@@ -22,13 +22,24 @@ MODEL_PATH = MODEL_DIR / "traffic_sign_svm.pkl"
 LABEL_ENCODER_PATH = MODEL_DIR / "label_encoder.pkl"
 
 # ==============================================================================
-# 2. CẤU HÌNH TIỀN XỬ LÝ & KÍCH THƯỚC ROI (THÀNH VIÊN 1 & 2)
+# 2. CẤU HÌNH NHÓM BIỂN BÁO & TIỀN XỬ LÝ (THÀNH VIÊN 1 & 2)
 # ==============================================================================
-# Kích thước chuẩn hóa của vùng ROI sau khi cắt (cho HOG và Model)
-ROI_SIZE = (64, 64)  # (width, height)
+# Ánh xạ tiền tố mã biển báo trong dataset sang 4 Nhóm Biển Báo chính:
+PREFIX_TO_CLASS = {
+    "P": "Bien_Cam",         # Biển cấm (Prohibitory: viền đỏ, nền trắng/xanh, tròn)
+    "W": "Bien_Nguy_Hiem",    # Biển cảnh báo (Warning: viền đỏ, nền vàng, tam giác)
+    "R": "Bien_Hieu_Lenh",    # Biển hiệu lệnh (Mandatory: nền xanh dương, tròn)
+    "I": "Bien_Chi_Dan",      # Biển chỉ dẫn (Information: nền xanh dương, vuông/chữ nhật)
+}
+
+TARGET_CLASSES = ["Bien_Cam", "Bien_Nguy_Hiem", "Bien_Hieu_Lenh", "Bien_Chi_Dan"]
 
 # Thư mục / nhãn cần loại bỏ trong quá trình làm sạch
-IGNORED_CLASSES = ["Camera", ".ipynb_checkpoints"]
+# (Camera: ảnh ngoại cảnh nhiễu; B.8a: biển phụ quá ít mẫu)
+IGNORED_CLASSES = ["Camera", "B.8a", ".ipynb_checkpoints"]
+
+# Kích thước chuẩn hóa của vùng ROI sau khi cắt (cho HOG và Model)
+ROI_SIZE = (64, 64)  # (width, height)
 
 # ==============================================================================
 # 3. CẤU HÌNH KHÔNG GIAN MÀU HSV (GIAI ĐOẠN 1 - COLOR MASKING)
