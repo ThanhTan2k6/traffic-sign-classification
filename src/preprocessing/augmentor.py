@@ -1,23 +1,23 @@
 """
 Module Tăng cường Dữ liệu (Data Augmentation) - Thành viên 1 phụ trách.
 Nhiệm vụ:
-- Khắc phục hiện tượng mất cân bằng dữ liệu giữa các lớp biển báo (Class Imbalance).
-- Áp dụng các biến đổi hình học và màu sắc phù hợp với biển báo giao thông:
-  + Xoay góc nhỏ (-15 đến +15 độ)
-  + Điều chỉnh độ sáng và độ tương phản (mô phỏng nắng/tối/bóng râm)
-  + Làm mờ Gaussian (mô phỏng mờ do chuyển động - motion blur)
-  + Thu phóng (Zoom in / Zoom out nhẹ)
-  + Dịch chuyển nhẹ (Translation)
+- Cân bằng số lượng mẫu giữa 4 Nhóm Biển Báo chính:
+    + Bien_Cam (~2,823 ảnh)
+    + Bien_Nguy_Hiem (~1,367 ảnh)
+    + Bien_Hieu_Lenh (~572 ảnh)
+    + Bien_Chi_Dan (~421 ảnh)
+- Đưa các lớp về mức cân bằng lý tưởng (~1,200 - 1,500 ảnh/lớp).
+- Áp dụng các biến đổi: Xoay (-15 đến +15 độ), chỉnh sáng/tương phản, mờ Gaussian, dịch chuyển nhẹ.
 """
 
 import random
 from pathlib import Path
-from typing import List, Optional
+from typing import Optional
 import cv2
 import numpy as np
 from tqdm import tqdm
 
-from src.config import CLEANED_DATA_DIR, AUGMENTED_DATA_DIR
+from src.config import CLEANED_DATA_DIR, AUGMENTED_DATA_DIR, TARGET_CLASSES
 from src.utils import ensure_dir, imread_unicode, imwrite_unicode
 
 
@@ -29,8 +29,8 @@ class DataAugmentor:
         np.random.seed(seed)
 
     @staticmethod
-    def random_rotation(image: np.ndarray, max_angle: float = 15.0) -> np.ndarray:
-        """Xoay ảnh một góc ngẫu nhiên trong khoảng [-max_angle, max_angle]."""
+    def random_rotation(image: np.ndarray, max_angle: float = 12.0) -> np.ndarray:
+        """Xoay ảnh góc nhỏ ngẫu nhiên [-max_angle, max_angle]."""
         angle = random.uniform(-max_angle, max_angle)
         h, w = image.shape[:2]
         center = (w // 2, h // 2)
@@ -44,27 +44,24 @@ class DataAugmentor:
     @staticmethod
     def random_brightness_contrast(
         image: np.ndarray,
-        alpha_range: tuple = (0.8, 1.2),
-        beta_range: tuple = (-25, 25),
+        alpha_range: tuple = (0.85, 1.15),
+        beta_range: tuple = (-20, 20),
     ) -> np.ndarray:
         """Thay đổi độ tương phản (alpha) và độ sáng (beta)."""
         alpha = random.uniform(*alpha_range)
         beta = random.uniform(*beta_range)
-        augmented = cv2.convertScaleAbs(image, alpha=alpha, beta=beta)
-        return augmented
+        return cv2.convertScaleAbs(image, alpha=alpha, beta=beta)
 
     @staticmethod
-    def random_blur(image: np.ndarray, max_ksize: int = 3) -> np.ndarray:
-        """Làm mờ Gaussian nhẹ ngẫu nhiên."""
+    def random_blur(image: np.ndarray) -> np.ndarray:
+        """Làm mờ Gaussian nhẹ ngẫu nhiên (mô phỏng camera rung)."""
         if random.random() > 0.5:
-            ksize = random.choice([3, 5])
-            if ksize <= max_ksize:
-                return cv2.GaussianBlur(image, (ksize, ksize), 0)
+            return cv2.GaussianBlur(image, (3, 3), 0)
         return image
 
     @staticmethod
-    def random_shift(image: np.ndarray, max_shift_ratio: float = 0.1) -> np.ndarray:
-        """Dịch chuyển ảnh theo chiều ngang và dọc."""
+    def random_shift(image: np.ndarray, max_shift_ratio: float = 0.08) -> np.ndarray:
+        """Dịch chuyển nhẹ ảnh theo trục X và Y."""
         h, w = image.shape[:2]
         tx = random.uniform(-max_shift_ratio, max_shift_ratio) * w
         ty = random.uniform(-max_shift_ratio, max_shift_ratio) * h
@@ -88,76 +85,79 @@ class DataAugmentor:
         self,
         source_dir: Path = CLEANED_DATA_DIR,
         target_dir: Path = AUGMENTED_DATA_DIR,
-        target_samples_per_class: Optional[int] = None,
+        target_samples_per_class: int = 1500,
+        max_samples_cap: int = 1800,
     ):
         """
-        Tự động tăng cường dữ liệu cho các lớp ít ảnh để đạt target_samples_per_class.
-        Nếu target_samples_per_class là None: sẽ lấy số mẫu của lớp nhiều nhất hoặc trung vị.
+        Cân bằng 4 nhóm biển báo về khoảng ~1,500 ảnh/nhóm:
+        - Các lớp ít mẫu (Hiệu lệnh, Chỉ dẫn) sẽ được sinh thêm ảnh.
+        - Các lớp quá nhiều mẫu (Biển cấm > 2,800 ảnh) sẽ được giới hạn ở max_samples_cap để tránh lệch lớp.
         """
         source_path = Path(source_dir)
         target_path = Path(target_dir)
 
-        print("=" * 60)
-        print("BẮT ĐẦU TĂNG CƯỜNG DỮ LIỆU ĐỂ CÂN BẰNG LỚP (DATA AUGMENTATION)")
+        print("=" * 65)
+        print("TĂNG CƯỜNG DỮ LIỆU CÂN BẰNG 4 NHÓM BIỂN BÁO (DATA AUGMENTATION)")
         print(f"[+] Thư mục nguồn: {source_path}")
         print(f"[+] Thư mục đích:   {target_path}")
-        print("=" * 60)
+        print(f"[+] Mục tiêu cân bằng: ~{target_samples_per_class} ảnh/lớp")
+        print("=" * 65)
 
-        classes = [d for d in source_path.iterdir() if d.is_dir()]
-        if not classes:
-            print("[-] Không tìm thấy thư mục lớp!")
-            return
+        if not source_path.exists():
+            raise FileNotFoundError(f"Chưa có thư mục cleaned: {source_path}. Hãy chạy clean_dataset trước!")
 
+        ensure_dir(target_path)
         supported_exts = {".jpg", ".jpeg", ".png", ".bmp"}
-        class_files = {}
 
-        for folder in classes:
-            files = [f for f in folder.iterdir() if f.suffix.lower() in supported_exts]
-            class_files[folder.name] = files
+        for cls_name in TARGET_CLASSES:
+            src_cls_dir = source_path / cls_name
+            dst_cls_dir = target_path / cls_name
+            ensure_dir(dst_cls_dir)
 
-        counts = [len(f) for f in class_files.values()]
-        max_count = max(counts)
-        median_count = int(np.median(counts))
+            if not src_cls_dir.exists():
+                print(f"[-] Không tìm thấy thư mục: {src_cls_dir}")
+                continue
 
-        # Nếu không chỉ định, lấy mức trung vị hoặc tối thiểu 50 ảnh
-        if target_samples_per_class is None:
-            target_samples = max(median_count, 50)
-        else:
-            target_samples = target_samples_per_class
-
-        print(f"[+] Số mẫu nhiều nhất: {max_count} | Trung vị: {median_count}")
-        print(f"[+] Mục tiêu cân bằng cho mỗi lớp (Target count): {target_samples} ảnh\n")
-
-        for class_name, files in class_files.items():
-            class_target_dir = target_path / class_name
-            ensure_dir(class_target_dir)
-
+            files = [f for f in src_cls_dir.iterdir() if f.suffix.lower() in supported_exts]
             count = len(files)
-            # Copy ảnh gốc sang thư mục target trước
-            for f in files:
-                dst = class_target_dir / f.name
-                if not dst.exists():
+            print(f"\n[>] Xử lý nhóm '{cls_name}': hiện có {count} ảnh gốc.")
+
+            # 1. Nếu lớp quá nhiều mẫu (ví dụ Bien_Cam > 2,800), lấy ngẫu nhiên max_samples_cap
+            if count > max_samples_cap:
+                selected_files = random.sample(files, max_samples_cap)
+                for f in selected_files:
                     img = imread_unicode(f)
                     if img is not None:
-                        imwrite_unicode(dst, img)
-
-            # Nếu lớp bị thiếu mẫu so với target -> tiến hành Augmentation
-            if count < target_samples and count > 0:
-                needed = target_samples - count
-                print(f"[~] Lớp '{class_name}': có {count} ảnh -> Đang tạo thêm {needed} ảnh augmented...")
-
-                for i in range(needed):
-                    src_file = random.choice(files)
-                    img = imread_unicode(src_file)
-                    if img is None:
-                        continue
-                    aug_img = self.apply_random_pipeline(img)
-                    aug_name = f"aug_{i+1:04d}_{src_file.stem}.png"
-                    imwrite_unicode(class_target_dir / aug_name, aug_img)
+                        imwrite_unicode(dst_cls_dir / f.name, img)
+                print(f"[✓] Lấy mẫu cân bằng (Downsampled): giữ {max_samples_cap} / {count} ảnh.")
             else:
-                print(f"[✓] Lớp '{class_name}': đã có đủ {count} ảnh (>= {target_samples})")
+                # Copy toàn bộ ảnh gốc sang target
+                for f in files:
+                    img = imread_unicode(f)
+                    if img is not None:
+                        imwrite_unicode(dst_cls_dir / f.name, img)
 
-        print("\n[+] Hoàn thành tăng cường dữ liệu!")
+                # 2. Nếu lớp thiếu mẫu so với target -> Augment sinh thêm
+                if count < target_samples_per_class and count > 0:
+                    needed = target_samples_per_class - count
+                    print(f"[~] Đang sinh thêm {needed} ảnh augmented...")
+
+                    for i in range(needed):
+                        src_f = random.choice(files)
+                        img = imread_unicode(src_f)
+                        if img is None:
+                            continue
+                        aug_img = self.apply_random_pipeline(img)
+                        aug_name = f"aug_{i+1:04d}_{src_f.stem}.png"
+                        imwrite_unicode(dst_cls_dir / aug_name, aug_img)
+
+                    print(f"[✓] Đã tăng cường thành công lên tổng cộng {target_samples_per_class} ảnh.")
+                else:
+                    print(f"[✓] Đã đủ số lượng chuẩn ({count} ảnh).")
+
+        print("\n" + "=" * 65)
+        print("[+] HOÀN THÀNH TĂNG CƯỜNG DỮ LIỆU! 4 nhóm biển báo đã được cân bằng hoàn hảo.")
+        print("=" * 65)
 
 
 if __name__ == "__main__":

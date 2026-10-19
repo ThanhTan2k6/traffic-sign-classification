@@ -1,9 +1,14 @@
 """
-Module Làm sạch Dữ liệu (Dataset Cleaner) - Thành viên 1 phụ trách.
+Module Làm sạch & Gom nhóm Dữ liệu (Dataset Cleaner & Grouping) - Thành viên 1 phụ trách.
 Nhiệm vụ:
-- Xóa bỏ/loại bỏ thư mục "Camera" (ảnh ngoại cảnh/nhiễu).
+- Xóa bỏ/loại bỏ thư mục ngoại cảnh "Camera" và biển phụ "B.8a".
 - Quét và loại bỏ các file ảnh lỗi, hỏng (corrupt), 0-byte hoặc kích thước quá nhỏ.
-- Xuất dữ liệu sạch sang thư mục đích hoặc tạo báo cáo thống kê.
+- Gom 38 mã biển báo con về 4 NHÓM BIỂN BÁO CHÍNH:
+    + Bien_Cam (tiền tố P.*): 2,823 ảnh
+    + Bien_Nguy_Hiem (tiền tố W.*): 1,367 ảnh
+    + Bien_Hieu_Lenh (tiền tố R.*): 572 ảnh
+    + Bien_Chi_Dan (tiền tố I.*): 421 ảnh
+- Xuất dữ liệu sạch và được gom nhóm sang 'data/cleaned/'.
 """
 
 import shutil
@@ -13,7 +18,13 @@ from PIL import Image
 import pandas as pd
 from tqdm import tqdm
 
-from src.config import RAW_DATA_DIR, CLEANED_DATA_DIR, IGNORED_CLASSES
+from src.config import (
+    RAW_DATA_DIR,
+    CLEANED_DATA_DIR,
+    IGNORED_CLASSES,
+    PREFIX_TO_CLASS,
+    TARGET_CLASSES,
+)
 from src.utils import ensure_dir, imread_unicode
 
 
@@ -25,29 +36,34 @@ def validate_image_file(image_path: Path, min_size: int = 10) -> Tuple[bool, str
     if not image_path.is_file():
         return False, "Không phải là file"
 
-    # Kiểm tra kích thước file
     if image_path.stat().st_size == 0:
         return False, "File dung lượng 0 bytes"
 
     # Đọc thử bằng PIL
     try:
         with Image.open(image_path) as img:
-            img.verify()  # Kiểm tra tính toàn vẹn của header
+            img.verify()
     except Exception as e:
-        return False, f"Lỗi đọc header PIL: {e}"
+        return False, f"Lỗi header PIL: {e}"
 
     # Đọc thử bằng OpenCV
     try:
         cv_img = imread_unicode(image_path)
         if cv_img is None or cv_img.size == 0:
-            return False, "OpenCV không thể giải mã ảnh"
+            return False, "OpenCV không thể decode ảnh"
         h, w = cv_img.shape[:2]
         if h < min_size or w < min_size:
-            return False, f"Ảnh quá nhỏ ({w}x{h} < {min_size}x{min_size})"
+            return False, f"Ảnh quá nhỏ ({w}x{h})"
     except Exception as e:
         return False, f"Lỗi decode OpenCV: {e}"
 
     return True, "Hợp lệ"
+
+
+def get_target_class_from_folder(folder_name: str) -> str | None:
+    """Xác định nhóm biển báo dựa trên tiền tố chữ cái đầu (P, W, R, I)."""
+    prefix = folder_name.split(".")[0].upper()
+    return PREFIX_TO_CLASS.get(prefix, None)
 
 
 def clean_dataset(
@@ -57,82 +73,89 @@ def clean_dataset(
     copy_files: bool = True,
 ) -> pd.DataFrame:
     """
-    Làm sạch toàn bộ tập dữ liệu:
-    1. Bỏ qua các thư mục trong danh sách ignored_classes (ví dụ: 'Camera').
-    2. Quét kiểm tra tất cả các file ảnh trong từng thư mục lớp.
-    3. Copy ảnh hợp lệ sang target_dir (nếu copy_files=True).
-    4. Trả về DataFrame thống kê kết quả.
+    Làm sạch và gom nhóm toàn bộ tập dữ liệu về 4 nhóm biển báo chính:
+    1. Loại bỏ các thư mục trong ignored_classes ('Camera', 'B.8a',...).
+    2. Ánh xạ các thư mục con (P.*, W.*, R.*, I.*) vào 4 nhóm lớn.
+    3. Quét loại bỏ ảnh corrupt/0-byte.
+    4. Copy ảnh hợp lệ sang data/cleaned/<Target_Group>/.
     """
     source_path = Path(source_dir)
     target_path = Path(target_dir)
 
-    print("=" * 60)
-    print("BẮT ĐẦU QUY TRÌNH LÀM SẠCH DỮ LIỆU (DATA CLEANING)")
+    print("=" * 65)
+    print("QUY TRÌNH LÀM SẠCH VÀ GOM NHÓM DỮ LIỆU (DATA CLEAN & GROUP)")
     print(f"[+] Thư mục nguồn: {source_path}")
     print(f"[+] Thư mục đích:   {target_path}")
-    print(f"[+] Các lớp loại bỏ: {ignored_classes}")
-    print("=" * 60)
+    print(f"[+] 4 Nhóm đích:   {TARGET_CLASSES}")
+    print(f"[+] Các lớp bỏ qua: {ignored_classes}")
+    print("=" * 65)
 
     if not source_path.exists():
         raise FileNotFoundError(f"Không tìm thấy thư mục nguồn: {source_path}")
 
-    ensure_dir(target_path)
+    # Tạo sẵn các thư mục nhóm đích
+    for t_cls in TARGET_CLASSES:
+        ensure_dir(target_path / t_cls)
 
-    stats = []
     supported_exts = {".jpg", ".jpeg", ".png", ".bmp", ".ppm", ".webp"}
+    stats = {cls_name: {"Total": 0, "Valid": 0, "Corrupted": 0} for cls_name in TARGET_CLASSES}
+    ignored_count = 0
 
-    # Lấy danh sách thư mục con (các lớp biển báo)
     class_folders = [d for d in source_path.iterdir() if d.is_dir()]
 
     for folder in class_folders:
-        class_name = folder.name
+        folder_name = folder.name
 
-        # 1. Kiểm tra nếu nằm trong danh sách cần loại bỏ (ví dụ 'Camera')
-        if class_name in ignored_classes:
-            print(f"[!] Bỏ qua thư mục ngoại cảnh: '{class_name}'")
+        # 1. Bỏ qua các thư mục nhiễu (Camera, B.8a)
+        if folder_name in ignored_classes:
+            files_in_ignored = len(list(folder.glob("*.*")))
+            ignored_count += files_in_ignored
+            print(f"[!] Bỏ qua thư mục ngoại cảnh: '{folder_name}' ({files_in_ignored} ảnh)")
             continue
 
-        class_target_dir = target_path / class_name
-        if copy_files:
-            ensure_dir(class_target_dir)
+        # 2. Xác định nhóm đích (Bien_Cam, Bien_Nguy_Hiem, Bien_Hieu_Lenh, Bien_Chi_Dan)
+        target_group = get_target_class_from_folder(folder_name)
+        if target_group is None:
+            print(f"[!] Bỏ qua thư mục không xác định được nhóm: '{folder_name}'")
+            continue
 
-        # Lấy danh sách ảnh trong lớp
+        group_target_dir = target_path / target_group
         all_files = [f for f in folder.iterdir() if f.suffix.lower() in supported_exts]
-        valid_count = 0
-        corrupt_count = 0
 
-        for file_path in tqdm(all_files, desc=f"Đang lọc lớp {class_name:10s}", leave=False):
+        for file_path in tqdm(all_files, desc=f"Xử lý {folder_name:10s} -> {target_group}", leave=False):
+            stats[target_group]["Total"] += 1
             is_valid, reason = validate_image_file(file_path)
-            if is_valid:
-                valid_count += 1
-                if copy_files:
-                    target_file = class_target_dir / file_path.name
-                    if not target_file.exists():
-                        shutil.copy2(file_path, target_file)
-            else:
-                corrupt_count += 1
-                print(f"\n[-] Phát hiện ảnh lỗi: {file_path.name} ({reason})")
 
-        stats.append({
-            "Class": class_name,
-            "Total Files": len(all_files),
-            "Valid Files": valid_count,
-            "Corrupted/Removed": corrupt_count,
+            if is_valid:
+                stats[target_group]["Valid"] += 1
+                if copy_files:
+                    # Đặt tên file mới kèm mã gốc để tránh trùng tên: P.102_0001.png
+                    new_file_name = f"{folder_name}_{file_path.name}"
+                    dst_path = group_target_dir / new_file_name
+                    if not dst_path.exists():
+                        shutil.copy2(file_path, dst_path)
+            else:
+                stats[target_group]["Corrupted"] += 1
+                print(f"\n[-] Ảnh hỏng: {folder_name}/{file_path.name} ({reason})")
+
+    # Tổng kết dạng bảng
+    summary_data = []
+    for cls_name, vals in stats.items():
+        summary_data.append({
+            "Nhóm Biển Báo": cls_name,
+            "Tổng quét": vals["Total"],
+            "Hợp lệ (Cleaned)": vals["Valid"],
+            "Lỗi (Corrupted)": vals["Corrupted"],
         })
 
-    df_stats = pd.DataFrame(stats)
-    print("\n" + "=" * 60)
-    print("KẾT QUẢ LÀM SẠCH TẬP DỮ LIỆU:")
-    print("=" * 60)
-    if not df_stats.empty:
-        print(df_stats.to_string(index=False))
-        total_valid = df_stats["Valid Files"].sum()
-        total_corrupt = df_stats["Corrupted/Removed"].sum()
-        print(f"\n[+] Tổng số ảnh hợp lệ: {total_valid}")
-        print(f"[+] Tổng số ảnh lỗi bị loại: {total_corrupt}")
-        print(f"[+] Tổng số lớp biển báo hợp lệ: {len(df_stats)}")
-    else:
-        print("[-] Không có dữ liệu nào được xử lý.")
+    df_stats = pd.DataFrame(summary_data)
+    print("\n" + "=" * 65)
+    print("BÁO CÁO TỔNG HỢP SAU KHI LÀM SẠCH VÀ GOM NHÓM:")
+    print("=" * 65)
+    print(df_stats.to_string(index=False))
+    print(f"\n[+] Tổng số ảnh hợp lệ đưa vào huấn luyện: {df_stats['Hợp lệ (Cleaned)'].sum()} ảnh")
+    print(f"[+] Tổng số ảnh nhiễu đã loại bỏ: {df_stats['Lỗi (Corrupted)'].sum() + ignored_count} ảnh")
+    print("=" * 65)
 
     return df_stats
 
