@@ -1,5 +1,5 @@
 """
-Giai đoạn 3: Trích xuất đặc trưng HOG (Histogram of Oriented Gradients) - Thành viên 2 phụ trách.
+Giai đoạn 3: Trích xuất đặc trưng HOG - Khung sườn cho Thành viên 2 phụ trách.
 Nhiệm vụ:
 - Chuẩn hóa kích thước vùng ROI (mặc định 64x64).
 - Chuyển sang ảnh xám (Grayscale).
@@ -7,11 +7,8 @@ Nhiệm vụ:
 """
 
 from typing import Tuple, Optional
-import cv2
 import numpy as np
-from skimage.feature import hog
-
-from src.config import HOG_CONFIG, ROI_SIZE
+from src.config import HOG_CONFIG
 
 
 class HOGFeatureExtractor:
@@ -38,44 +35,6 @@ class HOGFeatureExtractor:
     ) -> Tuple[np.ndarray, Optional[np.ndarray]]:
         """
         Trích xuất vector đặc trưng HOG từ ảnh ROI.
-        
-        Tham số:
-        - bgr_roi: Ảnh ROI (định dạng BGR hoặc Gray).
-        - visualize: Nếu True, trả về cả ảnh trực quan hóa HOG (dùng cho báo cáo/demo).
-
-        Trả về:
-        - features: 1D numpy array chứa các đặc trưng HOG.
-        - hog_image: Ảnh biểu diễn HOG (nếu visualize=True), ngược lại là None.
         """
-        # Đảm bảo ảnh có kích thước chuẩn 64x64
-        if bgr_roi.shape[:2] != (ROI_SIZE[1], ROI_SIZE[0]):
-            bgr_roi = cv2.resize(bgr_roi, ROI_SIZE, interpolation=cv2.INTER_AREA)
-
-        # Chuyển sang ảnh xám
-        if len(bgr_roi.shape) == 3:
-            gray = cv2.cvtColor(bgr_roi, cv2.COLOR_BGR2GRAY)
-        else:
-            gray = bgr_roi
-
-        if visualize:
-            features, hog_image = hog(
-                gray,
-                orientations=self.orientations,
-                pixels_per_cell=self.pixels_per_cell,
-                cells_per_block=self.cells_per_block,
-                block_norm=self.block_norm,
-                visualize=True,
-                transform_sqrt=self.transform_sqrt,
-            )
-            return features, hog_image
-        else:
-            features = hog(
-                gray,
-                orientations=self.orientations,
-                pixels_per_cell=self.pixels_per_cell,
-                cells_per_block=self.cells_per_block,
-                block_norm=self.block_norm,
-                visualize=False,
-                transform_sqrt=self.transform_sqrt,
-            )
-            return features, None
+        # TODO: [Thành viên 2] Cài đặt thuật toán trích xuất đặc trưng HOG
+        raise NotImplementedError("TODO: Thành viên 2 phụ trách cài đặt HOG extractor")
