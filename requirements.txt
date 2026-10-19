@@ -1,0 +1,23 @@
+# Computer Vision & Image Processing
+opencv-python>=4.8.0
+numpy>=1.24.0
+scikit-image>=0.21.0
+pillow>=10.0.0
+
+# Machine Learning & Metrics
+scikit-learn>=1.3.0
+joblib>=1.3.0
+
+# Data Analysis & Visualization
+pandas>=2.0.0
+matplotlib>=3.7.0
+seaborn>=0.12.0
+
+# Utilities & Progress Bar
+tqdm>=4.66.0
+
+# UI Application (Member 3)
+streamlit>=1.28.0
+
+# Notebook Environment
+jupyter>=1.0.0

@@ -1,0 +1,63 @@
+# Python & Cache
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual Environment
+venv/
+.venv/
+env/
+ENV/
+env.bak/
+venv.bak/
+
+# Jupyter Notebook Checkpoints
+.ipynb_checkpoints
+*/.ipynb_checkpoints/*
+
+# IDEs & Editors
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# Dataset & Data outputs (Tránh push dữ liệu ảnh nặng lên Github)
+dataset_cropped_for_lenet/
+data/raw/
+data/cleaned/
+data/augmented/
+data/rois/
+*.zip
+*.tar.gz
+*.rar
+
+# Model checkpoints & weights
+*.pkl
+*.joblib
+*.h5
+*.pt
+*.pth
+*.onnx
+models_saved/
+
+# OS generated files
+.DS_Store
+Thumbs.db
+desktop.ini
