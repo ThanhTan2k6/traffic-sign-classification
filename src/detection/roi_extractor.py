@@ -52,11 +52,17 @@ class ROIExtractor:
         Khử nhiễu bằng bộ lọc hình thái học (Morphological Operations):
         - MORPH_OPEN: Xóa các hạt nhiễu trắng nhỏ lẻ bên ngoài
         - MORPH_CLOSE: Lấp đầy các lỗ trống và nối liền các vùng viền đứt đoạn
+        - Thích ứng kích thước kernel theo kích thước ảnh.
         """
+        h, w = binary_mask.shape[:2]
+        # Nếu ảnh nhỏ (ảnh crop), dùng kernel 2x2 hoặc 3x3 để không xóa mất chi tiết
+        k_dim = max(2, min(5, min(h, w) // 8))
+        kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (k_dim, k_dim))
+
         # 1. Opening: Xóa nhiễu ngoài
-        opened = cv2.morphologyEx(binary_mask, cv2.MORPH_OPEN, self.kernel, iterations=open_iters)
+        opened = cv2.morphologyEx(binary_mask, cv2.MORPH_OPEN, kernel, iterations=open_iters)
         # 2. Closing: Lấp đầy khoảng trống bên trong biển báo
-        closed = cv2.morphologyEx(opened, cv2.MORPH_CLOSE, self.kernel, iterations=close_iters)
+        closed = cv2.morphologyEx(opened, cv2.MORPH_CLOSE, kernel, iterations=close_iters)
         return closed
 
     def extract_rois(
@@ -67,15 +73,12 @@ class ROIExtractor:
     ) -> List[Dict[str, Any]]:
         """
         Phân tích đường viền từ mặt nạ và trích xuất các vùng ROI đạt tiêu chuẩn.
-
-        Trả về danh sách các dict, mỗi dict chứa:
-        - 'bbox': (x, y, w, h) tọa độ hộp bao trên ảnh gốc
-        - 'roi_original': vùng ảnh cắt gốc (chưa resize)
-        - 'roi_normalized': vùng ảnh sau khi chuẩn hóa về kích thước 64x64
-        - 'contour': đường viền tìm được
-        - 'area': diện tích contour
-        - 'aspect_ratio': tỷ lệ w / h
+        Thích ứng ngưỡng diện tích linh hoạt theo độ phân giải ảnh.
         """
+        img_h, img_w = bgr_image.shape[:2]
+        # Ngưỡng diện tích thích ứng: nếu ảnh nhỏ (crop sẵn) thì diện tích tối thiểu nhỏ lại
+        adaptive_min_area = min(self.min_area, (img_h * img_w) * 0.03)
+
         # 1. Khử nhiễu hình thái học
         cleaned_mask = self.clean_mask_morphology(binary_mask)
 
@@ -90,8 +93,8 @@ class ROIExtractor:
         for cnt in contours:
             area = cv2.contourArea(cnt)
 
-            # Lọc theo diện tích
-            if area < self.min_area or area > self.max_area:
+            # Lọc theo diện tích thích ứng
+            if area < adaptive_min_area or area > self.max_area:
                 continue
 
             x, y, w, h = cv2.boundingRect(cnt)

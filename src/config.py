@@ -38,25 +38,25 @@ HSV_COLOR_RANGES = {
     # Màu đỏ bị ngắt ở 180 và 0 nên cần 2 dải
     "red": [
         {
-            "lower": np.array([0, 70, 50], dtype=np.uint8),
+            "lower": np.array([0, 50, 40], dtype=np.uint8),
             "upper": np.array([10, 255, 255], dtype=np.uint8),
         },
         {
-            "lower": np.array([170, 70, 50], dtype=np.uint8),
+            "lower": np.array([170, 50, 40], dtype=np.uint8),
             "upper": np.array([180, 255, 255], dtype=np.uint8),
         },
     ],
     # Màu xanh dương (Biển hiệu lệnh R, chỉ dẫn I)
     "blue": [
         {
-            "lower": np.array([100, 70, 50], dtype=np.uint8),
+            "lower": np.array([95, 50, 40], dtype=np.uint8),
             "upper": np.array([135, 255, 255], dtype=np.uint8),
         }
     ],
     # Màu vàng (Biển cảnh báo nguy hiểm W)
     "yellow": [
         {
-            "lower": np.array([15, 70, 70], dtype=np.uint8),
+            "lower": np.array([15, 50, 50], dtype=np.uint8),
             "upper": np.array([35, 255, 255], dtype=np.uint8),
         }
     ],
