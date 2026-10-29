@@ -1,4 +1,4 @@
-# Python & Cache
+# Python & Caches
 __pycache__/
 *.py[cod]
 *$py.class
@@ -38,7 +38,7 @@ venv.bak/
 *.sublime-project
 *.sublime-workspace
 
-# Dataset & Data outputs (Tránh push dữ liệu ảnh nặng lên Github)
+# Dataset & Data outputs (Chặn toàn bộ dữ liệu ảnh nặng)
 dataset_cropped_for_lenet/
 data/raw/
 data/cleaned/
@@ -48,14 +48,20 @@ data/rois/
 *.tar.gz
 *.rar
 
-# Model checkpoints & weights
+# Model checkpoints & weights (Chặn file trọng số nặng)
+checkpoints/
+models_saved/
 *.pkl
 *.joblib
 *.h5
 *.pt
 *.pth
 *.onnx
-models_saved/
+
+# Evaluation outputs / logs / temporary outputs
+res/outputs/
+runs/
+logs/
 
 # OS generated files
 .DS_Store

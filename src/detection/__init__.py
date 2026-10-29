@@ -1,4 +1,3 @@
-from .color_filter import ColorFilter
-from .roi_extractor import ROIExtractor
+from .base_detector import BaseDetector
 
-__all__ = ["ColorFilter", "ROIExtractor"]
+__all__ = ["BaseDetector"]

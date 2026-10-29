@@ -1,109 +1,61 @@
 """
-File cấu hình chung cho toàn bộ dự án Nhận dạng & Phân loại Biển báo Giao thông.
-Được chia sẻ giữa 3 thành viên để đảm bảo tính nhất quán của hệ thống.
+Cấu hình tập trung cho toàn bộ Dự án Benchmarking Nhận dạng Biển báo Giao thông.
+Được chia sẻ thống nhất giữa tất cả các thành viên trong nhóm.
 """
 
 from pathlib import Path
-import numpy as np
 
 # ==============================================================================
-# 1. CẤU HÌNH ĐƯỜNG DẪN THƯ MỤC (PROJECT PATHS)
+# 1. ĐƯỜNG DẪN DỰ ÁN (PROJECT PATHS)
 # ==============================================================================
-BASE_DIR = Path(__file__).resolve().parent.parent
+PROJECT_ROOT = Path(__file__).resolve().parent.parent
 
-DATA_DIR = BASE_DIR / "data"
-RAW_DATA_DIR = BASE_DIR / "dataset_cropped_for_lenet"  # Hoặc data/raw
-CLEANED_DATA_DIR = DATA_DIR / "cleaned"
-AUGMENTED_DATA_DIR = DATA_DIR / "augmented"
-ROI_OUTPUT_DIR = DATA_DIR / "rois"
+DATA_DIR = PROJECT_ROOT / "data"
+RAW_DATA_DIR = PROJECT_ROOT / "dataset_cropped_for_lenet"  # Hoặc data/raw
+GLOBAL_SPLITS_DIR = DATA_DIR / "global_splits"
+CHECKPOINTS_DIR = PROJECT_ROOT / "checkpoints"
+RESULTS_DIR = PROJECT_ROOT / "res" / "outputs"
 
-MODEL_DIR = BASE_DIR / "models_saved"
-MODEL_PATH = MODEL_DIR / "traffic_sign_svm.pkl"
-LABEL_ENCODER_PATH = MODEL_DIR / "label_encoder.pkl"
+# File phân chia dữ liệu toàn cục (Global Data Splits)
+TRAIN_SPLIT_FILE = GLOBAL_SPLITS_DIR / "train_ids.txt"
+VAL_SPLIT_FILE = GLOBAL_SPLITS_DIR / "val_ids.txt"
+TEST_SPLIT_FILE = GLOBAL_SPLITS_DIR / "test_ids.txt"
 
 # ==============================================================================
-# 2. CẤU HÌNH NHÓM BIỂN BÁO & TIỀN XỬ LÝ (THÀNH VIÊN 1 & 2)
+# 2. CẤU HÌNH NHÓM BIỂN BÁO (4 CLASSES CHUẨN QCVN 41:2019/BGTVT)
 # ==============================================================================
-# Ánh xạ tiền tố mã biển báo trong dataset sang 4 Nhóm Biển Báo chính:
 PREFIX_TO_CLASS = {
-    "P": "Bien_Cam",         # Biển cấm (Prohibitory: viền đỏ, nền trắng/xanh, tròn)
-    "W": "Bien_Nguy_Hiem",    # Biển cảnh báo (Warning: viền đỏ, nền vàng, tam giác)
-    "R": "Bien_Hieu_Lenh",    # Biển hiệu lệnh (Mandatory: nền xanh dương, tròn)
-    "I": "Bien_Chi_Dan",      # Biển chỉ dẫn (Information: nền xanh dương, vuông/chữ nhật)
+    "P": "Bien_Cam",         # Biển cấm (Prohibitory) - Viền đỏ, nền trắng/xanh, hình tròn
+    "W": "Bien_Nguy_Hiem",    # Biển cảnh báo (Warning) - Viền đỏ, nền vàng, tam giác đều
+    "R": "Bien_Hieu_Lenh",    # Biển hiệu lệnh (Mandatory) - Nền xanh dương, hình tròn
+    "I": "Bien_Chi_Dan",      # Biển chỉ dẫn (Information) - Nền xanh dương, chữ nhật/vuông
 }
 
 TARGET_CLASSES = ["Bien_Cam", "Bien_Nguy_Hiem", "Bien_Hieu_Lenh", "Bien_Chi_Dan"]
+CLASS_TO_IDX = {cls_name: idx for idx, cls_name in enumerate(TARGET_CLASSES)}
+IDX_TO_CLASS = {idx: cls_name for idx, cls_name in enumerate(TARGET_CLASSES)}
 
-# Thư mục / nhãn cần loại bỏ trong quá trình làm sạch
-# (Camera: ảnh ngoại cảnh nhiễu; B.8a: biển phụ quá ít mẫu)
+# Các thư mục hoặc lớp cần loại bỏ (nhiễu/ngoại cảnh/quá ít mẫu)
 IGNORED_CLASSES = ["Camera", "B.8a", ".ipynb_checkpoints"]
 
-# Kích thước chuẩn hóa của vùng ROI sau khi cắt (cho HOG và Model)
-ROI_SIZE = (64, 64)  # (width, height)
-
 # ==============================================================================
-# 3. CẤU HÌNH KHÔNG GIAN MÀU HSV (GIAI ĐOẠN 1 - COLOR MASKING)
+# 3. TỈ LỆ GLOBAL DATA SPLIT (3 TẬP ĐỘC LẬP: TRAIN / VAL / TEST)
 # ==============================================================================
-# Lưu ý trong OpenCV: H: [0, 180], S: [0, 255], V: [0, 255]
-HSV_COLOR_RANGES = {
-    # Màu đỏ bị ngắt ở 180 và 0 nên cần 2 dải
-    "red": [
-        {
-            "lower": np.array([0, 50, 40], dtype=np.uint8),
-            "upper": np.array([10, 255, 255], dtype=np.uint8),
-        },
-        {
-            "lower": np.array([170, 50, 40], dtype=np.uint8),
-            "upper": np.array([180, 255, 255], dtype=np.uint8),
-        },
-    ],
-    # Màu xanh dương (Biển hiệu lệnh R, chỉ dẫn I)
-    "blue": [
-        {
-            "lower": np.array([95, 50, 40], dtype=np.uint8),
-            "upper": np.array([135, 255, 255], dtype=np.uint8),
-        }
-    ],
-    # Màu vàng (Biển cảnh báo nguy hiểm W)
-    "yellow": [
-        {
-            "lower": np.array([15, 50, 50], dtype=np.uint8),
-            "upper": np.array([35, 255, 255], dtype=np.uint8),
-        }
-    ],
+SPLIT_RATIOS = {
+    "train": 0.70,   # 70% dùng để huấn luyện mô hình
+    "val": 0.15,     # 15% dùng để tinh chỉnh siêu tham số (Tuning)
+    "test": 0.15,    # 15% tập đánh giá mù (Final Benchmarking)
 }
+RANDOM_SEED = 42
 
 # ==============================================================================
-# 4. CẤU HÌNH PHÂN ĐOẠN & TÌM ROI (GIAI ĐOẠN 2 - MORPHOLOGY & CONTOURS)
+# 4. DANH SÁCH MÔ HÌNH HỖ TRỢ TRONG HỆ THỐNG BENCHMARK
 # ==============================================================================
-# Kích thước kernel hình thái học
-MORPH_KERNEL_SIZE = (5, 5)
-MORPH_OPEN_ITERS = 1
-MORPH_CLOSE_ITERS = 2
+SUPPORTED_MODELS = [
+    "color_hog_svm",  # Phương pháp 1 (Thành viên 1): Lọc màu HSV + Morphology + HOG + SVM
+    "model_2",        # Phương pháp 2 (Thành viên 2): Template tự chọn (VD: Custom CNN / LeNet)
+    "model_3",        # Phương pháp 3 (Thành viên 3): Template tự chọn (VD: YOLO / MobileNet / KNN)
+]
 
-# Điều kiện lọc Contours phát hiện biển báo
-MIN_CONTOUR_AREA = 100       # Diện tích tối thiểu để loại bỏ nhiễu hạt
-MAX_CONTOUR_AREA = 500000    # Diện tích tối đa (tránh nhầm khung cảnh lớn)
-MIN_ASPECT_RATIO = 0.5       # Tỷ lệ chiều rộng / chiều cao (width / height)
-MAX_ASPECT_RATIO = 2.0       # Biển báo thường gần vuông, tròn hoặc tam giác đều
-
-# ==============================================================================
-# 5. CẤU HÌNH TRÍCH XUẤT ĐẶC TRƯNG HOG (GIAI ĐOẠN 3 - THÀNH VIÊN 2)
-# ==============================================================================
-HOG_CONFIG = {
-    "orientations": 9,
-    "pixels_per_cell": (8, 8),
-    "cells_per_block": (2, 2),
-    "block_norm": "L2-Hys",
-    "visualize": False,
-    "transform_sqrt": True,
-}
-
-# ==============================================================================
-# 6. CẤU HÌNH HUẤN LUYỆN MÔ HÌNH (GIAI ĐOẠN 4 - THÀNH VIÊN 2)
-# ==============================================================================
-TRAIN_TEST_SPLIT_RATIO = 0.2
-RANDOM_STATE = 42
-SVM_KERNEL = "rbf"
-SVM_C = 10.0
-SVM_GAMMA = "scale"
+# Kích thước ảnh chuẩn hóa cho việc trích xuất đặc trưng
+IMAGE_SIZE = (64, 64)
