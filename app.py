@@ -44,8 +44,7 @@ from src.config import (
     RESULTS_DIR,
 )
 from src.detection.color_hog_svm import ColorHogSvmDetector
-from src.detection.model_2 import Model2Detector
-from src.detection.model_3 import Model3Detector
+from src.detection.deep_learning import DeepLearningDetector
 from src.evaluation.eval_metrics import evaluate_detector, benchmark_all_models
 from src.evaluation.plotter import plot_benchmark_comparison, plot_confusion_matrix
 from src.utils import imread_unicode
@@ -56,10 +55,8 @@ def get_detector(model_name: str):
     model_name = model_name.lower()
     if model_name == "color_hog_svm":
         return ColorHogSvmDetector()
-    elif model_name == "model_2":
-        return Model2Detector()
-    elif model_name == "model_3":
-        return Model3Detector()
+    elif model_name == "deep_learning":
+        return DeepLearningDetector()
     else:
         raise ValueError(f"Không hỗ trợ mô hình '{model_name}'. Hỗ trợ: {SUPPORTED_MODELS}")
 
@@ -86,11 +83,10 @@ def run_evaluation(model_name: str = None, split_name: str = "test"):
             print("\n" + metrics["report"])
             plot_confusion_matrix(metrics["confusion_matrix"], model_name)
     else:
-        # Chạy Benchmarking tất cả các model
+        # Chạy Benchmarking tất cả các model (2 thành viên)
         detectors = [
             ColorHogSvmDetector(),
-            Model2Detector(),
-            Model3Detector(),
+            DeepLearningDetector(),
         ]
         df_leaderboard = benchmark_all_models(detectors, split_file)
         if not df_leaderboard.empty:

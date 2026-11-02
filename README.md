@@ -2,7 +2,9 @@
 
 Dự án nghiên cứu và đánh giá so sánh (**Benchmarking**) các phương pháp nhận dạng biển báo giao thông Việt Nam (theo Quy chuẩn kỹ thuật quốc gia QCVN 41:2019/BGTVT).
 
-Hệ thống được thiết kế theo kiến trúc chuẩn hóa (Framework Base Skeleton): **Mỗi thành viên phụ trách một phương pháp/mô hình riêng**, tất cả cùng chạy trên **cùng một bộ dữ liệu toàn cục cố định (Global Data Split)** để đảm bảo tính khách quan và công bằng tuyệt đối.
+Hệ thống được thiết kế theo kiến trúc chuẩn hóa (Framework Base Skeleton) cho **nhóm 2 thành viên**, tất cả cùng chạy trên **cùng một bộ dữ liệu toàn cục cố định (Global Data Split)** để đảm bảo tính khách quan và công bằng tuyệt đối:
+- **Thành viên 1:** Phương pháp Thị giác máy tính truyền thống (**`color_hog_svm`** - Lọc màu HSV + Hình thái học + HOG + SVM).
+- **Thành viên 2:** Phương pháp Học sâu Hiện đại (**`deep_learning`** - Linh hoạt lựa chọn **Custom CNN** hoặc **YOLOv8**).
 
 ---
 
@@ -22,8 +24,8 @@ Dữ liệu biển báo giao thông Việt Nam gồm 52 lớp chi tiết đượ
 
 ---
 
-### 📊 Thống Kê Bộ Dữ Liệu Mới (Dataset Overview)
-- **Tổng số ảnh toàn cảnh:** 3,216 ảnh thực tế đường phố Việt Nam (độ phân giải 960x540 và 1920x1080).
+### 📊 Thống Kê Bộ Dữ Liệu (Dataset Overview)
+- **Tổng số ảnh toàn cảnh:** 3,216 ảnh chụp thực tế đường sá Việt Nam (độ phân giải 960x540 và 1920x1080).
 - **Định dạng nhãn gốc:** YOLO format (`<class_id> <x_center> <y_center> <width> <height>`).
 - **Tổng số bounding box được gán nhãn:** 8,334 boxes thuộc 52 lớp chuẩn.
 - **Tổng số bounding box mục tiêu sau lọc:** ~7,858 boxes biển báo (đạt chuẩn kích thước $\ge 10$px và thuộc 4 nhóm chính).
@@ -31,19 +33,19 @@ Dữ liệu biển báo giao thông Việt Nam gồm 52 lớp chi tiết đượ
 ---
 
 ### 🛡️ Cơ Chế Global Data Split (Chống Data Leakage Tuyệt Đối)
-Để đảm bảo so sánh công bằng giữa các thành viên:
-1. **Phân chia ở cấp độ ẢNH (Image-level split):** Nếu một ảnh chứa nhiều biển báo, toàn bộ các biển báo này cùng nằm trong một tập dữ liệu duy nhất, tuyệt đối không bị rò rỉ (Zero Data Leakage).
+Để đảm bảo so sánh công bằng giữa 2 thành viên:
+1. **Phân chia ở cấp độ ẢNH (Image-level split):** Nếu một ảnh có nhiều biển báo, toàn bộ biển trong ảnh đó sẽ cùng vào 1 tập duy nhất, tuyệt đối không bị rò rỉ dữ liệu giữa tập Train và Test (Zero Data Leakage).
 2. **Tỉ lệ phân chia toàn cục:**
    - **Tập Train (70%):** Huấn luyện trọng số mô hình.
    - **Tập Validation (15%):** Tinh chỉnh siêu tham số (Hyperparameter tuning / Validation loss).
    - **Tập Test (15%):** **TẬP ĐÁNH GIÁ MÙ (BLIND TEST SET)** — Dùng một lần duy nhất lúc chấm điểm Benchmarking cuối cùng.
 
-3. **Hỗ trợ 2 luồng bài toán song song:**
-   - **Luồng Phân loại (Classification - SVM, LeNet, CNN):** Tự động cắt các vùng chứa biển báo (ROI Cropping) lưu tại `data/cropped/{train,val,test}/{category}/` và định danh qua 3 file text trong `data/global_splits/`:
+3. **Hỗ trợ 2 luồng dữ liệu song song cho 2 thành viên:**
+   - **Luồng Phân loại ROI (Classification - Dùng cho HOG+SVM hoặc CNN):** Tự động cắt 7,858 vùng chứa biển báo lưu tại `data/cropped/{train,val,test}/{category}/` và định danh qua 3 file text trong `data/global_splits/`:
      * `data/global_splits/train_ids.txt`
      * `data/global_splits/val_ids.txt`
      * `data/global_splits/test_ids.txt`
-   - **Luồng Phát hiện (Object Detection - YOLO):** Cung cấp danh sách ảnh toàn cảnh và cấu hình YOLO chuẩn:
+   - **Luồng Phát hiện Toàn cảnh (Object Detection - Dùng cho YOLOv8):** Cung cấp danh sách ảnh và cấu hình YOLO chuẩn:
      * `data/global_splits/yolo_train.txt`
      * `data/global_splits/yolo_val.txt`
      * `data/global_splits/yolo_test.txt`
@@ -61,6 +63,7 @@ python global_data_split.py
 ```text
 traffic-sign-classification/
 ├── checkpoints/                        # Trọng số mô hình (.pkl, .pt, .pth) [ĐÃ IGNORE]
+│   └── deep_learning/                  # Lưu best_cnn.pth hoặc best_yolo.pt
 ├── data/                               # Dữ liệu xử lý trung gian
 │   ├── cropped/                        # [TỰ ĐỘNG SINH] Ảnh ROI biển báo cắt sẵn theo nhóm
 │   │   ├── train/
@@ -80,21 +83,19 @@ traffic-sign-classification/
 │   ├── utils/                          # Tiện ích đọc/ghi ảnh Unicode tiếng Việt an toàn
 │   │   ├── __init__.py
 │   │   └── image_io.py
-│   ├── detection/                      # CÁC PHƯƠNG PHÁP NHẬN DẠNG (MỖI NGƯỜI 1 THƯ MỤC)
+│   ├── detection/                      # CÁC PHƯƠNG PHÁP NHẬN DẠNG (2 THÀNH VIÊN)
 │   │   ├── __init__.py
 │   │   ├── base_detector.py            # [RULE] Lớp trừu tượng chuẩn hóa Interface
-│   │   ├── color_hog_svm/              # 👉 Thành viên 1 (Truyền thống: HSV + Morphology + HOG + SVM)
+│   │   ├── color_hog_svm/              # 👉 THÀNH VIÊN 1 (HSV + Morphology + HOG + SVM)
 │   │   │   ├── __init__.py
 │   │   │   ├── detector.py             # Kế thừa BaseDetector
-│   │   │   └── train.py                # Script train theo Global Split
-│   │   ├── model_2/                    # 👉 Thành viên 2 (Deep Learning: Custom CNN / LeNet)
-│   │   │   ├── __init__.py
-│   │   │   ├── detector.py             # Kế thừa BaseDetector
-│   │   │   └── train.py                # Script train theo Global Split
-│   │   └── model_3/                    # 👉 Thành viên 3 (Object Detection: YOLO / MobileNet)
+│   │   │   └── train.py                # Script train SVM
+│   │   └── deep_learning/              # 👉 THÀNH VIÊN 2 (TÙY CHỌN: CNN HOẶC YOLO)
 │   │       ├── __init__.py
-│   │       ├── detector.py             # Kế thừa BaseDetector
-│   │       └── train.py                # Script train theo Global Split
+│   │       ├── detector.py             # Kế thừa BaseDetector (hỗ trợ cả checkpoint CNN & YOLO)
+│   │       ├── train_cnn.py            # Template huấn luyện Custom CNN (PyTorch) trên data/cropped
+│   │       ├── train_yolo.py           # Template huấn luyện YOLOv8 trên traffic_signs_4cls.yaml
+│   │       └── train.py                # Entrypoint thống nhất (chọn --arch cnn hoặc --arch yolo)
 │   └── evaluation/                     # BỘ ĐÁNH GIÁ CHUNG (BENCHMARKING ENGINE)
 │       ├── __init__.py
 │       ├── eval_metrics.py             # Tính Accuracy, Precision, Recall, F1, Latency, FPS, Leaderboard
@@ -108,18 +109,21 @@ traffic-sign-classification/
 
 ---
 
-## 📜 3. QUY TẮC LÀM VIỆC NHÓM (TEAM RULES & CONTRIBUTION)
+## 📜 3. QUY TẮC LÀM VIỆC NHÓM 2 NGƯỜI (TEAM RULES)
 
-1. **Quy tắc Git Branching:**
+1. **Phân chia trách nhiệm:**
+   - **Thành viên 1:** Phụ trách thư mục `src/detection/color_hog_svm/` (Lọc màu HSV, trích xuất đặc trưng HOG, mô hình SVM).
+   - **Thành viên 2:** Phụ trách thư mục `src/detection/deep_learning/` (Tự do lựa chọn mạng CNN hoặc YOLOv8).
+
+2. **Quy tắc Git Branching:**
    - **Nhánh `main`:** Chỉ lưu trữ **Bộ khung chuẩn (Base Skeleton)** và các phiên bản Release ổn định.
    - **Nhánh `dev`:** Nhánh tích hợp chung.
    - Mỗi thành viên tạo nhánh tính năng riêng từ `dev`:
-     * Thành viên 1: `git checkout -b feature/model-1-hog-svm`
-     * Thành viên 2: `git checkout -b feature/model-2-cnn`
-     * Thành viên 3: `git checkout -b feature/model-3-yolo`
+     * Thành viên 1: `git checkout -b feature/tv1-color-hog-svm`
+     * Thành viên 2: `git checkout -b feature/tv2-deep-learning`
    - Khi hoàn thành, tạo Pull Request (PR) merge vào `dev`.
 
-2. **Quy tắc Interface (Bắt buộc):**
+3. **Quy tắc Interface (Bắt buộc):**
    - Mọi detector tại `src/detection/<tên_model>/detector.py` **bắt buộc phải kế thừa class `BaseDetector`** từ `src/detection/base_detector.py`.
    - Kết quả trả về của hàm `postprocess()` bắt buộc phải tuân theo cấu trúc dict:
      ```python
@@ -130,9 +134,6 @@ traffic-sign-classification/
          "bbox": tuple | None     # (x1, y1, x2, y2) nếu có
      }
      ```
-
-3. **Quy tắc Dữ liệu & Checkpoints:**
-   - **Tuyệt đối không push** `dataset/images/`, `dataset/labels/`, `data/cropped/` và các file trọng số `.pkl`, `.pt`, `.pth` lên GitHub (đã được cấu hình tự động trong `.gitignore`).
 
 ---
 
@@ -157,26 +158,31 @@ python global_data_split.py
 > Lệnh này sẽ tự động phân chia 70/15/15 và cắt các ROI biển báo lưu vào `data/cropped/`, đồng thời xuất các file danh sách split trong `data/global_splits/`.
 
 ### Bước 3: Huấn luyện từng mô hình
-Mỗi thành viên thực hiện huấn luyện mô hình của mình độc lập:
+
+#### 👤 Thành viên 1 (Phương pháp truyền thống: HOG + SVM):
 ```bash
-# Thành viên 1 (HOG + SVM):
 python -m src.detection.color_hog_svm.train
+```
 
-# Thành viên 2 (Custom CNN / LeNet):
-python -m src.detection.model_2.train
+#### 👤 Thành viên 2 (Phương pháp Deep Learning - Tùy chọn CNN hoặc YOLO):
+```bash
+# Lựa chọn A: Huấn luyện Custom CNN trên tập ROI cắt sẵn (data/cropped/)
+python -m src.detection.deep_learning.train --arch cnn --epochs 20
 
-# Thành viên 3 (YOLO / MobileNet):
-python -m src.detection.model_3.train
+# Lựa chọn B: Huấn luyện YOLOv8 phát hiện toàn cảnh (data/traffic_signs_4cls.yaml)
+python -m src.detection.deep_learning.train --arch yolo --epochs 25
 ```
 
 ### Bước 4: Chạy Đánh giá So sánh (Benchmarking) & Demo qua `app.py`
 ```bash
-# 1. Chạy Benchmark so sánh toàn bộ các mô hình trên tập Test:
+# 1. Chạy Benchmark so sánh 2 mô hình trên tập Test:
 python app.py --mode evaluate --split test
 
 # 2. Chạy đánh giá 1 mô hình cụ thể trên tập Val:
 python app.py --mode evaluate --model color_hog_svm --split val
+python app.py --mode evaluate --model deep_learning --split val
 
 # 3. Chạy thử nghiệm Demo 1 mô hình trên 1 ảnh bất kỳ:
 python app.py --mode demo --model color_hog_svm --input dataset/images/0001.jpg
+python app.py --mode demo --model deep_learning --input dataset/images/0001.jpg
 ```

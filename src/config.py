@@ -118,12 +118,11 @@ SPLIT_RATIOS = {
 RANDOM_SEED = 42
 
 # ==============================================================================
-# 4. DANH SÁCH MÔ HÌNH BENCHMARK
+# 4. DANH SÁCH MÔ HÌNH BENCHMARK (2 THÀNH VIÊN)
 # ==============================================================================
 SUPPORTED_MODELS = [
     "color_hog_svm",  # Phương pháp 1 (Thành viên 1): Lọc màu HSV + Morphology + HOG + SVM
-    "model_2",        # Phương pháp 2 (Thành viên 2): Deep Learning / CNN (VD: LeNet / ResNet)
-    "model_3",        # Phương pháp 3 (Thành viên 3): Object Detection (VD: YOLOv8 / MobileNet)
+    "deep_learning",  # Phương pháp 2 (Thành viên 2): Deep Learning (Tùy chọn Custom CNN hoặc YOLO)
 ]
 
 # Kích thước ảnh chuẩn hóa cho việc trích xuất đặc trưng phân loại
