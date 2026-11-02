@@ -11,13 +11,26 @@ Hướng dẫn sử dụng:
     python app.py --mode evaluate --model color_hog_svm --split val
 
 3. Chạy Demo thử nghiệm 1 mô hình trên ảnh bất kỳ:
-    python app.py --mode demo --model color_hog_svm --input path/to/image.png
+    python app.py --mode demo --model color_hog_svm --input dataset/images/0001.jpg
 ================================================================================
 """
 
 import argparse
 import sys
 from pathlib import Path
+
+# UTF-8 stdout/stderr fix cho Windows
+if sys.platform == "win32":
+    if hasattr(sys.stdout, "reconfigure"):
+        try:
+            sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+        except Exception:
+            pass
+    if hasattr(sys.stderr, "reconfigure"):
+        try:
+            sys.stderr.reconfigure(encoding="utf-8", errors="replace")
+        except Exception:
+            pass
 
 # Đảm bảo đường dẫn gốc được nhận diện
 PROJECT_ROOT = Path(__file__).resolve().parent
@@ -54,6 +67,12 @@ def get_detector(model_name: str):
 def run_evaluation(model_name: str = None, split_name: str = "test"):
     """Chế độ Đánh giá & So sánh (Evaluation / Benchmark Mode)."""
     split_file = TEST_SPLIT_FILE if split_name.lower() == "test" else VAL_SPLIT_FILE
+
+    if not split_file.exists():
+        print(f"[-] [LỖI] Không tìm thấy file split: {split_file}")
+        print("[!] Vui lòng chạy lệnh sau để khởi tạo dữ liệu trước:")
+        print("    python global_data_split.py")
+        return
 
     if model_name:
         # Đánh giá 1 model duy nhất
@@ -92,13 +111,23 @@ def run_demo(model_name: str, input_path: str):
 
     detector = get_detector(model_name)
     print(f"\n🚀 Khởi chạy Demo với mô hình: [{model_name}]...")
-    res = detector.predict(img)
+    try:
+        res = detector.predict(img)
+    except NotImplementedError:
+        print(f"[!] Mô hình [{model_name}] chưa được triển khai hoàn thiện (đang là skeleton).")
+        print(f"    Thành viên phụ trách cần hoàn thành hàm preprocess, inference, postprocess trong thư mục src/detection/{model_name}/.")
+        return
+    except Exception as e:
+        print(f"[-] Lỗi trong quá trình suy luận mô hình [{model_name}]: {e}")
+        return
 
     print("=" * 50)
     print("🎯 KẾT QUẢ DỰ ĐOÁN:")
-    print(f"  • Nhãn dự đoán   : {res['class_name']} (Class ID: {res['class_id']})")
-    print(f"  • Độ tin cậy     : {res['confidence'] * 100:.2f}%")
-    print(f"  • Thời gian xử lý: {res['inference_time'] * 1000:.2f} ms ({res['fps']:.1f} FPS)")
+    print(f"  • Nhãn dự đoán   : {res.get('class_name', 'Unknown')} (Class ID: {res.get('class_id', -1)})")
+    print(f"  • Độ tin cậy     : {res.get('confidence', 0.0) * 100:.2f}%")
+    print(f"  • Thời gian xử lý: {res.get('inference_time', 0.0) * 1000:.2f} ms ({res.get('fps', 0.0):.1f} FPS)")
+    if res.get("bbox") is not None:
+        print(f"  • Bounding box   : {res.get('bbox')}")
     print("=" * 50)
 
 

@@ -36,7 +36,7 @@ def plot_benchmark_comparison(df_leaderboard: pd.DataFrame, save_path: Path = No
     ax1.set_ylim(0, 105)
 
     # Biểu đồ 2: Tốc độ suy luận (FPS)
-    sns.barplot(data=df_leaderboard, x="Phương Pháp / Model", y="Tốc độ (FPS)", ax=ax2, palette="magma")
+    sns.barplot(data=df_leaderboard, x="Phương Pháp / Model", y="Tốc độ (FPS)", ax=ax2, hue="Phương Pháp / Model", palette="magma", legend=False)
     ax2.set_title("So sánh Tốc độ Xử lý (Frames Per Second - FPS)", fontsize=12, fontweight="bold")
 
     plt.tight_layout()

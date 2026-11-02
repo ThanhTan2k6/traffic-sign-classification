@@ -1,0 +1,12 @@
+# Cấu hình dữ liệu YOLOv8 / YOLOv11 cho bài toán Nhận dạng Biển báo (4 nhóm QCVN 41:2019)
+path: D:/HocKy5/thigiacmaytinh/traffic-sign-classification
+train: data/global_splits/yolo_train.txt
+val: data/global_splits/yolo_val.txt
+test: data/global_splits/yolo_test.txt
+
+nc: 4
+names:
+  0: Bien_Cam
+  1: Bien_Nguy_Hiem
+  2: Bien_Hieu_Lenh
+  3: Bien_Chi_Dan

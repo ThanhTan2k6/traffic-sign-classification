@@ -39,11 +39,14 @@ venv.bak/
 *.sublime-workspace
 
 # Dataset & Data outputs (Chặn toàn bộ dữ liệu ảnh nặng)
+dataset/images/
+dataset/labels/
 dataset_cropped_for_lenet/
 data/raw/
 data/cleaned/
 data/augmented/
 data/rois/
+data/cropped/
 *.zip
 *.tar.gz
 *.rar
