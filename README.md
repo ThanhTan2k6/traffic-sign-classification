@@ -109,19 +109,73 @@ traffic-sign-classification/
 
 ---
 
-## 📜 3. QUY TẮC LÀM VIỆC NHÓM 2 NGƯỜI (TEAM RULES)
+## 🔬 3. ĐẶC TẢ KỸ THUẬT CHI TIẾT 2 PHƯƠNG PHÁP (METHODOLOGY SPECIFICATIONS)
+
+### 👤 THÀNH VIÊN 1: Phương Pháp Truyền Thống (`color_hog_svm`)
+* **Thư mục làm việc:** `src/detection/color_hog_svm/`
+* **File chính:**
+  * `detector.py`: Kế thừa `BaseDetector`, triển khai `preprocess()`, `inference()`, `postprocess()`.
+  * `train.py`: Huấn luyện mô hình SVM và xuất checkpoint `checkpoints/color_hog_svm/best_svm.pkl`.
+* **Pipeline kỹ thuật 4 bước:**
+  1. **Tiền xử lý (Preprocessing):** Nhận ảnh ROI biển báo kích thước $64 \times 64$, chuyển sang ảnh xám (`GRAY`) hoặc không gian màu `HSV`, cân bằng lược đồ sáng bằng `cv2.equalizeHist` hoặc CLAHE để triệt tiêu ảnh hưởng của bóng râm.
+  2. **Trích xuất đặc trưng HOG (Feature Extraction):** Sử dụng `skimage.feature.hog` để nắm bắt đặc trưng biên cạnh hình học (đường viền tròn của biển cấm/hiệu lệnh, tam giác của biển nguy hiểm, góc vuông của biển chỉ dẫn). Trả về vector đặc trưng 1 chiều.
+  3. **Huấn luyện phân loại (SVM Classifier):** Sử dụng `sklearn.svm.SVC` (kernel `rbf` hoặc `linear`), tinh chỉnh siêu tham số $C$ (mức phạt lỗi) và $\gamma$ (phạm vi ảnh hưởng).
+  4. **Hậu xử lý (Postprocessing):** Trả về dict chuẩn hóa: `{"class_name": ..., "class_id": ..., "confidence": ..., "bbox": None}`.
+
+---
+
+### 👤 THÀNH VIÊN 2: Phương Pháp Deep Learning (`deep_learning`)
+Thành viên 2 linh hoạt lựa chọn 1 trong 2 hướng tiếp cận sau:
+
+#### 🔹 Lựa chọn A: Mạng Nơ-ron Tích Chập (Custom CNN / LeNet)
+* **Thư mục làm việc:** `src/detection/deep_learning/` (sử dụng `train_cnn.py` và `detector.py`)
+* **Dữ liệu đầu vào:** Tập ảnh ROI đã cắt sẵn trong `data/cropped/train/` và `val/`.
+* **Kiến trúc mạng:**
+  * **Feature Extractor:** 3 khối Convolution: `Conv2d(3, 32)` $\to$ `BatchNorm` $\to$ `ReLU` $\to$ `MaxPool2d(2, 2)` $\to$ `Conv2d(32, 64)` $\to$ `BatchNorm` $\to$ `ReLU` $\to$ `MaxPool2d(2, 2)` $\to$ `Conv2d(64, 128)` $\to$ `BatchNorm` $\to$ `ReLU` $\to$ `MaxPool2d(2, 2)`.
+  * **Classifier Head:** `Dropout(0.3)` $\to$ `Linear(128*8*8, 256)` $\to$ `ReLU` $\to$ `Dropout(0.3)` $\to$ `Linear(256, 4)`.
+* **Huấn luyện:** Loss function `CrossEntropyLoss`, Optimizer `Adam(lr=0.001)`. Tự động lưu checkpoint tốt nhất vào `checkpoints/deep_learning/best_cnn.pth`.
+
+#### 🔹 Lựa chọn B: Mô hình Phát hiện Đối tượng End-to-End (YOLOv8)
+* **Thư mục làm việc:** `src/detection/deep_learning/` (sử dụng `train_yolo.py` và `detector.py`)
+* **Dữ liệu đầu vào:** Toàn cảnh ảnh đường phố qua file cấu hình `data/traffic_signs_4cls.yaml`.
+* **Cơ chế hoạt động:** Sử dụng mạng `yolov8n.pt` (hoặc `yolov8s.pt`) từ thư viện `ultralytics` để vừa xác định Bounding Box vừa phân loại 4 nhóm biển báo trong 1 bước duy nhất.
+* **Huấn luyện:** Tự động huấn luyện qua 25 epochs và sao chép trọng số tốt nhất về `checkpoints/deep_learning/best_yolo.pt`.
+
+---
+
+## 📜 4. QUY TRÌNH LÀM VIỆC NHÓM & GIT WORKFLOW
+
+```mermaid
+gitGraph
+   commit id: "Base Skeleton (main)"
+   branch dev
+   checkout dev
+   commit id: "Init dev"
+   branch feature/tv1-color-hog-svm
+   checkout feature/tv1-color-hog-svm
+   commit id: "TV1: Code HOG + SVM"
+   checkout dev
+   branch feature/tv2-deep-learning
+   checkout feature/tv2-deep-learning
+   commit id: "TV2: Code CNN / YOLO"
+   checkout dev
+   merge feature/tv1-color-hog-svm id: "PR: Merge TV1 to dev"
+   merge feature/tv2-deep-learning id: "PR: Merge TV2 to dev"
+   checkout main
+   merge dev id: "Release Final (Chấm điểm)"
+```
 
 1. **Phân chia trách nhiệm:**
-   - **Thành viên 1:** Phụ trách thư mục `src/detection/color_hog_svm/` (Lọc màu HSV, trích xuất đặc trưng HOG, mô hình SVM).
-   - **Thành viên 2:** Phụ trách thư mục `src/detection/deep_learning/` (Tự do lựa chọn mạng CNN hoặc YOLOv8).
+   - **Thành viên 1:** Phụ trách `src/detection/color_hog_svm/`.
+   - **Thành viên 2:** Phụ trách `src/detection/deep_learning/`.
 
 2. **Quy tắc Git Branching:**
-   - **Nhánh `main`:** Chỉ lưu trữ **Bộ khung chuẩn (Base Skeleton)** và các phiên bản Release ổn định.
-   - **Nhánh `dev`:** Nhánh tích hợp chung.
+   - **Nhánh `main`:** Chỉ lưu trữ **Bộ khung chuẩn (Base Skeleton)** và các phiên bản Release ổn định cuối kỳ.
+   - **Nhánh `dev`:** Nhánh tích hợp chung của nhóm.
    - Mỗi thành viên tạo nhánh tính năng riêng từ `dev`:
      * Thành viên 1: `git checkout -b feature/tv1-color-hog-svm`
      * Thành viên 2: `git checkout -b feature/tv2-deep-learning`
-   - Khi hoàn thành, tạo Pull Request (PR) merge vào `dev`.
+   - Khi hoàn thành và test xong trên máy cục bộ, tạo Pull Request (PR) merge vào `dev`.
 
 3. **Quy tắc Interface (Bắt buộc):**
    - Mọi detector tại `src/detection/<tên_model>/detector.py` **bắt buộc phải kế thừa class `BaseDetector`** từ `src/detection/base_detector.py`.
@@ -135,9 +189,12 @@ traffic-sign-classification/
      }
      ```
 
+4. **Quy tắc Dữ liệu:**
+   - Tuyệt đối không commit ảnh `dataset/images/`, `dataset/labels/` hay `data/cropped/` lên GitHub (đã được cấu hình tự động chặn trong `.gitignore`).
+
 ---
 
-## ⚙️ 4. HƯỚNG DẪN CÀI ĐẶT & SỬ DỤNG
+## ⚙️ 5. HƯỚNG DẪN CÀI ĐẶT & THỰC THI (STEP-BY-STEP QUICKSTART)
 
 ### Bước 1: Khởi tạo môi trường ảo & Cài đặt thư viện
 ```bash
