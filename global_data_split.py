@@ -146,7 +146,7 @@ def split_dataset_stratified(image_items, seed=RANDOM_SEED):
     return train_set, val_set, test_set
 
 
-def create_global_splits(do_crop: bool = True, min_box_size: int = 10):
+def create_global_splits(do_crop: bool = True, min_box_size: int = 10, seed: int = RANDOM_SEED):
     print("=" * 70)
     print("🌍 KHỞI TẠO GLOBAL DATA SPLIT CHO HỆ THỐNG BENCHMARK (QCVN 41:2019)")
     print("=" * 70)
@@ -198,7 +198,7 @@ def create_global_splits(do_crop: bool = True, min_box_size: int = 10):
     print(f"[*] Tổng số bounding boxes hợp lệ (sau khi lọc bỏ biển phụ & nhiễu): {total_valid_boxes} boxes")
 
     # 2. Phân chia Train / Val / Test cố định (Image-level split)
-    train_items, val_items, test_items = split_dataset_stratified(image_items)
+    train_items, val_items, test_items = split_dataset_stratified(image_items, seed=seed)
     print(f"\n[*] Phân chia ở cấp độ ảnh (Zero Data Leakage):")
     print(f"    • Tập Train : {len(train_items)} ảnh ({len(train_items)/len(image_items)*100:.1f}%)")
     print(f"    • Tập Val   : {len(val_items)} ảnh ({len(val_items)/len(image_items)*100:.1f}%)")
@@ -236,19 +236,26 @@ def create_global_splits(do_crop: bool = True, min_box_size: int = 10):
 
             for idx, box in enumerate(item["boxes"]):
                 cat = box["category"]
-                cat_counter[cat] += 1
                 crop_rel_name = f"{item['stem']}_{idx:02d}.jpg"
                 crop_save_rel = f"{split_name}/{cat}/{crop_rel_name}"
 
-                if do_crop and img is not None:
-                    x1, y1, x2, y2 = box["bbox_pixel"]
-                    crop = img[y1:y2, x1:x2]
-                    if crop.size > 0:
-                        save_dest = CROPPED_DATA_DIR / crop_save_rel
-                        imwrite_unicode(save_dest, crop)
+                crop_success = True
+                if do_crop:
+                    if img is None:
+                        crop_success = False
+                    else:
+                        x1, y1, x2, y2 = box["bbox_pixel"]
+                        crop = img[y1:y2, x1:x2]
+                        if crop.size > 0:
+                            save_dest = CROPPED_DATA_DIR / crop_save_rel
+                            crop_success = imwrite_unicode(save_dest, crop)
+                        else:
+                            crop_success = False
 
-                # Format file split: relative_path \t category \t class_name_52
-                cls_records.append(f"{crop_save_rel}\t{cat}\t{box['class_name_52']}")
+                if crop_success:
+                    cat_counter[cat] += 1
+                    # Format file split: relative_path \t category \t class_name_52
+                    cls_records.append(f"{crop_save_rel}\t{cat}\t{box['class_name_52']}")
 
         # Ghi file split phân loại
         with open(cls_split_file, "w", encoding="utf-8") as f:
@@ -296,7 +303,7 @@ def main():
     parser.add_argument("--seed", type=int, default=RANDOM_SEED, help=f"Random seed (mặc định: {RANDOM_SEED})")
 
     args = parser.parse_args()
-    create_global_splits(do_crop=args.crop, min_box_size=args.min_size)
+    create_global_splits(do_crop=args.crop, min_box_size=args.min_size, seed=args.seed)
 
 
 if __name__ == "__main__":

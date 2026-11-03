@@ -48,14 +48,14 @@ class BaseDetector(ABC):
         """
         pass
 
-    def predict(self, image: np.ndarray) -> Dict[str, Any]:
+    def predict(self, image: np.ndarray, **kwargs) -> Dict[str, Any]:
         """
         Luồng dự đoán chuẩn mực kết hợp đo thời gian suy luận (Inference Time):
         preprocess -> inference -> postprocess
         """
         start_time = time.perf_counter()
 
-        preprocessed = self.preprocess(image)
+        preprocessed = self.preprocess(image, **kwargs)
         raw_output = self.inference(preprocessed)
         result = self.postprocess(raw_output)
 

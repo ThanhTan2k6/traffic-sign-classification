@@ -90,6 +90,11 @@ def load_dataset_info():
                 xc, yc, bw, bh = map(float, parts[1:5])
                 pixel_w = bw * w
                 pixel_h = bh * h
+
+                # Lọc bỏ bounding box nhiễu dưới 10px đồng bộ với pipeline split
+                if pixel_w < 10 or pixel_h < 10:
+                    continue
+
                 box_records.append({
                     "image": img_p.name,
                     "class_id_52": cid,
@@ -109,12 +114,12 @@ def load_dataset_info():
 
 def plot_class_distribution(df_boxes):
     """Biểu đồ 1: Phân bố số lượng và tỷ lệ của 4 nhóm biển báo chính."""
-    cat_counts = df_boxes["category"].value_counts()[TARGET_CLASSES]
+    cat_counts = df_boxes["category"].value_counts().reindex(TARGET_CLASSES, fill_value=0)
     total = len(df_boxes)
     df_cat = pd.DataFrame({
         "Nhóm Biển Báo": TARGET_CLASSES,
-        "Số Lượng": [cat_counts[c] for c in TARGET_CLASSES],
-        "Tỷ Lệ (%)": [round(cat_counts[c] / total * 100, 2) for c in TARGET_CLASSES],
+        "Số Lượng": [int(cat_counts[c]) for c in TARGET_CLASSES],
+        "Tỷ Lệ (%)": [round(float(cat_counts[c]) / total * 100, 2) if total > 0 else 0.0 for c in TARGET_CLASSES],
     })
 
     fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(14, 5))

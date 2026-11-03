@@ -62,22 +62,23 @@ class DeepLearningDetector(BaseDetector):
                 from src.detection.deep_learning.lenet_model import EnhancedLeNet
 
                 self.device = "cuda" if torch.cuda.is_available() else "cpu"
-                self.model = EnhancedLeNet(num_classes=len(TARGET_CLASSES))
+                model = EnhancedLeNet(num_classes=len(TARGET_CLASSES))
 
-                checkpoint = torch.load(checkpoint_path, map_location=self.device, weights_only=False)
+                checkpoint = torch.load(checkpoint_path, map_location=self.device, weights_only=True)
                 if isinstance(checkpoint, dict) and "model_state_dict" in checkpoint:
-                    self.model.load_state_dict(checkpoint["model_state_dict"])
+                    model.load_state_dict(checkpoint["model_state_dict"])
                     val_acc = checkpoint.get("val_acc", 0.0)
                     print(f"[+] [DeepLearning] Đã nạp Enhanced LeNet (Val Acc: {val_acc*100:.2f}%) từ: {checkpoint_path}")
                 else:
-                    self.model.load_state_dict(checkpoint)
+                    model.load_state_dict(checkpoint)
                     print(f"[+] [DeepLearning] Đã nạp Enhanced LeNet từ: {checkpoint_path}")
 
-                self.model.to(self.device).eval()
+                self.model = model.to(self.device).eval()
                 self.arch_type = "cnn"
                 return
             except Exception as e:
                 print(f"[-] Lỗi nạp checkpoint CNN: {e}")
+                self.model = None
 
         # 2. Trường hợp nạp mô hình YOLOv8/v11
         if "yolo" in ckpt_path.name.lower():

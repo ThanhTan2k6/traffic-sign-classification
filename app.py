@@ -10,8 +10,8 @@ Hướng dẫn sử dụng:
 2. Chạy đánh giá 1 mô hình cụ thể:
     python app.py --mode evaluate --model color_hog_svm --split val
 
-3. Chạy Demo thử nghiệm 1 mô hình trên ảnh bất kỳ:
-    python app.py --mode demo --model color_hog_svm --input dataset/images/0001.jpg
+3. Chạy Demo thử nghiệm 1 mô hình trên ảnh ROI biển báo (hoặc ảnh toàn cảnh):
+    python app.py --mode demo --model color_hog_svm --input data/cropped/test/Bien_Cam/0002_00.jpg
 ================================================================================
 """
 
@@ -93,7 +93,7 @@ def run_evaluation(model_name: str = None, split_name: str = "test"):
             plot_benchmark_comparison(df_leaderboard)
 
 
-def run_demo(model_name: str, input_path: str):
+def run_demo(model_name: str, input_path: str, is_scene: bool = False):
     """Chế độ Demo kiểm tra trên 1 ảnh đầu vào."""
     path = Path(input_path)
     if not path.exists():
@@ -106,9 +106,15 @@ def run_demo(model_name: str, input_path: str):
         return
 
     detector = get_detector(model_name)
-    print(f"\n🚀 Khởi chạy Demo với mô hình: [{model_name}]...")
+    print(f"\n🚀 Khởi chạy Demo với mô hình: [{model_name}] (Chế độ: {'Toàn cảnh đường phố' if is_scene else 'ROI Biển báo'})...")
     try:
-        res = detector.predict(img)
+        # Nếu chọn chế độ toàn cảnh (scene mode), định tuyến qua luồng phát hiện + phân loại
+        if is_scene and hasattr(detector, "predict_scene"):
+            res = detector.predict_scene(img)
+        elif is_scene and "is_roi" in detector.predict.__code__.co_varnames:
+            res = detector.predict(img, is_roi=False)
+        else:
+            res = detector.predict(img)
     except NotImplementedError:
         print(f"[!] Mô hình [{model_name}] chưa được triển khai hoàn thiện (đang là skeleton).")
         print(f"    Thành viên phụ trách cần hoàn thành hàm preprocess, inference, postprocess trong thư mục src/detection/{model_name}/.")
@@ -156,6 +162,17 @@ def main():
         default=None,
         help="Đường dẫn file ảnh đầu vào (dùng trong chế độ demo)",
     )
+    parser.add_argument(
+        "--scene",
+        action="store_true",
+        help="Chỉ định ảnh đầu vào là ảnh toàn cảnh đường phố (tự động phát hiện và cắt ROI biển báo)",
+    )
+    parser.add_argument(
+        "--roi",
+        action="store_true",
+        default=True,
+        help="Chỉ định ảnh đầu vào là ảnh ROI biển báo cắt sẵn (mặc định)",
+    )
 
     args = parser.parse_args()
 
@@ -166,9 +183,10 @@ def main():
             print("[-] Vui lòng chỉ định mô hình bằng tham số --model khi chạy demo!")
             return
         if not args.input:
-            print("[-] Vui lòng chỉ định file ảnh đầu vào bằng tham số --input!")
+            print("[-] Vui lòng cung cấp đường dẫn ảnh bằng tham số --input khi chạy demo!")
             return
-        run_demo(model_name=args.model, input_path=args.input)
+        is_scene = args.scene
+        run_demo(model_name=args.model, input_path=args.input, is_scene=is_scene)
 
 
 if __name__ == "__main__":
