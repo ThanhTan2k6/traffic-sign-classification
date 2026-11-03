@@ -93,7 +93,7 @@ class DeepLearningDetector(BaseDetector):
             except Exception as e:
                 print(f"[-] Lỗi nạp checkpoint YOLO: {e}")
 
-    def preprocess(self, image: np.ndarray) -> Any:
+    def preprocess(self, image: np.ndarray, **kwargs) -> Any:
         """
         Tiền xử lý ảnh đầu vào BGR.
         Với LeNet: Resize về IMAGE_SIZE (64x64), chuẩn hóa ImageNet, chuyển đổi Tensor.

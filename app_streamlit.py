@@ -143,10 +143,11 @@ def main():
                     st.image(annotated_rgb, caption="Vùng biển báo phát hiện được", use_container_width=True)
 
     # -------------------------------------------------------------
-    # TAB 2: BẢNG XẾP HẠNG BENCHMARK
+    # TAB 2: BẢNG XẾP HẠNG BENCHMARK (2 TẦNG ĐÁNH GIÁ)
     # -------------------------------------------------------------
     with tab2:
-        st.subheader("Bảng Xếp Hạng Kết Quả Đánh Giá Trên Tập Test Độc Lập (1.136 Mẫu)")
+        st.subheader("🥇 Tầng 1: Đánh Giá Phân Loại Thuần Túy Trên Ảnh Cắt Sẵn (ROI - 1.136 Mẫu)")
+        st.caption("Đánh giá độc lập năng lực của 2 thuật toán trên tập Blind Test cắt sẵn theo chuẩn quốc tế.")
 
         leaderboard_data = {
             "Phương Pháp / Model": ["Enhanced LeNet-5 (Deep Learning)", "Color HOG + SVM (Truyền thống)"],
@@ -163,7 +164,7 @@ def main():
 
         benchmark_img = RESULTS_DIR / "benchmark_comparison.png"
         if benchmark_img.exists():
-            st.image(str(benchmark_img), caption="Biểu đồ so sánh đa chiều giữa 2 mô hình", use_container_width=True)
+            st.image(str(benchmark_img), caption="Biểu đồ so sánh phân loại đa chiều giữa 2 mô hình", use_container_width=True)
 
         col_cm1, col_cm2 = st.columns(2)
         with col_cm1:
@@ -174,6 +175,26 @@ def main():
             cm_svm = RESULTS_DIR / "confusion_matrix_color_hog_svm.png"
             if cm_svm.exists():
                 st.image(str(cm_svm), caption="Confusion Matrix: Color HOG + SVM", use_container_width=True)
+
+        st.markdown("---")
+        st.subheader("🥈 Tầng 2: Đánh Giá Toàn Trình Trên Ảnh Chụp Đường Phố Toàn Cảnh (End-to-End Scene)")
+        st.caption("Đánh giá pipeline hoàn chỉnh gồm: Định vị vùng ứng viên (HSV Detection) + Phân loại (Classification) trên ảnh toàn cảnh chưa qua cắt.")
+
+        scene_data = {
+            "Phương Pháp / Pipeline": ["Two-Stage LeNet (Thành viên 2)", "Two-Stage SVM (Thành viên 1)"],
+            "Tỷ Lệ Định Vị (%)": [32.37, 30.94],
+            "Đoán Đúng Khi Tìm Thấy (%)": [91.11, 93.02],
+            "E2E Precision (%)": [3.16, 2.97],
+            "E2E Recall (%)": [29.50, 28.78],
+            "Độ Trễ Toàn Trình (ms)": [41.35, 67.72],
+            "Tốc Độ Toàn Trình (FPS)": [24.2, 14.8],
+        }
+        df_scene = pd.DataFrame(scene_data)
+        st.dataframe(df_scene, use_container_width=True)
+
+        scene_img = RESULTS_DIR / "scene_benchmark_comparison.png"
+        if scene_img.exists():
+            st.image(str(scene_img), caption="Biểu đồ đối chuẩn trên ảnh toàn cảnh đường phố", use_container_width=True)
 
     # -------------------------------------------------------------
     # TAB 3: PHÂN TÍCH DỮ LIỆU EDA

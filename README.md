@@ -232,27 +232,31 @@ python -m src.detection.deep_learning.train --arch yolo --epochs 25
 
 ### Bước 4: Chạy Đánh giá So sánh (Benchmarking) & Demo qua `app.py`
 ```bash
-# 1. Chạy Benchmark so sánh 2 mô hình trên tập Test:
+# 1. Chạy Benchmark phân loại (Classification) trên tập Test ROI:
 python app.py --mode evaluate --split test
 
-# 2. Chạy đánh giá 1 mô hình cụ thể trên tập Val:
+# 2. Chạy Benchmark toàn trình (Detection + Classification) trên ảnh toàn cảnh:
+python app.py --mode evaluate-scene --split test
+
+# 3. Chạy đánh giá 1 mô hình cụ thể trên tập Val:
 python app.py --mode evaluate --model color_hog_svm --split val
 python app.py --mode evaluate --model deep_learning --split val
 
-# 3. Chạy thử nghiệm Demo qua CLI:
+# 4. Chạy thử nghiệm Demo qua CLI:
 # Chế độ ROI biển báo cắt sẵn:
 python app.py --mode demo --model deep_learning --input data/cropped/test/Bien_Cam/0002_00.jpg
 # Chế độ Toàn cảnh đường phố (Tự động phát hiện qua HSV + Morphology):
 python app.py --mode demo --model color_hog_svm --input dataset/images/0001.jpg --scene
 
-# 4. Khởi chạy Giao diện Web tương tác (Streamlit):
+# 5. Khởi chạy Giao diện Web tương tác (Streamlit):
 streamlit run app_streamlit.py
 ```
 
 ---
 
-## 🏆 6. KẾT QUẢ BENCHMARKING THỰC TẾ (BLIND TEST SET - 1,136 MẪU)
+## 🏆 6. KẾT QUẢ BENCHMARKING THỰC TẾ (2 TẦNG ĐỐI CHUẨN)
 
+### 🥇 Tầng 1: Đánh Giá Năng Lực Phân Loại Trên Ảnh Cắt Sẵn (Blind Test - 1.136 Mẫu)
 Đánh giá độc lập trên tập **Blind Test** ($1,136$ mẫu ROI biển báo chưa từng xuất hiện trong quá trình huấn luyện):
 
 | Mô Hình / Phương Pháp | Thành Viên | Accuracy | Precision | Recall | Macro F1 | Độ Trễ (Latency) | Tốc Độ (FPS) |
@@ -262,3 +266,13 @@ streamlit run app_streamlit.py
 
 *Biểu đồ so sánh trực quan được xuất tự động tại:* `res/outputs/benchmark_comparison.png`  
 *Ma trận nhầm lẫn chi tiết được lưu tại:* `res/outputs/confusion_matrix_deep_learning.png` và `res/outputs/confusion_matrix_color_hog_svm.png`
+
+### 🥈 Tầng 2: Đánh Giá Toàn Trình Trên Ảnh Chụp Đường Phố Toàn Cảnh (End-to-End Scene Benchmark)
+Đánh giá hệ thống Two-Stage hoàn chỉnh (Định vị ứng viên qua HSV + Phân loại mô hình) trên tập ảnh đường phố toàn cảnh $960 \times 540$:
+
+| Phương Pháp / Pipeline | Tỷ Lệ Định Vị (%) | Đoán Đúng Khi Tìm Thấy (%) | E2E Recall (%) | Độ Trễ Toàn Cảnh | Tốc Độ (FPS) |
+| :--- | :---: | :---: | :---: | :---: | :---: |
+| **Two-Stage LeNet (Thành viên 2)** | **32.37%** | **91.11%** | **29.50%** | **41.35 ms** | **24.2 FPS** |
+| **Two-Stage SVM (Thành viên 1)** | **30.94%** | **93.02%** | **28.78%** | **67.72 ms** | **14.8 FPS** |
+
+*Biểu đồ đối chuẩn toàn cảnh được xuất tự động tại:* `res/outputs/scene_benchmark_comparison.png`

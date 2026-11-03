@@ -139,8 +139,8 @@ def main():
         "--mode",
         type=str,
         required=True,
-        choices=["evaluate", "demo"],
-        help="Chế độ chạy: 'evaluate' (đánh giá so sánh) hoặc 'demo' (chạy thử nghiệm ảnh)",
+        choices=["evaluate", "evaluate-scene", "demo"],
+        help="Chế độ chạy: 'evaluate' (benchmark ROI), 'evaluate-scene' (benchmark toàn cảnh), 'demo' (chạy thử nghiệm ảnh)",
     )
     parser.add_argument(
         "--model",
@@ -155,6 +155,12 @@ def main():
         default="test",
         choices=["test", "val"],
         help="Chọn tập dữ liệu để đánh giá: 'test' (mặc định) hoặc 'val'",
+    )
+    parser.add_argument(
+        "--samples",
+        type=int,
+        default=None,
+        help="Số lượng mẫu tối đa khi đánh giá (mặc định: toàn bộ tập)",
     )
     parser.add_argument(
         "--input",
@@ -178,6 +184,9 @@ def main():
 
     if args.mode == "evaluate":
         run_evaluation(model_name=args.model, split_name=args.split)
+    elif args.mode == "evaluate-scene":
+        from src.evaluation.scene_eval import run_scene_benchmark
+        run_scene_benchmark(split_name=args.split, max_samples=args.samples)
     elif args.mode == "demo":
         if not args.model:
             print("[-] Vui lòng chỉ định mô hình bằng tham số --model khi chạy demo!")
