@@ -1,9 +1,8 @@
 """
 ================================================================================
 PHƯƠNG PHÁP 2 (THÀNH VIÊN 2 PHỤ TRÁCH): DEEP LEARNING DETECTOR / CLASSIFIER
-Hỗ trợ linh hoạt tùy chọn giữa 2 kiến trúc theo sở thích của thành viên:
-- Lựa chọn A: Mạng nơ-ron tích chập (Custom CNN / LeNet-5 / MobileNet)
-- Lựa chọn B: Mô hình phát hiện đối tượng End-to-End (YOLOv8 / YOLOv11)
+Kiến trúc chính: Mạng Nơ-ron Tích Chập LeNet-5 Cải Tiến (Enhanced LeNet-5).
+(Đồng thời hỗ trợ linh hoạt nạp checkpoint YOLOv8 nếu có).
 ================================================================================
 """
 
@@ -24,23 +23,22 @@ from src.detection.base_detector import BaseDetector
 
 class DeepLearningDetector(BaseDetector):
     """
-    Lớp suy luận Deep Learning cho Thành viên 2.
+    Lớp suy luận Deep Learning cho Thành viên 2 (Enhanced LeNet / CNN).
     Kế thừa BaseDetector để tương thích 100% với hệ thống Benchmark và App.
     """
 
     def __init__(self, checkpoint_path: Optional[str] = None):
         super().__init__(model_name="deep_learning", checkpoint_path=checkpoint_path)
-        self.arch_type = "unknown"  # 'cnn' hoặc 'yolo'
+        self.arch_type = "unknown"
         self.device = "cpu"
         self.load_model(checkpoint_path)
 
     def load_model(self, checkpoint_path: Optional[str] = None):
         """
         Nạp trọng số mô hình từ tệp checkpoint (.pth, .pt).
-        Tự động nhận diện mô hình CNN (PyTorch) hoặc YOLO (Ultralytics).
+        Tự động ưu tiên nạp mô hình LeNet-5 Cải Tiến (PyTorch).
         """
         if checkpoint_path is None:
-            # Tìm checkpoint mặc định trong thư mục checkpoints/deep_learning/
             default_dir = CHECKPOINTS_DIR / "deep_learning"
             cnn_ckpt = default_dir / "best_cnn.pth"
             yolo_ckpt = default_dir / "best_yolo.pt"
@@ -51,14 +49,37 @@ class DeepLearningDetector(BaseDetector):
                 checkpoint_path = str(yolo_ckpt)
 
         if checkpoint_path is None or not Path(checkpoint_path).exists():
-            # Chưa có checkpoint được train
             self.model = None
             return
 
         self.checkpoint_path = checkpoint_path
         ckpt_path = Path(checkpoint_path)
 
-        # 1. Trường hợp nạp mô hình YOLOv8/v11
+        # 1. Trường hợp nạp mô hình PyTorch CNN (Enhanced LeNet)
+        if ckpt_path.suffix.lower() in [".pth", ".pt"] and "yolo" not in ckpt_path.name.lower():
+            try:
+                import torch
+                from src.detection.deep_learning.lenet_model import EnhancedLeNet
+
+                self.device = "cuda" if torch.cuda.is_available() else "cpu"
+                self.model = EnhancedLeNet(num_classes=len(TARGET_CLASSES))
+
+                checkpoint = torch.load(checkpoint_path, map_location=self.device, weights_only=False)
+                if isinstance(checkpoint, dict) and "model_state_dict" in checkpoint:
+                    self.model.load_state_dict(checkpoint["model_state_dict"])
+                    val_acc = checkpoint.get("val_acc", 0.0)
+                    print(f"[+] [DeepLearning] Đã nạp Enhanced LeNet (Val Acc: {val_acc*100:.2f}%) từ: {checkpoint_path}")
+                else:
+                    self.model.load_state_dict(checkpoint)
+                    print(f"[+] [DeepLearning] Đã nạp Enhanced LeNet từ: {checkpoint_path}")
+
+                self.model.to(self.device).eval()
+                self.arch_type = "cnn"
+                return
+            except Exception as e:
+                print(f"[-] Lỗi nạp checkpoint CNN: {e}")
+
+        # 2. Trường hợp nạp mô hình YOLOv8/v11
         if "yolo" in ckpt_path.name.lower():
             try:
                 from ultralytics import YOLO
@@ -71,46 +92,34 @@ class DeepLearningDetector(BaseDetector):
             except Exception as e:
                 print(f"[-] Lỗi nạp checkpoint YOLO: {e}")
 
-        # 2. Trường hợp nạp mô hình PyTorch CNN
-        try:
-            import torch
-            self.device = "cuda" if torch.cuda.is_available() else "cpu"
-            # TODO: [Thành viên 2] Khởi tạo class kiến trúc mạng CNN và load state_dict
-            # checkpoint = torch.load(checkpoint_path, map_location=self.device)
-            # self.model = CustomCNN(num_classes=len(TARGET_CLASSES))
-            # self.model.load_state_dict(checkpoint['model_state_dict'])
-            # self.model.to(self.device).eval()
-            self.arch_type = "cnn"
-            print(f"[+] [DeepLearning] Đã nhận diện checkpoint CNN: {checkpoint_path}")
-        except Exception as e:
-            print(f"[-] Lỗi nạp checkpoint CNN: {e}")
-
     def preprocess(self, image: np.ndarray) -> Any:
         """
         Tiền xử lý ảnh đầu vào BGR.
-        - Với CNN: Resize về IMAGE_SIZE (64x64), chuẩn hóa [0, 1], chuyển đổi Tensor.
-        - Với YOLO: Đưa thẳng ảnh BGR vào để mô hình tự xử lý letterbox.
+        Với LeNet: Resize về IMAGE_SIZE (64x64), chuẩn hóa ImageNet, chuyển đổi Tensor.
         """
         if self.model is None:
             raise NotImplementedError(
                 "Mô hình Deep Learning chưa được huấn luyện hoặc chưa nạp checkpoint!\n"
-                "-> Thành viên 2 hãy chạy huấn luyện bằng lệnh:\n"
-                "   python -m src.detection.deep_learning.train --arch cnn   (hoặc --arch yolo)"
+                "-> Hãy chạy lệnh huấn luyện Enhanced LeNet:\n"
+                "   python -m src.detection.deep_learning.train --arch cnn --epochs 15"
             )
 
         if self.arch_type == "cnn":
             resized = cv2.resize(image, IMAGE_SIZE)
-            # Chuyển BGR -> RGB và chuẩn hóa
+            # Chuyển BGR sang RGB và chuẩn hóa theo phân phối ImageNet
             rgb = cv2.cvtColor(resized, cv2.COLOR_BGR2RGB).astype(np.float32) / 255.0
-            # Chuyển HWC -> CHW
-            tensor_data = np.transpose(rgb, (2, 0, 1))
+            mean = np.array([0.485, 0.456, 0.406], dtype=np.float32)
+            std = np.array([0.229, 0.224, 0.225], dtype=np.float32)
+            normalized = (rgb - mean) / std
+
+            # Chuyển format HWC -> CHW cho PyTorch
+            tensor_data = np.transpose(normalized, (2, 0, 1))
             return tensor_data
         else:
-            # Với YOLO chỉ cần ảnh numpy BGR
             return image
 
     def inference(self, preprocessed_input: Any) -> Any:
-        """Thực thi suy luận mô hình."""
+        """Thực thi dự đoán mô hình."""
         if self.arch_type == "cnn":
             import torch
             with torch.no_grad():
@@ -146,7 +155,6 @@ class DeepLearningDetector(BaseDetector):
                 "bbox": None,
             }
         elif self.arch_type == "yolo":
-            # Xử lý kết quả từ YOLO Results object
             boxes = raw_output[0].boxes
             if len(boxes) == 0:
                 return {
@@ -155,7 +163,6 @@ class DeepLearningDetector(BaseDetector):
                     "confidence": 0.0,
                     "bbox": None,
                 }
-            # Lấy box có độ tin cậy cao nhất
             best_idx = int(boxes.conf.argmax().cpu().item())
             cls_id = int(boxes.cls[best_idx].cpu().item())
             conf = float(boxes.conf[best_idx].cpu().item())

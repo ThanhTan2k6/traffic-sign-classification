@@ -1,13 +1,14 @@
 """
 ================================================================================
-SCRIPT HUẤN LUYỆN MÔ HÌNH CNN (LỰA CHỌN A CHO THÀNH VIÊN 2)
-Huấn luyện mạng nơ-ron tích chập (Custom CNN / LeNet) trên tập ROI biển báo cắt sẵn.
-Dữ liệu sử dụng: data/cropped/train và data/cropped/val (hoặc train_ids.txt, val_ids.txt)
-Trọng số lưu tại: checkpoints/deep_learning/best_cnn.pth
+SCRIPT HUẤN LUYỆN MÔ HÌNH LENET-5 CẢI TIẾN (THÀNH VIÊN 2)
+Huấn luyện mạng nơ-ron tích chập (Enhanced LeNet) trên tập ROI biển báo cắt sẵn.
+Dữ liệu sử dụng: data/cropped/train và data/cropped/val (tuân thủ Global Split).
+Trọng số tốt nhất được lưu tại: checkpoints/deep_learning/best_cnn.pth
 ================================================================================
 """
 
 import argparse
+import sys
 from pathlib import Path
 import torch
 import torch.nn as nn
@@ -16,6 +17,10 @@ from torch.utils.data import DataLoader, Dataset
 from torchvision import transforms
 from PIL import Image
 from tqdm import tqdm
+
+PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent.parent
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(PROJECT_ROOT))
 
 from src.config import (
     CROPPED_DATA_DIR,
@@ -27,11 +32,13 @@ from src.config import (
     IMAGE_SIZE,
     RANDOM_SEED,
 )
+from src.detection.deep_learning.lenet_model import EnhancedLeNet
 from src.utils import ensure_dir
 
 
-# 1. Định nghĩa Dataset tuân thủ Global Data Split
 class TrafficSignDataset(Dataset):
+    """Dataset nạp ảnh ROI tuân thủ tập Global Data Split."""
+
     def __init__(self, split_file: Path, transform=None):
         self.samples = []
         self.transform = transform
@@ -59,52 +66,23 @@ class TrafficSignDataset(Dataset):
         return image, label
 
 
-# 2. Định nghĩa kiến trúc mạng CNN mẫu
-class TrafficSignCNN(nn.Module):
-    def __init__(self, num_classes=4):
-        super(TrafficSignCNN, self).__init__()
-        self.features = nn.Sequential(
-            nn.Conv2d(3, 32, kernel_size=3, padding=1),
-            nn.BatchNorm2d(32),
-            nn.ReLU(),
-            nn.MaxPool2d(2, 2),  # 64 -> 32
-
-            nn.Conv2d(32, 64, kernel_size=3, padding=1),
-            nn.BatchNorm2d(64),
-            nn.ReLU(),
-            nn.MaxPool2d(2, 2),  # 32 -> 16
-
-            nn.Conv2d(64, 128, kernel_size=3, padding=1),
-            nn.BatchNorm2d(128),
-            nn.ReLU(),
-            nn.MaxPool2d(2, 2),  # 16 -> 8
-        )
-        self.classifier = nn.Sequential(
-            nn.Dropout(0.3),
-            nn.Linear(128 * 8 * 8, 256),
-            nn.ReLU(),
-            nn.Dropout(0.3),
-            nn.Linear(256, num_classes),
-        )
-
-    def forward(self, x):
-        x = self.features(x)
-        x = x.view(x.size(0), -1)
-        x = self.classifier(x)
-        return x
-
-
-def train_cnn(epochs=20, batch_size=32, lr=1e-3):
+def train_cnn(epochs: int = 15, batch_size: int = 64, lr: float = 1e-3):
     print("=" * 65)
-    print("🚀 [THÀNH VIÊN 2] BẮT ĐẦU HUẤN LUYỆN MÔ HÌNH CNN PHÂN LOẠI BIỂN BÁO")
+    print("🚀 [THÀNH VIÊN 2] BẮT ĐẦU HUẤN LUYỆN MẠNG LENET-5 CẢI TIẾN")
     print("=" * 65)
 
+    torch.manual_seed(RANDOM_SEED)
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    print(f"[*] Thiết bị huấn luyện: {device}")
+    print(f"[*] Thiết bị tính toán (Device) : {device}")
+    print(f"[*] Kích thước ảnh chuẩn hóa    : {IMAGE_SIZE}")
+    print(f"[*] Số lượt huấn luyện (Epochs) : {epochs}")
+    print(f"[*] Kích thước Batch Size       : {batch_size}")
+    print(f"[*] Tốc độ học (Learning Rate)  : {lr}")
 
+    # Data Augmentation chống Overfitting và mô phỏng điều kiện xấu
     train_transforms = transforms.Compose([
         transforms.Resize(IMAGE_SIZE),
-        transforms.RandomRotation(10),
+        transforms.RandomRotation(degrees=10),
         transforms.ColorJitter(brightness=0.2, contrast=0.2),
         transforms.ToTensor(),
         transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
@@ -122,12 +100,14 @@ def train_cnn(epochs=20, batch_size=32, lr=1e-3):
     train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
     val_loader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False)
 
-    print(f"[*] Số mẫu Train : {len(train_dataset)}")
-    print(f"[*] Số mẫu Val   : {len(val_dataset)}")
+    print(f"[*] Mẫu tập Huấn luyện (Train) : {len(train_dataset)} ảnh")
+    print(f"[*] Mẫu tập Đánh giá (Val)     : {len(val_dataset)} ảnh")
 
-    model = TrafficSignCNN(num_classes=len(TARGET_CLASSES)).to(device)
+    # Khởi tạo mô hình
+    model = EnhancedLeNet(num_classes=len(TARGET_CLASSES)).to(device)
     criterion = nn.CrossEntropyLoss()
-    optimizer = optim.Adam(model.parameters(), lr=lr)
+    optimizer = optim.Adam(model.parameters(), lr=lr, weight_decay=1e-4)
+    scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=7, gamma=0.5)
 
     save_dir = ensure_dir(CHECKPOINTS_DIR / "deep_learning")
     best_val_acc = 0.0
@@ -139,7 +119,7 @@ def train_cnn(epochs=20, batch_size=32, lr=1e-3):
         correct = 0
         total = 0
 
-        for images, labels in tqdm(train_loader, desc=f"Epoch {epoch}/{epochs} [Train]", leave=False):
+        for images, labels in tqdm(train_loader, desc=f"Epoch [{epoch:02d}/{epochs:02d}]", leave=False):
             images, labels = images.to(device), labels.to(device)
             optimizer.zero_grad()
             outputs = model(images)
@@ -152,6 +132,7 @@ def train_cnn(epochs=20, batch_size=32, lr=1e-3):
             correct += torch.sum(preds == labels.data).item()
             total += labels.size(0)
 
+        scheduler.step()
         train_loss = running_loss / total
         train_acc = correct / total
 
@@ -172,7 +153,7 @@ def train_cnn(epochs=20, batch_size=32, lr=1e-3):
                 val_total += labels.size(0)
 
         val_acc = val_correct / val_total
-        print(f"Epoch [{epoch:02d}/{epochs:02d}] - Train Loss: {train_loss:.4f} Acc: {train_acc*100:.2f}% | Val Acc: {val_acc*100:.2f}%")
+        print(f"Epoch [{epoch:02d}/{epochs:02d}] - Train Loss: {train_loss:.4f} | Train Acc: {train_acc*100:.2f}% | Val Loss: {val_loss/val_total:.4f} | Val Acc: {val_acc*100:.2f}%")
 
         if val_acc > best_val_acc:
             best_val_acc = val_acc
@@ -180,11 +161,26 @@ def train_cnn(epochs=20, batch_size=32, lr=1e-3):
                 "epoch": epoch,
                 "model_state_dict": model.state_dict(),
                 "val_acc": val_acc,
+                "arch": "EnhancedLeNet",
             }, best_ckpt_path)
-            print(f"   -> [BEST] Đã lưu checkpoint mới tốt nhất: {best_ckpt_path} (Acc: {val_acc*100:.2f}%)")
+            print(f"   -> ⭐ [BEST MODEL] Đã lưu trọng số tại: {best_ckpt_path} (Val Acc: {val_acc*100:.2f}%)")
 
-    print(f"\n[+] Huấn luyện CNN hoàn tất! Trọng số lưu tại: {best_ckpt_path}")
+    print("\n" + "=" * 65)
+    print(f"✅ HUẤN LUYỆN LENET-5 CẢI TIẾN HOÀN TẤT THÀNH CÔNG!")
+    print(f"[*] Trọng số tốt nhất đạt: {best_val_acc*100:.2f}% Val Accuracy")
+    print(f"[*] Đường dẫn checkpoint  : {best_ckpt_path}")
+    print("=" * 65)
+
+
+def main():
+    parser = argparse.ArgumentParser(description="Train Enhanced LeNet-5 for Traffic Sign Classification")
+    parser.add_argument("--epochs", type=int, default=15, help="Số epochs huấn luyện (mặc định: 15)")
+    parser.add_argument("--batch-size", type=int, default=64, help="Batch size (mặc định: 64)")
+    parser.add_argument("--lr", type=float, default=1e-3, help="Learning rate (mặc định: 0.001)")
+    args = parser.parse_args()
+
+    train_cnn(epochs=args.epochs, batch_size=args.batch_size, lr=args.lr)
 
 
 if __name__ == "__main__":
-    train_cnn()
+    main()
