@@ -239,7 +239,26 @@ python app.py --mode evaluate --split test
 python app.py --mode evaluate --model color_hog_svm --split val
 python app.py --mode evaluate --model deep_learning --split val
 
-# 3. Chạy thử nghiệm Demo 1 mô hình trên 1 ảnh bất kỳ:
-python app.py --mode demo --model color_hog_svm --input dataset/images/0001.jpg
-python app.py --mode demo --model deep_learning --input dataset/images/0001.jpg
+# 3. Chạy thử nghiệm Demo qua CLI:
+# Chế độ ROI biển báo cắt sẵn:
+python app.py --mode demo --model deep_learning --input data/cropped/test/Bien_Cam/0002_00.jpg
+# Chế độ Toàn cảnh đường phố (Tự động phát hiện qua HSV + Morphology):
+python app.py --mode demo --model color_hog_svm --input dataset/images/0001.jpg --scene
+
+# 4. Khởi chạy Giao diện Web tương tác (Streamlit):
+streamlit run app_streamlit.py
 ```
+
+---
+
+## 🏆 6. KẾT QUẢ BENCHMARKING THỰC TẾ (BLIND TEST SET - 1,136 MẪU)
+
+Đánh giá độc lập trên tập **Blind Test** ($1,136$ mẫu ROI biển báo chưa từng xuất hiện trong quá trình huấn luyện):
+
+| Mô Hình / Phương Pháp | Thành Viên | Accuracy | Precision | Recall | Macro F1 | Độ Trễ (Latency) | Tốc Độ (FPS) |
+| :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
+| **Enhanced LeNet-5 (Deep Learning)** | **Thành viên 2** | **99.74%** | **99.49%** | **99.69%** | **99.59%** | **1.12 ms** | **890.6 FPS** |
+| **Color HOG + SVM (Truyền thống)** | **Thành viên 1** | **99.38%** | **99.28%** | **98.93%** | **99.10%** | **2.23 ms** | **449.4 FPS** |
+
+*Biểu đồ so sánh trực quan được xuất tự động tại:* `res/outputs/benchmark_comparison.png`  
+*Ma trận nhầm lẫn chi tiết được lưu tại:* `res/outputs/confusion_matrix_deep_learning.png` và `res/outputs/confusion_matrix_color_hog_svm.png`
