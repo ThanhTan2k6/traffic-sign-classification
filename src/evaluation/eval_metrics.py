@@ -91,8 +91,8 @@ def evaluate_detector(
             y_true.append(true_class)
             y_pred.append("Error")
 
-    if not y_true:
-        print("[-] Không có mẫu nào được dự đoán!")
+    if not y_true or not latencies:
+        print("[-] Không có mẫu nào được dự đoán thành công!")
         return {}
 
     # Tính toán các chỉ số

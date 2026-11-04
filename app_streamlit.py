@@ -9,6 +9,7 @@ Hướng dẫn khởi chạy:
 """
 
 import sys
+import logging
 from pathlib import Path
 import cv2
 import numpy as np
@@ -20,8 +21,7 @@ PROJECT_ROOT = Path(__file__).resolve().parent
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
-from src.config import TARGET_CLASSES, RESULTS_DIR
-from src.detection.color_hog_svm import ColorHogSvmDetector
+from src.config import TARGET_CLASSES, RESULTS_DIR, CHECKPOINTS_DIR
 from src.detection.deep_learning import DeepLearningDetector
 
 # Cấu hình giao diện Streamlit
@@ -48,32 +48,43 @@ COLOR_MAP = {
 }
 
 
-@st.cache_resource
-def load_detectors():
-    """Nạp cache các mô hình một lần duy nhất."""
-    svm_det = ColorHogSvmDetector()
-    dl_det = DeepLearningDetector()
-    return {"color_hog_svm": svm_det, "deep_learning": dl_det}
+@st.cache_resource(max_entries=1)
+def _get_cached_detector(ckpt_mtime: float, ckpt_path: str):
+    """Nạp và cache mô hình dựa trên mtime của checkpoint. Không cache kết quả tải thất bại."""
+    detector = DeepLearningDetector(checkpoint_path=ckpt_path)
+    if detector.model is None:
+        raise RuntimeError(f"Không thể nạp trọng số mô hình từ: {ckpt_path}")
+    return detector
+
+
+def load_detector():
+    """Kiểm tra checkpoint bên ngoài hàm cache để tránh cache vĩnh viễn trạng thái None khi chưa có file."""
+    cnn_ckpt = CHECKPOINTS_DIR / "deep_learning" / "best_cnn.pth"
+    if not cnn_ckpt.exists():
+        return None
+    try:
+        return _get_cached_detector(cnn_ckpt.stat().st_mtime, str(cnn_ckpt))
+    except Exception:
+        logging.getLogger(__name__).exception("Không thể nạp detector từ %s", cnn_ckpt)
+        return None
 
 
 def main():
     st.title("🚦 Hệ Thống Nhận Dạng Biển Báo Giao Thông Việt Nam")
     st.markdown(
         "**Đồ án Thị Giác Máy Tính - ĐH Công Nghệ Thông Tin (UIT - VNU-HCM)**  \n"
-        "So sánh & đối chuẩn giữa **Phương pháp Truyền thống (Color HOG + SVM)** và **Học Sâu (Enhanced LeNet-5)**."
+        "Phương pháp Học Sâu: **Enhanced LeNet-5 (Thành viên 2)**."
     )
 
-    detectors = load_detectors()
+    detector = load_detector()
 
     # Thanh điều khiển bên trái
     st.sidebar.header("⚙️ Cấu Hình Thử Nghiệm")
-    model_choice = st.sidebar.selectbox(
-        "Chọn phương pháp / mô hình:",
-        options=["deep_learning", "color_hog_svm"],
-        format_func=lambda x: "Học Sâu: Enhanced LeNet-5 (Thành viên 2)" if x == "deep_learning" else "Truyền thống: Color HOG + SVM (Thành viên 1)",
-    )
-
-    detector = detectors[model_choice]
+    if detector is not None and detector.model is not None:
+        model_label = "Enhanced LeNet-5 (PyTorch CNN)" if detector.arch_type == "cnn" else "Deep Learning Classifier"
+        st.sidebar.info(f"Mô hình hoạt động: **{model_label}**")
+    else:
+        st.sidebar.warning("Mô hình: **Chưa nạp checkpoint (Cần huấn luyện)**")
 
     tab1, tab2, tab3 = st.tabs(["🎯 Thử Nghiệm Ảnh Trực Quan", "📊 Bảng Xếp Hạng Benchmark", "📈 Phân Tích Dữ Liệu (EDA)"])
 
@@ -81,19 +92,14 @@ def main():
     # TAB 1: DEMO TRỰC QUAN
     # -------------------------------------------------------------
     with tab1:
-        st.subheader("Tải Lên Ảnh Để Nhận Dạng")
+        st.subheader("Tải Lên Ảnh Biển Báo Để Nhận Dạng (ROI)")
+        st.caption("Chế độ phân loại ảnh biển báo đã cắt theo chuẩn bài toán Traffic Sign Classification.")
         col_input, col_result = st.columns([1, 1])
 
         with col_input:
             uploaded_file = st.file_uploader(
-                "Kéo thả hoặc chọn ảnh (JPG / PNG):",
+                "Kéo thả hoặc chọn ảnh biển báo (ROI - JPG / PNG):",
                 type=["jpg", "jpeg", "png"],
-            )
-
-            is_scene = st.checkbox(
-                "Ảnh chụp toàn cảnh đường phố (Kích hoạt tự động định vị ROI)",
-                value=False,
-                help="Tích chọn nếu bạn tải ảnh chụp góc rộng đường phố. Bỏ tích nếu là ảnh biển báo đã cắt sẵn.",
             )
 
         if uploaded_file is not None:
@@ -103,98 +109,57 @@ def main():
             img_rgb = cv2.cvtColor(img_bgr, cv2.COLOR_BGR2RGB)
 
             with col_input:
-                st.image(img_rgb, caption="Ảnh đầu vào", use_container_width=True)
+                st.image(img_rgb, caption="Ảnh biển báo đầu vào", use_container_width=True)
 
             with col_result:
                 st.subheader("Kết Quả Phân Loại")
-                with st.spinner("Đang xử lý suy luận..."):
-                    if is_scene and hasattr(detector, "predict_scene"):
-                        res = detector.predict_scene(img_bgr)
-                    elif is_scene and "is_roi" in detector.predict.__code__.co_varnames:
-                        res = detector.predict(img_bgr, is_roi=False)
-                    else:
+                cnn_ckpt = CHECKPOINTS_DIR / "deep_learning" / "best_cnn.pth"
+                if not cnn_ckpt.exists():
+                    st.error(
+                        f"[-] Không tìm thấy checkpoint mô hình Enhanced LeNet-5 tại: `{cnn_ckpt}`. "
+                        "Vui lòng chạy script huấn luyện: `python -m src.detection.deep_learning.train_cnn`"
+                    )
+                elif detector is None or detector.model is None:
+                    st.error(
+                        f"[-] Không thể nạp trọng số từ checkpoint `{cnn_ckpt}`. "
+                        "Vui lòng kiểm tra tính tương thích của file checkpoint hoặc log server."
+                    )
+                else:
+                    with st.spinner("Đang xử lý suy luận..."):
                         res = detector.predict(img_bgr)
 
-                pred_class = res.get("class_name", "Unknown")
-                confidence = res.get("confidence", 0.0)
-                fps = res.get("fps", 0.0)
-                latency = res.get("inference_time", 0.0) * 1000.0
-                bbox = res.get("bbox")
+                    pred_class = res.get("class_name", "Unknown")
+                    confidence = res.get("confidence", 0.0)
+                    fps = res.get("fps", 0.0)
+                    latency = res.get("inference_time", 0.0) * 1000.0
 
-                st.success(f"**Nhóm Biển Báo:** {VIETNAMESE_NAMES.get(pred_class, pred_class)}")
-                st.metric("Độ Tin Cậy", f"{confidence * 100:.2f}%")
-                st.caption(f"⏱️ **Độ trễ:** {latency:.2f} ms | ⚡ **Tốc độ:** {fps:.1f} FPS")
-
-                # Vẽ bounding box nếu có
-                if bbox is not None and len(bbox) == 4:
-                    x1, y1, x2, y2 = bbox
-                    annotated_rgb = img_rgb.copy()
-                    color = COLOR_MAP.get(pred_class, (0, 255, 0))
-                    cv2.rectangle(annotated_rgb, (x1, y1), (x2, y2), color, 3)
-                    cv2.putText(
-                        annotated_rgb,
-                        f"{pred_class} ({confidence*100:.1f}%)",
-                        (x1, max(20, y1 - 10)),
-                        cv2.FONT_HERSHEY_SIMPLEX,
-                        0.7,
-                        color,
-                        2,
-                    )
-                    st.image(annotated_rgb, caption="Vùng biển báo phát hiện được", use_container_width=True)
+                    st.success(f"**Nhóm Biển Báo:** {VIETNAMESE_NAMES.get(pred_class, pred_class)}")
+                    st.metric("Độ Tin Cậy", f"{confidence * 100:.2f}%")
+                    st.caption(f"⏱️ **Độ trễ:** {latency:.2f} ms | ⚡ **Tốc độ:** {fps:.1f} FPS")
 
     # -------------------------------------------------------------
-    # TAB 2: BẢNG XẾP HẠNG BENCHMARK (2 TẦNG ĐÁNH GIÁ)
+    # TAB 2: BẢNG XẾP HẠNG BENCHMARK (ENHANCED LENET-5)
     # -------------------------------------------------------------
     with tab2:
-        st.subheader("🥇 Tầng 1: Đánh Giá Phân Loại Thuần Túy Trên Ảnh Cắt Sẵn (ROI - 1.136 Mẫu)")
-        st.caption("Đánh giá độc lập năng lực của 2 thuật toán trên tập Blind Test cắt sẵn theo chuẩn quốc tế.")
+        st.subheader("🥇 Đánh Giá Phân Loại Trên Tập Blind Test (ROI - 1.136 Mẫu)")
+        st.caption("Đánh giá mô hình học sâu Enhanced LeNet-5 trên tập Blind Test cắt sẵn theo chuẩn quốc tế.")
 
         leaderboard_data = {
-            "Phương Pháp / Model": ["Enhanced LeNet-5 (Deep Learning)", "Color HOG + SVM (Truyền thống)"],
-            "Người Phụ Trách": ["Thành viên 2", "Thành viên 1"],
-            "Accuracy (%)": [99.74, 99.38],
-            "Precision (%)": [99.49, 99.28],
-            "Recall (%)": [99.69, 98.93],
-            "Macro F1 (%)": [99.59, 99.10],
-            "Độ Trễ (ms)": [1.12, 2.23],
-            "Tốc Độ (FPS)": [890.6, 449.4],
+            "Phương Pháp / Model": ["Enhanced LeNet-5 (Deep Learning)"],
+            "Người Phụ Trách": ["Thành viên 2"],
+            "Accuracy (%)": [99.74],
+            "Precision (%)": [99.49],
+            "Recall (%)": [99.69],
+            "Macro F1 (%)": [99.59],
+            "Độ Trễ (ms)": [1.12],
+            "Tốc Độ (FPS)": [890.6],
         }
         df_lead = pd.DataFrame(leaderboard_data)
         st.dataframe(df_lead, use_container_width=True)
 
-        benchmark_img = RESULTS_DIR / "benchmark_comparison.png"
-        if benchmark_img.exists():
-            st.image(str(benchmark_img), caption="Biểu đồ so sánh phân loại đa chiều giữa 2 mô hình", use_container_width=True)
-
-        col_cm1, col_cm2 = st.columns(2)
-        with col_cm1:
-            cm_cnn = RESULTS_DIR / "confusion_matrix_deep_learning.png"
-            if cm_cnn.exists():
-                st.image(str(cm_cnn), caption="Confusion Matrix: Enhanced LeNet-5", use_container_width=True)
-        with col_cm2:
-            cm_svm = RESULTS_DIR / "confusion_matrix_color_hog_svm.png"
-            if cm_svm.exists():
-                st.image(str(cm_svm), caption="Confusion Matrix: Color HOG + SVM", use_container_width=True)
-
-        st.markdown("---")
-        st.subheader("🥈 Tầng 2: Đánh Giá Toàn Trình Trên Ảnh Chụp Đường Phố Toàn Cảnh (End-to-End Scene)")
-        st.caption("Đánh giá pipeline hoàn chỉnh gồm: Định vị vùng ứng viên (HSV Detection) + Phân loại (Classification) trên ảnh toàn cảnh chưa qua cắt.")
-
-        scene_data = {
-            "Phương Pháp / Pipeline": ["Two-Stage LeNet (Thành viên 2)", "Two-Stage SVM (Thành viên 1)"],
-            "Tỷ Lệ Định Vị (%)": [32.37, 30.94],
-            "Đoán Đúng Khi Tìm Thấy (%)": [91.11, 93.02],
-            "E2E Precision (%)": [3.16, 2.97],
-            "E2E Recall (%)": [29.50, 28.78],
-            "Độ Trễ Toàn Trình (ms)": [41.35, 67.72],
-            "Tốc Độ Toàn Trình (FPS)": [24.2, 14.8],
-        }
-        df_scene = pd.DataFrame(scene_data)
-        st.dataframe(df_scene, use_container_width=True)
-
-        scene_img = RESULTS_DIR / "scene_benchmark_comparison.png"
-        if scene_img.exists():
-            st.image(str(scene_img), caption="Biểu đồ đối chuẩn trên ảnh toàn cảnh đường phố", use_container_width=True)
+        cm_cnn = RESULTS_DIR / "confusion_matrix_deep_learning.png"
+        if cm_cnn.exists():
+            st.image(str(cm_cnn), caption="Confusion Matrix: Enhanced LeNet-5 (Deep Learning)", use_container_width=True)
 
     # -------------------------------------------------------------
     # TAB 3: PHÂN TÍCH DỮ LIỆU EDA

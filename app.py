@@ -1,17 +1,17 @@
 """
 ================================================================================
 🚀 CONTROLLER CHÍNH DỰ ÁN (MAIN ENTRY POINT)
-Hệ Thống Đánh Giá & So Sánh (Benchmarking) Các Phương Pháp Nhận Dạng Biển Báo
+Hệ Thống Đánh Giá & Thử Nghiệm Mô Hình Nhận Dạng Biển Báo Giao Thông
 ================================================================================
 Hướng dẫn sử dụng:
-1. Chạy đánh giá so sánh (Benchmark) tất cả các mô hình trên tập Test:
+1. Chạy đánh giá (Benchmark) mô hình trên tập Test:
     python app.py --mode evaluate --split test
 
-2. Chạy đánh giá 1 mô hình cụ thể:
-    python app.py --mode evaluate --model color_hog_svm --split val
+2. Chạy đánh giá trên tập Val với giới hạn mẫu:
+    python app.py --mode evaluate --model deep_learning --split val --samples 50
 
-3. Chạy Demo thử nghiệm 1 mô hình trên ảnh ROI biển báo (hoặc ảnh toàn cảnh):
-    python app.py --mode demo --model color_hog_svm --input data/cropped/test/Bien_Cam/0002_00.jpg
+3. Chạy Demo thử nghiệm mô hình trên ảnh ROI biển báo:
+    python app.py --mode demo --model deep_learning --input data/cropped/test/Bien_Cam/0002_00.jpg
 ================================================================================
 """
 
@@ -41,96 +41,101 @@ from src.config import (
     SUPPORTED_MODELS,
     TEST_SPLIT_FILE,
     VAL_SPLIT_FILE,
+    CHECKPOINTS_DIR,
     RESULTS_DIR,
 )
-from src.detection.color_hog_svm import ColorHogSvmDetector
 from src.detection.deep_learning import DeepLearningDetector
 from src.evaluation.eval_metrics import evaluate_detector, benchmark_all_models
 from src.evaluation.plotter import plot_benchmark_comparison, plot_confusion_matrix
 from src.utils import imread_unicode
 
 
-def get_detector(model_name: str):
+def get_detector(model_name: str = "deep_learning"):
     """Factory helper khởi tạo detector theo tên."""
-    model_name = model_name.lower()
-    if model_name == "color_hog_svm":
-        return ColorHogSvmDetector()
-    elif model_name == "deep_learning":
-        return DeepLearningDetector()
-    else:
-        raise ValueError(f"Không hỗ trợ mô hình '{model_name}'. Hỗ trợ: {SUPPORTED_MODELS}")
+    model_name = (model_name or "deep_learning").lower()
+    if model_name != "deep_learning":
+        raise ValueError(
+            f"Mô hình '{model_name}' không được hỗ trợ trong phiên bản của Thành viên 2. "
+            f"Chỉ hỗ trợ: ['deep_learning']"
+        )
+    cnn_ckpt = CHECKPOINTS_DIR / "deep_learning" / "best_cnn.pth"
+
+    if not cnn_ckpt.exists():
+        raise FileNotFoundError(
+            f"Không tìm thấy checkpoint mô hình tại: {cnn_ckpt}. "
+            "Vui lòng huấn luyện mô hình trước: python -m src.detection.deep_learning.train_cnn"
+        )
+    detector = DeepLearningDetector(checkpoint_path=str(cnn_ckpt))
+    if detector.model is None:
+        raise RuntimeError(
+            f"Không thể nạp trọng số mô hình từ checkpoint: {cnn_ckpt}"
+        )
+    return detector
 
 
-def run_evaluation(model_name: str = None, split_name: str = "test"):
+def run_evaluation(model_name: str = None, split_name: str = "test", max_samples: int = None) -> int:
     """Chế độ Đánh giá & So sánh (Evaluation / Benchmark Mode)."""
     split_file = TEST_SPLIT_FILE if split_name.lower() == "test" else VAL_SPLIT_FILE
 
     if not split_file.exists():
         print(f"[-] [LỖI] Không tìm thấy file split: {split_file}")
-        print("[!] Vui lòng chạy lệnh sau để khởi tạo dữ liệu trước:")
-        print("    python global_data_split.py")
-        return
+        return 1
 
-    if model_name:
-        # Đánh giá 1 model duy nhất
+    try:
         detector = get_detector(model_name)
-        metrics = evaluate_detector(detector, split_file)
-        if metrics:
-            print(f"\n[+] Kết quả mô hình [{model_name}]:")
-            print(f"    - Accuracy : {metrics['accuracy']*100:.2f}%")
-            print(f"    - F1-Score : {metrics['f1_score']*100:.2f}%")
-            print(f"    - Tốc độ   : {metrics['fps']:.1f} FPS (Latency: {metrics['latency_ms']:.2f} ms)")
-            print("\n" + metrics["report"])
-            plot_confusion_matrix(metrics["confusion_matrix"], model_name)
-    else:
-        # Chạy Benchmarking tất cả các model (2 thành viên)
-        detectors = [
-            ColorHogSvmDetector(),
-            DeepLearningDetector(),
-        ]
-        df_leaderboard = benchmark_all_models(detectors, split_file)
-        if not df_leaderboard.empty:
-            plot_benchmark_comparison(df_leaderboard)
+    except (ValueError, FileNotFoundError, RuntimeError) as e:
+        print(f"[-] [LỖI] {e}")
+        return 1
+
+    metrics = evaluate_detector(detector, split_file, max_samples=max_samples)
+    if not metrics:
+        print("[-] [LỖI] Quá trình đánh giá không sinh ra kết quả hợp lệ.")
+        return 1
+
+    print(f"\n[+] Kết quả mô hình [{detector.model_name}]:")
+    print(f"    - Accuracy : {metrics['accuracy']*100:.2f}%")
+    print(f"    - F1-Score : {metrics['f1_score']*100:.2f}%")
+    print(f"    - Tốc độ   : {metrics['fps']:.1f} FPS (Latency: {metrics['latency_ms']:.2f} ms)")
+    print("\n" + metrics["report"])
+    plot_confusion_matrix(metrics["confusion_matrix"], detector.model_name)
+    return 0
 
 
-def run_demo(model_name: str, input_path: str, is_scene: bool = False):
-    """Chế độ Demo kiểm tra trên 1 ảnh đầu vào."""
+def run_demo(model_name: str, input_path: str) -> int:
+    """Chế độ Demo kiểm tra trên 1 ảnh đầu vào ROI biển báo."""
     path = Path(input_path)
     if not path.exists():
         print(f"[-] Không tìm thấy file ảnh: {path}")
-        return
+        return 1
 
     img = imread_unicode(path)
     if img is None:
         print(f"[-] Không thể giải mã ảnh: {path}")
-        return
+        return 1
 
-    detector = get_detector(model_name)
-    print(f"\n🚀 Khởi chạy Demo với mô hình: [{model_name}] (Chế độ: {'Toàn cảnh đường phố' if is_scene else 'ROI Biển báo'})...")
     try:
-        # Nếu chọn chế độ toàn cảnh (scene mode), định tuyến qua luồng phát hiện + phân loại
-        if is_scene and hasattr(detector, "predict_scene"):
-            res = detector.predict_scene(img)
-        elif is_scene and "is_roi" in detector.predict.__code__.co_varnames:
-            res = detector.predict(img, is_roi=False)
-        else:
-            res = detector.predict(img)
+        detector = get_detector(model_name)
+    except (ValueError, FileNotFoundError, RuntimeError) as e:
+        print(f"[-] [LỖI] {e}")
+        return 1
+
+    print(f"\n🚀 Khởi chạy Demo với mô hình: [{detector.model_name}] trên ảnh ROI biển báo...")
+    try:
+        res = detector.predict(img)
     except NotImplementedError:
-        print(f"[!] Mô hình [{model_name}] chưa được triển khai hoàn thiện (đang là skeleton).")
-        print(f"    Thành viên phụ trách cần hoàn thành hàm preprocess, inference, postprocess trong thư mục src/detection/{model_name}/.")
-        return
+        print(f"[!] Mô hình [{detector.model_name}] chưa nạp checkpoint!")
+        return 1
     except Exception as e:
-        print(f"[-] Lỗi trong quá trình suy luận mô hình [{model_name}]: {e}")
-        return
+        print(f"[-] Lỗi trong quá trình suy luận mô hình [{detector.model_name}]: {e}")
+        return 1
 
     print("=" * 50)
     print("🎯 KẾT QUẢ DỰ ĐOÁN:")
     print(f"  • Nhãn dự đoán   : {res.get('class_name', 'Unknown')} (Class ID: {res.get('class_id', -1)})")
     print(f"  • Độ tin cậy     : {res.get('confidence', 0.0) * 100:.2f}%")
     print(f"  • Thời gian xử lý: {res.get('inference_time', 0.0) * 1000:.2f} ms ({res.get('fps', 0.0):.1f} FPS)")
-    if res.get("bbox") is not None:
-        print(f"  • Bounding box   : {res.get('bbox')}")
     print("=" * 50)
+    return 0
 
 
 def main():
@@ -139,15 +144,15 @@ def main():
         "--mode",
         type=str,
         required=True,
-        choices=["evaluate", "evaluate-scene", "demo"],
-        help="Chế độ chạy: 'evaluate' (benchmark ROI), 'evaluate-scene' (benchmark toàn cảnh), 'demo' (chạy thử nghiệm ảnh)",
+        choices=["evaluate", "demo"],
+        help="Chế độ chạy: 'evaluate' (đánh giá trên tập test) hoặc 'demo' (chạy thử nghiệm ảnh ROI)",
     )
     parser.add_argument(
         "--model",
         type=str,
-        default=None,
-        choices=SUPPORTED_MODELS,
-        help=f"Chọn mô hình cụ thể ({SUPPORTED_MODELS}). Nếu bỏ trống trong evaluate sẽ chạy so sánh toàn bộ.",
+        default="deep_learning",
+        choices=["deep_learning"],
+        help="Chọn mô hình cụ thể (chỉ hỗ trợ 'deep_learning').",
     )
     parser.add_argument(
         "--split",
@@ -168,34 +173,25 @@ def main():
         default=None,
         help="Đường dẫn file ảnh đầu vào (dùng trong chế độ demo)",
     )
-    parser.add_argument(
-        "--scene",
-        action="store_true",
-        help="Chỉ định ảnh đầu vào là ảnh toàn cảnh đường phố (tự động phát hiện và cắt ROI biển báo)",
-    )
-    parser.add_argument(
-        "--roi",
-        action="store_true",
-        default=True,
-        help="Chỉ định ảnh đầu vào là ảnh ROI biển báo cắt sẵn (mặc định)",
-    )
 
     args = parser.parse_args()
 
+    if args.samples is not None and args.samples <= 0:
+        print(f"[-] [LỖI] Tham số --samples phải là số nguyên dương (> 0). Nhận được: {args.samples}")
+        sys.exit(1)
+
     if args.mode == "evaluate":
-        run_evaluation(model_name=args.model, split_name=args.split)
-    elif args.mode == "evaluate-scene":
-        from src.evaluation.scene_eval import run_scene_benchmark
-        run_scene_benchmark(split_name=args.split, max_samples=args.samples)
+        ret = run_evaluation(model_name=args.model, split_name=args.split, max_samples=args.samples)
+        if ret != 0:
+            sys.exit(ret)
     elif args.mode == "demo":
-        if not args.model:
-            print("[-] Vui lòng chỉ định mô hình bằng tham số --model khi chạy demo!")
-            return
+        model_name = args.model or "deep_learning"
         if not args.input:
             print("[-] Vui lòng cung cấp đường dẫn ảnh bằng tham số --input khi chạy demo!")
-            return
-        is_scene = args.scene
-        run_demo(model_name=args.model, input_path=args.input, is_scene=is_scene)
+            sys.exit(1)
+        ret = run_demo(model_name=model_name, input_path=args.input)
+        if ret != 0:
+            sys.exit(ret)
 
 
 if __name__ == "__main__":

@@ -51,11 +51,6 @@ Dữ liệu biển báo giao thông Việt Nam gồm 52 lớp chi tiết đượ
      * `data/global_splits/yolo_test.txt`
      * `data/traffic_signs_4cls.yaml`
 
-Khởi tạo toàn bộ dữ liệu split và crop ROI bằng một lệnh duy nhất:
-```bash
-python global_data_split.py
-```
-
 ---
 
 ## 🏗️ 2. KIẾN TRÚC MÃ NGUỒN (REPOSITORY STRUCTURE)
@@ -208,71 +203,35 @@ python -m venv venv
 pip install -r requirements.txt
 ```
 
-### Bước 2: Khởi tạo Global Data Split & Cắt ROI Biển Báo
-```bash
-python global_data_split.py
-```
-> Lệnh này sẽ tự động phân chia 70/15/15 và cắt các ROI biển báo lưu vào `data/cropped/`, đồng thời xuất các file danh sách split trong `data/global_splits/`.
+### Bước 2: Chuẩn bị dữ liệu & Huấn luyện mô hình Deep Learning (Enhanced LeNet-5)
+> **Lưu ý:** Tập dữ liệu ảnh ROI biển báo được lưu trữ tại `data/cropped/`. Đảm bảo dữ liệu đã được giải nén hoặc tạo sẵn vào `data/cropped/{train,val,test}/` trước khi chạy lệnh huấn luyện.
 
-### Bước 3: Huấn luyện từng mô hình
-
-#### 👤 Thành viên 1 (Phương pháp truyền thống: HOG + SVM):
 ```bash
-python -m src.detection.color_hog_svm.train
-```
-
-#### 👤 Thành viên 2 (Phương pháp Deep Learning - Tùy chọn CNN hoặc YOLO):
-```bash
-# Lựa chọn A: Huấn luyện Custom CNN trên tập ROI cắt sẵn (data/cropped/)
+# Huấn luyện Enhanced LeNet trên tập ROI biển báo (data/cropped/)
 python -m src.detection.deep_learning.train --arch cnn --epochs 20
-
-# Lựa chọn B: Huấn luyện YOLOv8 phát hiện toàn cảnh (data/traffic_signs_4cls.yaml)
-python -m src.detection.deep_learning.train --arch yolo --epochs 25
 ```
 
-### Bước 4: Chạy Đánh giá So sánh (Benchmarking) & Demo qua `app.py`
+### Bước 3: Chạy Đánh giá (Benchmarking) & Demo qua `app.py`
 ```bash
 # 1. Chạy Benchmark phân loại (Classification) trên tập Test ROI:
 python app.py --mode evaluate --split test
 
-# 2. Chạy Benchmark toàn trình (Detection + Classification) trên ảnh toàn cảnh:
-python app.py --mode evaluate-scene --split test
-
-# 3. Chạy đánh giá 1 mô hình cụ thể trên tập Val:
-python app.py --mode evaluate --model color_hog_svm --split val
-python app.py --mode evaluate --model deep_learning --split val
-
-# 4. Chạy thử nghiệm Demo qua CLI:
-# Chế độ ROI biển báo cắt sẵn:
+# 2. Chạy thử nghiệm Demo qua CLI:
 python app.py --mode demo --model deep_learning --input data/cropped/test/Bien_Cam/0002_00.jpg
-# Chế độ Toàn cảnh đường phố (Tự động phát hiện qua HSV + Morphology):
-python app.py --mode demo --model color_hog_svm --input dataset/images/0001.jpg --scene
 
-# 5. Khởi chạy Giao diện Web tương tác (Streamlit):
+# 3. Khởi chạy Giao diện Web tương tác (Streamlit):
 streamlit run app_streamlit.py
 ```
 
 ---
 
-## 🏆 6. KẾT QUẢ BENCHMARKING THỰC TẾ (2 TẦNG ĐỐI CHUẨN)
+## 🏆 6. KẾT QUẢ BENCHMARKING THỰC TẾ
 
-### 🥇 Tầng 1: Đánh Giá Năng Lực Phân Loại Trên Ảnh Cắt Sẵn (Blind Test - 1.136 Mẫu)
+### Đánh Giá Năng Lực Phân Loại Trên Ảnh Cắt Sẵn (Blind Test - 1.136 Mẫu)
 Đánh giá độc lập trên tập **Blind Test** ($1,136$ mẫu ROI biển báo chưa từng xuất hiện trong quá trình huấn luyện):
 
 | Mô Hình / Phương Pháp | Thành Viên | Accuracy | Precision | Recall | Macro F1 | Độ Trễ (Latency) | Tốc Độ (FPS) |
 | :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
 | **Enhanced LeNet-5 (Deep Learning)** | **Thành viên 2** | **99.74%** | **99.49%** | **99.69%** | **99.59%** | **1.12 ms** | **890.6 FPS** |
-| **Color HOG + SVM (Truyền thống)** | **Thành viên 1** | **99.38%** | **99.28%** | **98.93%** | **99.10%** | **2.23 ms** | **449.4 FPS** |
 
-*Biểu đồ so sánh trực quan được xuất tự động tại:* `res/outputs/benchmark_comparison.png`  
-*Ma trận nhầm lẫn chi tiết được lưu tại:* `res/outputs/confusion_matrix_deep_learning.png` và `res/outputs/confusion_matrix_color_hog_svm.png`
-
-### 🥈 Tầng 2: Đánh Giá Toàn Trình Trên Ảnh Chụp Đường Phố Toàn Cảnh (End-to-End Scene Benchmark)
-Đánh giá hệ thống Two-Stage hoàn chỉnh (Định vị ứng viên qua HSV + Phân loại mô hình) trên tập ảnh đường phố toàn cảnh $960 \times 540$:
-
-| Phương Pháp / Pipeline | Tỷ Lệ Định Vị (%) | Đoán Đúng Khi Tìm Thấy (%) | E2E Recall (%) | Độ Trễ Toàn Cảnh | Tốc Độ (FPS) |
-| :--- | :---: | :---: | :---: | :---: | :---: |
-| **Two-Stage LeNet (Thành viên 2)** | **32.37%** | **91.11%** | **29.50%** | **41.35 ms** | **24.2 FPS** |
-| **Two-Stage SVM (Thành viên 1)** | **30.94%** | **93.02%** | **28.78%** | **67.72 ms** | **14.8 FPS** |
-
-*Biểu đồ đối chuẩn toàn cảnh được xuất tự động tại:* `res/outputs/scene_benchmark_comparison.png`
+*Ma trận nhầm lẫn chi tiết được lưu tại:* `res/outputs/confusion_matrix_deep_learning.png`
