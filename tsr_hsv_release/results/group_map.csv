@@ -1,0 +1,53 @@
+﻿id,name,vie_name,code,group,common3
+0,W.224,Đường người đi bộ cắt ngang,W.224,warning,warning
+1,W.205c,Đường giao nhau (ngã ba bên phải),W.205c,warning,warning
+2,P.102,Cấm đi ngược chiều,P.102,prohibitory,prohibitory
+3,R.302a,Phải đi vòng sang bên phải,R.302a,mandatory,mandatory
+4,W.205a,Giao nhau với đường đồng cấp,W.205a,warning,warning
+5,W.207,Giao nhau với đường không ưu tiên,W.207,warning,warning
+6,W.201a,Chỗ ngoặt nguy hiểm vòng bên trái,W.201a,warning,warning
+7,P.123a,Cấm rẽ trái,P.123a,prohibitory,prohibitory
+8,I.434a,Bến xe buýt,I.434a,information,other
+9,R.303,Nơi giao nhau chạy theo vòng xuyến,R.303,mandatory,mandatory
+10,P.130,Cấm dừng và đỗ xe,P.130,prohibitory,prohibitory
+11,I.409,Chỗ quay xe,I.409,information,other
+12,R.415a,Biển gộp làn đường theo phương tiện,R.415a,mandatory,mandatory
+13,W.245a,Đi chậm,W.245a,warning,warning
+14,P.106a*Xe tải,Cấm xe tải,P.106a*Xe,prohibitory,prohibitory
+15,W.203c,Đường bị thu hẹp về phía phải,W.203c,warning,warning
+16,P.117*,Giới hạn chiều cao,P.117*,prohibitory,prohibitory
+17,P.124a*,Cấm quay đầu,P.124a*,prohibitory,prohibitory
+18,P.107,Cấm ô tô khách và ô tô tải,P.107,prohibitory,prohibitory
+19,P.124d,Cấm rẽ phải và quay đầu,P.124d,prohibitory,prohibitory
+20,P.103a,Cấm ô tô,P.103a,prohibitory,prohibitory
+21,W.203b,Đường bị thu hẹp về phía trái,W.203b,warning,warning
+22,W.221b,Gồ giảm tốc phía trước,W.221b,warning,warning
+23,P.111,Cấm xe hai và ba bánh,P.111,prohibitory,prohibitory
+24,P.129,Kiểm tra,P.129,prohibitory,prohibitory
+25,S.505a*Xe máy,Chỉ dành cho xe máy*,S.505a*Xe,supplementary,other
+26,W.246a,Chướng ngoại vật phía trước,W.246a,warning,warning
+27,W.225,Trẻ em,W.225,warning,warning
+28,S.505a*Xe tải và công,Xe tải và xe công*,S.505a*Xe,supplementary,other
+29,P.104,Cấm mô tô và xe máy,P.104,prohibitory,prohibitory
+30,S.505a*Xe tải,Chỉ dành cho xe tải*,S.505a*Xe,supplementary,other
+31,Camera,Đường có camera giám sát,Camera,camera,other
+32,P.123b,Cấm rẽ phải,P.123b,prohibitory,prohibitory
+33,W.202b,"Nhiều chỗ ngoặt nguy hiểm liên tiếp, chỗ đầu tiên sang phải",W.202b,warning,warning
+34,B.8a,Cấm xe sơ-mi rơ-moóc,B.8a,prohibitory,prohibitory
+35,P.137,Cấm rẽ trái và phải,P.137,prohibitory,prohibitory
+36,P.139,Cấm đi thẳng và rẽ phải,P.139,prohibitory,prohibitory
+37,W.205b,Đường giao nhau (ngã ba bên trái),W.205b,warning,warning
+38,P.127*50,Giới hạn tốc độ (50km/h),P.127*50,prohibitory,prohibitory
+39,P.127*60,Giới hạn tốc độ (60km/h),P.127*60,prohibitory,prohibitory
+40,P.127*80,Giới hạn tốc độ (80km/h),P.127*80,prohibitory,prohibitory
+41,P.127*40,Giới hạn tốc độ (40km/h),P.127*40,prohibitory,prohibitory
+42,R.301e,Các xe chỉ được rẽ trái,R.301e,mandatory,mandatory
+43,W.239b*,Chiều cao tĩnh không thực tế,W.239b*,warning,warning
+44,W.233,Nguy hiểm khác,W.233,warning,warning
+45,I.407a,Đường một chiều,I.407a,information,other
+46,P.131a,Cấm đỗ xe,P.131a,prohibitory,prohibitory
+47,P.124b1,Cấm ô tô quay đầu xe (được rẽ trái),P.124b1,prohibitory,prohibitory
+48,W.210,Giao nhau với đường sắt có rào chắn,W.210,warning,warning
+49,P.124c,Cấm rẽ trái và quay đầu xe,P.124c,prohibitory,prohibitory
+50,W.201b,Chỗ ngoặt nguy hiểm vòng bên phải,W.201b,warning,warning
+51,W.246c,Chú ý chướng ngại vật – vòng tránh sang bên phải,W.246c,warning,warning

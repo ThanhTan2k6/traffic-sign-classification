@@ -1,0 +1,41 @@
+{
+  "model_selection": {
+    "SVM": {
+      "C": 10.0,
+      "gamma": "scale",
+      "val_macro_f1": 0.6175012146824522,
+      "val_acc": 0.9295774647887324
+    },
+    "kNN": {
+      "k": 15,
+      "weights": "uniform",
+      "val_macro_f1": 0.6453617908329047,
+      "val_acc": 0.9278169014084507
+    },
+    "selected": "kNN"
+  },
+  "level_a_gt_crops": {
+    "SVM": {
+      "accuracy": 0.9284552845528455,
+      "macro_f1": 0.6877102860382506
+    },
+    "kNN": {
+      "accuracy": 0.9208672086720867,
+      "macro_f1": 0.7007847569336851
+    }
+  },
+  "level_b_yolo_crops": {
+    "det_total_gt": 1845,
+    "det_matched_gt": 1559,
+    "det_fn_missed": 286,
+    "det_fp_extra": 216,
+    "SVM": {
+      "accuracy": 0.9660038486209108,
+      "macro_f1": 0.7264854327445871
+    },
+    "kNN": {
+      "accuracy": 0.9602309172546504,
+      "macro_f1": 0.708093599281218
+    }
+  }
+}

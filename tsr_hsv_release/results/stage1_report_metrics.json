@@ -1,0 +1,467 @@
+{
+  "mức_so_sánh_công_bằng": {
+    "SVM": {
+      "Level_A_all_1845": {
+        "acc": 0.9284552845528455,
+        "macro_f1": 0.6877102860382506
+      },
+      "Level_A_prime_matched_1559": {
+        "acc": 0.949326491340603,
+        "macro_f1": 0.6468846043567228
+      },
+      "Level_B_yolo_1559": {
+        "acc": 0.9660038486209108,
+        "macro_f1": 0.7264854327445871
+      }
+    },
+    "kNN": {
+      "Level_A_all_1845": {
+        "acc": 0.9208672086720867,
+        "macro_f1": 0.7007847569336851
+      },
+      "Level_A_prime_matched_1559": {
+        "acc": 0.9454778704297627,
+        "macro_f1": 0.6453754257674877
+      },
+      "Level_B_yolo_1559": {
+        "acc": 0.9602309172546504,
+        "macro_f1": 0.708093599281218
+      }
+    }
+  },
+  "end_to_end_pipeline": {
+    "total_test_gt": 1845,
+    "yolo_matched_gt": 1559,
+    "SVM": {
+      "correct_signs": 1506,
+      "recall_real": 0.816260162601626
+    },
+    "kNN": {
+      "correct_signs": 1497,
+      "recall_real": 0.8113821138211382
+    }
+  },
+  "detector_fp_classification": {
+    "total_fp": 216,
+    "SVM_predicted_groups": {
+      "cấm (prohibitory)": 108,
+      "cảnh báo (warning)": 64,
+      "hiệu lệnh (mandatory)": 27,
+      "chỉ dẫn (information)": 10,
+      "phụ (supplementary)": 6,
+      "chưa xác định": 1
+    },
+    "kNN_predicted_groups": {
+      "cấm (prohibitory)": 112,
+      "cảnh báo (warning)": 62,
+      "hiệu lệnh (mandatory)": 27,
+      "chỉ dẫn (information)": 9,
+      "phụ (supplementary)": 5,
+      "chưa xác định": 1
+    }
+  },
+  "top_confusion_pairs": {
+    "level_a_svm": [
+      {
+        "true": "hiệu lệnh (mandatory)",
+        "pred": "chỉ dẫn (information)",
+        "count": 53
+      },
+      {
+        "true": "chưa xác định",
+        "pred": "hiệu lệnh (mandatory)",
+        "count": 24
+      },
+      {
+        "true": "chưa xác định",
+        "pred": "cấm (prohibitory)",
+        "count": 23
+      },
+      {
+        "true": "cấm (prohibitory)",
+        "pred": "phụ (supplementary)",
+        "count": 13
+      },
+      {
+        "true": "chỉ dẫn (information)",
+        "pred": "hiệu lệnh (mandatory)",
+        "count": 10
+      }
+    ],
+    "level_a_knn": [
+      {
+        "true": "hiệu lệnh (mandatory)",
+        "pred": "chỉ dẫn (information)",
+        "count": 59
+      },
+      {
+        "true": "chưa xác định",
+        "pred": "cấm (prohibitory)",
+        "count": 24
+      },
+      {
+        "true": "chưa xác định",
+        "pred": "hiệu lệnh (mandatory)",
+        "count": 24
+      },
+      {
+        "true": "cảnh báo (warning)",
+        "pred": "cấm (prohibitory)",
+        "count": 12
+      },
+      {
+        "true": "cấm (prohibitory)",
+        "pred": "phụ (supplementary)",
+        "count": 9
+      }
+    ],
+    "level_b_svm": [
+      {
+        "true": "chưa xác định",
+        "pred": "cấm (prohibitory)",
+        "count": 16
+      },
+      {
+        "true": "hiệu lệnh (mandatory)",
+        "pred": "chỉ dẫn (information)",
+        "count": 15
+      },
+      {
+        "true": "cấm (prohibitory)",
+        "pred": "phụ (supplementary)",
+        "count": 7
+      },
+      {
+        "true": "hiệu lệnh (mandatory)",
+        "pred": "cấm (prohibitory)",
+        "count": 5
+      },
+      {
+        "true": "chỉ dẫn (information)",
+        "pred": "hiệu lệnh (mandatory)",
+        "count": 4
+      }
+    ],
+    "level_b_knn": [
+      {
+        "true": "chưa xác định",
+        "pred": "cấm (prohibitory)",
+        "count": 19
+      },
+      {
+        "true": "hiệu lệnh (mandatory)",
+        "pred": "chỉ dẫn (information)",
+        "count": 19
+      },
+      {
+        "true": "cảnh báo (warning)",
+        "pred": "cấm (prohibitory)",
+        "count": 9
+      },
+      {
+        "true": "cấm (prohibitory)",
+        "pred": "cảnh báo (warning)",
+        "count": 5
+      },
+      {
+        "true": "cấm (prohibitory)",
+        "pred": "phụ (supplementary)",
+        "count": 5
+      }
+    ]
+  },
+  "warning_similarity_check": {
+    "test_warning_count": 423,
+    "near_identical_hist_dist_under_0_05": 58,
+    "mean_min_dist": 0.07458606201230872,
+    "median_min_dist": 0.06930842323800392
+  },
+  "correct_samples": [
+    {
+      "file": "correct_chưa_1_stem0424.jpg",
+      "group": "chưa xác định",
+      "stem": "0424",
+      "label_fine": "B.8a",
+      "size": "37x37"
+    },
+    {
+      "file": "correct_chưa_2_stem0425.jpg",
+      "group": "chưa xác định",
+      "stem": "0425",
+      "label_fine": "B.8a",
+      "size": "45x41"
+    },
+    {
+      "file": "correct_chỉ_1_stem0307.jpg",
+      "group": "chỉ dẫn (information)",
+      "stem": "0307",
+      "label_fine": "I.434a",
+      "size": "20x26"
+    },
+    {
+      "file": "correct_chỉ_2_stem0308.jpg",
+      "group": "chỉ dẫn (information)",
+      "stem": "0308",
+      "label_fine": "I.434a",
+      "size": "20x26"
+    },
+    {
+      "file": "correct_cảnh_1_stem0357.jpg",
+      "group": "cảnh báo (warning)",
+      "stem": "0357",
+      "label_fine": "W.201a",
+      "size": "43x42"
+    },
+    {
+      "file": "correct_cảnh_2_stem0358.jpg",
+      "group": "cảnh báo (warning)",
+      "stem": "0358",
+      "label_fine": "W.201a",
+      "size": "53x51"
+    },
+    {
+      "file": "correct_cấm_1_stem0306.jpg",
+      "group": "cấm (prohibitory)",
+      "stem": "0306",
+      "label_fine": "P.123a",
+      "size": "18x17"
+    },
+    {
+      "file": "correct_cấm_2_stem0307.jpg",
+      "group": "cấm (prohibitory)",
+      "stem": "0307",
+      "label_fine": "P.123a",
+      "size": "21x17"
+    },
+    {
+      "file": "correct_hiệu_1_stem0360.jpg",
+      "group": "hiệu lệnh (mandatory)",
+      "stem": "0360",
+      "label_fine": "R.301e",
+      "size": "21x22"
+    },
+    {
+      "file": "correct_hiệu_2_stem0361.jpg",
+      "group": "hiệu lệnh (mandatory)",
+      "stem": "0361",
+      "label_fine": "R.301e",
+      "size": "23x19"
+    },
+    {
+      "file": "correct_phụ_1_stem2906.jpg",
+      "group": "phụ (supplementary)",
+      "stem": "2906",
+      "label_fine": "S.505a*Xe tải và công",
+      "size": "39x40"
+    },
+    {
+      "file": "correct_phụ_2_stem2907.jpg",
+      "group": "phụ (supplementary)",
+      "stem": "2907",
+      "label_fine": "S.505a*Xe tải và công",
+      "size": "38x40"
+    }
+  ],
+  "enriched_misclassified": [
+    {
+      "index": 1,
+      "file": "err_01_stem0313_True_chỉ_Pred_hiệu.jpg",
+      "stem": "0313",
+      "true_label": "chỉ dẫn (information)",
+      "pred_label": "hiệu lệnh (mandatory)",
+      "crop_size": "22x26",
+      "iou": 0.763,
+      "original_class": "I.434a (Bến xe buýt)"
+    },
+    {
+      "index": 2,
+      "file": "err_02_stem0315_True_chỉ_Pred_hiệu.jpg",
+      "stem": "0315",
+      "true_label": "chỉ dẫn (information)",
+      "pred_label": "hiệu lệnh (mandatory)",
+      "crop_size": "24x32",
+      "iou": 0.87,
+      "original_class": "I.434a (Bến xe buýt)"
+    },
+    {
+      "index": 3,
+      "file": "err_03_stem0326_True_chỉ_Pred_phụ.jpg",
+      "stem": "0326",
+      "true_label": "chỉ dẫn (information)",
+      "pred_label": "phụ (supplementary)",
+      "crop_size": "69x54",
+      "iou": 0.54,
+      "original_class": "I.434a (Bến xe buýt)"
+    },
+    {
+      "index": 4,
+      "file": "err_04_stem0330_True_chỉ_Pred_phụ.jpg",
+      "stem": "0330",
+      "true_label": "chỉ dẫn (information)",
+      "pred_label": "phụ (supplementary)",
+      "crop_size": "62x70",
+      "iou": 0.74,
+      "original_class": "I.434a (Bến xe buýt)"
+    },
+    {
+      "index": 5,
+      "file": "err_05_stem0336_True_chỉ_Pred_hiệu.jpg",
+      "stem": "0336",
+      "true_label": "chỉ dẫn (information)",
+      "pred_label": "hiệu lệnh (mandatory)",
+      "crop_size": "75x106",
+      "iou": 0.879,
+      "original_class": "I.434a (Bến xe buýt)"
+    },
+    {
+      "index": 6,
+      "file": "err_06_stem0414_True_chưa_Pred_cấm.jpg",
+      "stem": "0414",
+      "true_label": "chưa xác định",
+      "pred_label": "cấm (prohibitory)",
+      "crop_size": "24x24",
+      "iou": 0.922,
+      "original_class": "B.8a (Cấm xe sơ-mi rơ-moóc)"
+    },
+    {
+      "index": 7,
+      "file": "err_07_stem0415_True_chưa_Pred_cấm.jpg",
+      "stem": "0415",
+      "true_label": "chưa xác định",
+      "pred_label": "cấm (prohibitory)",
+      "crop_size": "24x25",
+      "iou": 0.8,
+      "original_class": "B.8a (Cấm xe sơ-mi rơ-moóc)"
+    },
+    {
+      "index": 8,
+      "file": "err_08_stem0416_True_chưa_Pred_cấm.jpg",
+      "stem": "0416",
+      "true_label": "chưa xác định",
+      "pred_label": "cấm (prohibitory)",
+      "crop_size": "26x25",
+      "iou": 0.926,
+      "original_class": "B.8a (Cấm xe sơ-mi rơ-moóc)"
+    },
+    {
+      "index": 9,
+      "file": "err_09_stem0417_True_chưa_Pred_cấm.jpg",
+      "stem": "0417",
+      "true_label": "chưa xác định",
+      "pred_label": "cấm (prohibitory)",
+      "crop_size": "27x28",
+      "iou": 0.837,
+      "original_class": "B.8a (Cấm xe sơ-mi rơ-moóc)"
+    },
+    {
+      "index": 10,
+      "file": "err_10_stem0418_True_chưa_Pred_cấm.jpg",
+      "stem": "0418",
+      "true_label": "chưa xác định",
+      "pred_label": "cấm (prohibitory)",
+      "crop_size": "28x27",
+      "iou": 0.813,
+      "original_class": "B.8a (Cấm xe sơ-mi rơ-moóc)"
+    },
+    {
+      "index": 11,
+      "file": "err_11_stem0419_True_chưa_Pred_cấm.jpg",
+      "stem": "0419",
+      "true_label": "chưa xác định",
+      "pred_label": "cấm (prohibitory)",
+      "crop_size": "30x30",
+      "iou": 0.849,
+      "original_class": "B.8a (Cấm xe sơ-mi rơ-moóc)"
+    },
+    {
+      "index": 12,
+      "file": "err_12_stem0420_True_chưa_Pred_cấm.jpg",
+      "stem": "0420",
+      "true_label": "chưa xác định",
+      "pred_label": "cấm (prohibitory)",
+      "crop_size": "31x31",
+      "iou": 0.882,
+      "original_class": "B.8a (Cấm xe sơ-mi rơ-moóc)"
+    },
+    {
+      "index": 13,
+      "file": "err_13_stem0421_True_chưa_Pred_cấm.jpg",
+      "stem": "0421",
+      "true_label": "chưa xác định",
+      "pred_label": "cấm (prohibitory)",
+      "crop_size": "32x34",
+      "iou": 0.795,
+      "original_class": "B.8a (Cấm xe sơ-mi rơ-moóc)"
+    },
+    {
+      "index": 14,
+      "file": "err_14_stem0423_True_chưa_Pred_cấm.jpg",
+      "stem": "0423",
+      "true_label": "chưa xác định",
+      "pred_label": "cấm (prohibitory)",
+      "crop_size": "37x36",
+      "iou": 0.899,
+      "original_class": "B.8a (Cấm xe sơ-mi rơ-moóc)"
+    },
+    {
+      "index": 15,
+      "file": "err_15_stem0424_True_chưa_Pred_cấm.jpg",
+      "stem": "0424",
+      "true_label": "chưa xác định",
+      "pred_label": "cấm (prohibitory)",
+      "crop_size": "39x40",
+      "iou": 0.878,
+      "original_class": "B.8a (Cấm xe sơ-mi rơ-moóc)"
+    },
+    {
+      "index": 16,
+      "file": "err_16_stem0432_True_chưa_Pred_cấm.jpg",
+      "stem": "0432",
+      "true_label": "chưa xác định",
+      "pred_label": "cấm (prohibitory)",
+      "crop_size": "73x109",
+      "iou": 0.738,
+      "original_class": "B.8a (Cấm xe sơ-mi rơ-moóc)"
+    },
+    {
+      "index": 17,
+      "file": "err_17_stem0433_True_chưa_Pred_cấm.jpg",
+      "stem": "0433",
+      "true_label": "chưa xác định",
+      "pred_label": "cấm (prohibitory)",
+      "crop_size": "80x123",
+      "iou": 0.735,
+      "original_class": "B.8a (Cấm xe sơ-mi rơ-moóc)"
+    },
+    {
+      "index": 18,
+      "file": "err_18_stem0434_True_chưa_Pred_cấm.jpg",
+      "stem": "0434",
+      "true_label": "chưa xác định",
+      "pred_label": "cấm (prohibitory)",
+      "crop_size": "91x115",
+      "iou": 0.906,
+      "original_class": "B.8a (Cấm xe sơ-mi rơ-moóc)"
+    },
+    {
+      "index": 19,
+      "file": "err_19_stem0714_True_chưa_Pred_cấm.jpg",
+      "stem": "0714",
+      "true_label": "chưa xác định",
+      "pred_label": "cấm (prohibitory)",
+      "crop_size": "47x49",
+      "iou": 0.92,
+      "original_class": "B.8a (Cấm xe sơ-mi rơ-moóc)"
+    },
+    {
+      "index": 20,
+      "file": "err_20_stem0716_True_chưa_Pred_cấm.jpg",
+      "stem": "0716",
+      "true_label": "chưa xác định",
+      "pred_label": "cấm (prohibitory)",
+      "crop_size": "59x63",
+      "iou": 0.905,
+      "original_class": "B.8a (Cấm xe sơ-mi rơ-moóc)"
+    }
+  ]
+}

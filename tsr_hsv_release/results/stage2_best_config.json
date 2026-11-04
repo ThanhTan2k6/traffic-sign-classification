@@ -1,0 +1,12 @@
+{
+  "feature_set": "S3 (+HOG)",
+  "model_name": "SVM",
+  "gkf_macro_f1": "0.8983",
+  "best_params": {
+    "C": 5.0,
+    "gamma": "scale"
+  },
+  "dims": 457,
+  "grid": "2x2",
+  "seed": 42
+}
