@@ -52,24 +52,24 @@ Toàn bộ 24 ảnh scene minh họa độ phân giải cao được phân loạ
 
 | Scene small_0365 | Scene small_0366 |
 |:---:|:---:|
-| ![](../assets/yolo_detect/small_1006.jpg) | ![](../assets/yolo_detect/small_1007.jpg) |
+| ![](assets/yolo_detect/small_1006.jpg) | ![](assets/yolo_detect/small_1007.jpg) |
 
 | Scene small_0367 | Scene small_0376 |
 |:---:|:---:|
-| ![](../assets/yolo_detect/small_1010.jpg) | ![](../assets/yolo_detect/small_1022.jpg) |
+| ![](assets/yolo_detect/small_1010.jpg) | ![](assets/yolo_detect/small_1022.jpg) |
 
 ### 4.2. Nhóm cảnh có nhiều biển báo cùng lúc (`crowded_*`)
 *(Giao lộ đông đúc, nhiều biển báo xuất hiện đồng thời trên cùng một cột)*
 
 | Scene crowded_0416 | Scene crowded_0423 |
 |:---:|:---:|
-| ![](../assets/yolo_detect/crowded_0756.jpg) | ![](../assets/yolo_detect/crowded_0757.jpg) |
+| ![](assets/yolo_detect/crowded_0756.jpg) | ![](assets/yolo_detect/crowded_0757.jpg) |
 
 ### 4.3. Nhóm cảnh có 1 biển báo đơn lẻ rõ ràng (`single_*`)
 
 | Scene single_0315 | Scene single_0335 |
 |:---:|:---:|
-| ![](../assets/yolo_detect/single_0341.jpg) | ![](../assets/yolo_detect/single_0342.jpg) |
+| ![](assets/yolo_detect/single_0341.jpg) | ![](assets/yolo_detect/single_0342.jpg) |
 
 ---
 

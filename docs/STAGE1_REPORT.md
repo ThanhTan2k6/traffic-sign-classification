@@ -107,7 +107,7 @@ Mỗi crop bounding box được xử lý theo một pipeline đặc trưng duy 
    * Nối thành vector 44 chiều: $\mathbf{x} = [\mathbf{h}_H, \mathbf{h}_S] \in \mathbb{R}^{44}$.
    * Chuẩn hóa $L_1$: $\hat{\mathbf{x}} = \frac{\mathbf{x}}{\sum_{i} x_i + 10^{-7}}$.
 
-![Minh họa Crop và Histogram trung bình theo 6 nhóm](../assets/figures/stage1/fig_hist_by_group.png)
+![Minh họa Crop và Histogram trung bình theo 6 nhóm](assets/figures/stage1/fig_hist_by_group.png)
 *Hình 1: Ảnh crop tiêu biểu và histogram Hue trung bình (36 bin đã xoay) tương ứng của 6 nhóm biển báo.*
 
 ---
@@ -193,7 +193,7 @@ Mức (A) sử dụng bounding box Ground-Truth lý tưởng trên 1.845 biển 
 
 | Ma trận nhầm lẫn SVM (Mức A) | Ma trận nhầm lẫn kNN (Mức A) |
 | :---: | :---: |
-| ![](../assets/figures/stage1/cm_level_a_svm.png) | ![](../assets/figures/stage1/cm_level_a_knn.png) |
+| ![](assets/figures/stage1/cm_level_a_svm.png) | ![](assets/figures/stage1/cm_level_a_knn.png) |
 
 **Đọc biểu đồ ma trận Mức A:**
 * **Ở mô hình SVM**: Cặp nhầm lẫn lớn nhất là **53 biển hiệu lệnh** bị phân loại nhầm sang **chỉ dẫn** (chiếm 24.2% số biển hiệu lệnh). Ngược lại, có 10 biển chỉ dẫn bị đoán nhầm thành hiệu lệnh. Ngoài ra, nhóm "chưa xác định" có 24 biển bị đoán nhầm thành hiệu lệnh và 23 biển bị đoán nhầm thành cấm.
@@ -243,7 +243,7 @@ hiệu lệnh (mandatory)       0.98      0.88      0.93       159
 
 | Ma trận nhầm lẫn SVM (Mức B) | Ma trận nhầm lẫn kNN (Mức B) |
 | :---: | :---: |
-| ![](../assets/figures/stage1/cm_level_b_svm.png) | ![](../assets/figures/stage1/cm_level_b_knn.png) |
+| ![](assets/figures/stage1/cm_level_b_svm.png) | ![](assets/figures/stage1/cm_level_b_knn.png) |
 
 **Đọc biểu đồ ma trận Mức B:**
 * Toàn bộ 8 biển nhóm *phụ* trong tập test đã bị detector bỏ sót (support ở mức B = 0).
@@ -321,7 +321,7 @@ $$\text{Recall}_{\text{End-to-End}} = \frac{\text{Số biển GT được YOLO p
 
 | `err_01` (Stem 0313) | `err_02` (Stem 0315) | `err_03` (Stem 0326) | `err_04` (Stem 0330) | `err_05` (Stem 0336) |
 | :---: | :---: | :---: | :---: | :---: |
-| ![](../assets/figures/stage1/misclassified/err_01_stem0313_True_chỉ_Pred_hiệu.jpg) | ![](../assets/figures/stage1/misclassified/err_02_stem0315_True_chỉ_Pred_hiệu.jpg) | ![](../assets/figures/stage1/misclassified/err_03_stem0326_True_chỉ_Pred_phụ.jpg) | ![](../assets/figures/stage1/misclassified/err_04_stem0330_True_chỉ_Pred_phụ.jpg) | ![](../assets/figures/stage1/misclassified/err_05_stem0336_True_chỉ_Pred_hiệu.jpg) |
+| ![](assets/figures/stage1/misclassified/err_01_stem0313_True_chỉ_Pred_hiệu.jpg) | ![](assets/figures/stage1/misclassified/err_02_stem0315_True_chỉ_Pred_hiệu.jpg) | ![](assets/figures/stage1/misclassified/err_03_stem0326_True_chỉ_Pred_phụ.jpg) | ![](assets/figures/stage1/misclassified/err_04_stem0330_True_chỉ_Pred_phụ.jpg) | ![](assets/figures/stage1/misclassified/err_05_stem0336_True_chỉ_Pred_hiệu.jpg) |
 | **True**: chỉ dẫn<br>**Pred**: hiệu lệnh<br>**Class**: I.434a<br>**Size**: $22 \times 26$, IoU 0.76 | **True**: chỉ dẫn<br>**Pred**: hiệu lệnh<br>**Class**: I.434a<br>**Size**: $24 \times 32$, IoU 0.87 | **True**: chỉ dẫn<br>**Pred**: phụ<br>**Class**: I.434a<br>**Size**: $69 \times 54$, IoU 0.54 | **True**: chỉ dẫn<br>**Pred**: phụ<br>**Class**: I.434a<br>**Size**: $62 \times 70$, IoU 0.74 | **True**: chỉ dẫn<br>**Pred**: hiệu lệnh<br>**Class**: I.434a<br>**Size**: $75 \times 106$, IoU 0.88 |
 
 ---
@@ -331,17 +331,17 @@ $$\text{Recall}_{\text{End-to-End}} = \frac{\text{Số biển GT được YOLO p
 
 | `err_06` (Stem 0414) | `err_07` (Stem 0415) | `err_08` (Stem 0416) | `err_09` (Stem 0417) | `err_10` (Stem 0418) |
 | :---: | :---: | :---: | :---: | :---: |
-| ![](../assets/figures/stage1/misclassified/err_06_stem0414_True_chưa_Pred_cấm.jpg) | ![](../assets/figures/stage1/misclassified/err_07_stem0415_True_chưa_Pred_cấm.jpg) | ![](../assets/figures/stage1/misclassified/err_08_stem0416_True_chưa_Pred_cấm.jpg) | ![](../assets/figures/stage1/misclassified/err_09_stem0417_True_chưa_Pred_cấm.jpg) | ![](../assets/figures/stage1/misclassified/err_10_stem0418_True_chưa_Pred_cấm.jpg) |
+| ![](assets/figures/stage1/misclassified/err_06_stem0414_True_chưa_Pred_cấm.jpg) | ![](assets/figures/stage1/misclassified/err_07_stem0415_True_chưa_Pred_cấm.jpg) | ![](assets/figures/stage1/misclassified/err_08_stem0416_True_chưa_Pred_cấm.jpg) | ![](assets/figures/stage1/misclassified/err_09_stem0417_True_chưa_Pred_cấm.jpg) | ![](assets/figures/stage1/misclassified/err_10_stem0418_True_chưa_Pred_cấm.jpg) |
 | **True**: chưa xác định<br>**Pred**: cấm<br>**Class**: B.8a<br>**Size**: $24 \times 24$, IoU 0.92 | **True**: chưa xác định<br>**Pred**: cấm<br>**Class**: B.8a<br>**Size**: $24 \times 25$, IoU 0.80 | **True**: chưa xác định<br>**Pred**: cấm<br>**Class**: B.8a<br>**Size**: $26 \times 25$, IoU 0.93 | **True**: chưa xác định<br>**Pred**: cấm<br>**Class**: B.8a<br>**Size**: $27 \times 28$, IoU 0.84 | **True**: chưa xác định<br>**Pred**: cấm<br>**Class**: B.8a<br>**Size**: $28 \times 27$, IoU 0.81 |
 
 | `err_11` (Stem 0419) | `err_12` (Stem 0420) | `err_13` (Stem 0421) | `err_14` (Stem 0423) | `err_15` (Stem 0424) |
 | :---: | :---: | :---: | :---: | :---: |
-| ![](../assets/figures/stage1/misclassified/err_11_stem0419_True_chưa_Pred_cấm.jpg) | ![](../assets/figures/stage1/misclassified/err_12_stem0420_True_chưa_Pred_cấm.jpg) | ![](../assets/figures/stage1/misclassified/err_13_stem0421_True_chưa_Pred_cấm.jpg) | ![](../assets/figures/stage1/misclassified/err_14_stem0423_True_chưa_Pred_cấm.jpg) | ![](../assets/figures/stage1/misclassified/err_15_stem0424_True_chưa_Pred_cấm.jpg) |
+| ![](assets/figures/stage1/misclassified/err_11_stem0419_True_chưa_Pred_cấm.jpg) | ![](assets/figures/stage1/misclassified/err_12_stem0420_True_chưa_Pred_cấm.jpg) | ![](assets/figures/stage1/misclassified/err_13_stem0421_True_chưa_Pred_cấm.jpg) | ![](assets/figures/stage1/misclassified/err_14_stem0423_True_chưa_Pred_cấm.jpg) | ![](assets/figures/stage1/misclassified/err_15_stem0424_True_chưa_Pred_cấm.jpg) |
 | **True**: chưa xác định<br>**Pred**: cấm<br>**Class**: B.8a<br>**Size**: $30 \times 30$, IoU 0.85 | **True**: chưa xác định<br>**Pred**: cấm<br>**Class**: B.8a<br>**Size**: $31 \times 31$, IoU 0.88 | **True**: chưa xác định<br>**Pred**: cấm<br>**Class**: B.8a<br>**Size**: $32 \times 34$, IoU 0.80 | **True**: chưa xác định<br>**Pred**: cấm<br>**Class**: B.8a<br>**Size**: $37 \times 36$, IoU 0.90 | **True**: chưa xác định<br>**Pred**: cấm<br>**Class**: B.8a<br>**Size**: $39 \times 40$, IoU 0.88 |
 
 | `err_16` (Stem 0432) | `err_17` (Stem 0433) | `err_18` (Stem 0434) | `err_19` (Stem 0714) | `err_20` (Stem 0716) |
 | :---: | :---: | :---: | :---: | :---: |
-| ![](../assets/figures/stage1/misclassified/err_16_stem0432_True_chưa_Pred_cấm.jpg) | ![](../assets/figures/stage1/misclassified/err_17_stem0433_True_chưa_Pred_cấm.jpg) | ![](../assets/figures/stage1/misclassified/err_18_stem0434_True_chưa_Pred_cấm.jpg) | ![](../assets/figures/stage1/misclassified/err_19_stem0714_True_chưa_Pred_cấm.jpg) | ![](../assets/figures/stage1/misclassified/err_20_stem0716_True_chưa_Pred_cấm.jpg) |
+| ![](assets/figures/stage1/misclassified/err_16_stem0432_True_chưa_Pred_cấm.jpg) | ![](assets/figures/stage1/misclassified/err_17_stem0433_True_chưa_Pred_cấm.jpg) | ![](assets/figures/stage1/misclassified/err_18_stem0434_True_chưa_Pred_cấm.jpg) | ![](assets/figures/stage1/misclassified/err_19_stem0714_True_chưa_Pred_cấm.jpg) | ![](assets/figures/stage1/misclassified/err_20_stem0716_True_chưa_Pred_cấm.jpg) |
 | **True**: chưa xác định<br>**Pred**: cấm<br>**Class**: B.8a<br>**Size**: $73 \times 109$, IoU 0.74 | **True**: chưa xác định<br>**Pred**: cấm<br>**Class**: B.8a<br>**Size**: $80 \times 123$, IoU 0.74 | **True**: chưa xác định<br>**Pred**: cấm<br>**Class**: B.8a<br>**Size**: $91 \times 115$, IoU 0.91 | **True**: chưa xác định<br>**Pred**: cấm<br>**Class**: B.8a<br>**Size**: $47 \times 49$, IoU 0.92 | **True**: chưa xác định<br>**Pred**: cấm<br>**Class**: B.8a<br>**Size**: $59 \times 63$, IoU 0.91 |
 
 ---
@@ -351,12 +351,12 @@ $$\text{Recall}_{\text{End-to-End}} = \frac{\text{Số biển GT được YOLO p
 
 | cấm (P.123a) | cảnh báo (W.201a) | hiệu lệnh (R.301e) |
 | :---: | :---: | :---: |
-| ![](../assets/figures/stage1/correct_samples/correct_cấm_1_stem0306.jpg) | ![](../assets/figures/stage1/correct_samples/correct_cảnh_1_stem0357.jpg) | ![](../assets/figures/stage1/correct_samples/correct_hiệu_1_stem0360.jpg) |
+| ![](assets/figures/stage1/correct_samples/correct_cấm_1_stem0306.jpg) | ![](assets/figures/stage1/correct_samples/correct_cảnh_1_stem0357.jpg) | ![](assets/figures/stage1/correct_samples/correct_hiệu_1_stem0360.jpg) |
 | $18 \times 17$ px, Viền đỏ nét | $43 \times 42$ px, Vàng cam đậm | $21 \times 22$ px, Xanh lam bão hòa cao |
 
 | chỉ dẫn (I.434a) | phụ (S.505a) | chưa xác định (B.8a) |
 | :---: | :---: | :---: |
-| ![](../assets/figures/stage1/correct_samples/correct_chỉ_1_stem0307.jpg) | ![](../assets/figures/stage1/correct_samples/correct_phụ_1_stem2906.jpg) | ![](../assets/figures/stage1/correct_samples/correct_chưa_1_stem0424.jpg) |
+| ![](assets/figures/stage1/correct_samples/correct_chỉ_1_stem0307.jpg) | ![](assets/figures/stage1/correct_samples/correct_phụ_1_stem2906.jpg) | ![](assets/figures/stage1/correct_samples/correct_chưa_1_stem0424.jpg) |
 | $20 \times 26$ px, Chữ nhật xanh | $39 \times 40$ px, Nền trắng chữ đen | $37 \times 37$ px, Đoán đúng nhãn gán |
 
 ---
@@ -405,15 +405,15 @@ Báo cáo nêu rõ các cảnh báo phương pháp luận và giới hạn thố
 
 ### 14.1. Danh mục tập tin & Đường dẫn
 * **Báo cáo**: **STAGE1_REPORT.md** (chính tài liệu này)
-* **Model lưu trữ chính thức**: [`models/stage1_hsv_vn_best.joblib`](../WEIGHTS.md)
-* **Weights Detector**: [`runs/detect/vn_s/weights/best.pt`](../WEIGHTS.md)
+* **Model lưu trữ chính thức**: [`models/stage1_hsv_vn_best.joblib`](WEIGHTS.md)
+* **Weights Detector**: [`runs/detect/vn_s/weights/best.pt`](WEIGHTS.md)
 * **Tập tin chỉ số chi tiết**:
-  * [`../results/stage1_final_summary.json`](../results/stage1_final_summary.json)
-  * [`../results/stage1_report_metrics.json`](../results/stage1_report_metrics.json)
-  * [`../results/stage1_misclassified_examples.json`](../results/stage1_misclassified_examples.json)
+  * [`../res/experiments/stage1_final_summary.json`](../res/experiments/stage1_final_summary.json)
+  * [`../res/experiments/stage1_report_metrics.json`](../res/experiments/stage1_report_metrics.json)
+  * [`../res/experiments/stage1_misclassified_examples.json`](../res/experiments/stage1_misclassified_examples.json)
 * **Tập tin mã nguồn**:
-  * Pipeline huấn luyện & đánh giá: [`tsr_pipeline/stage1_classify.py`](../code/stage1_classify.py)
-  * Đánh giá bổ trợ báo cáo: [`tsr_pipeline/evaluate_for_report.py`](../code/evaluate_for_report.py)
+  * Pipeline huấn luyện & đánh giá: [`tsr_pipeline/stage1_classify.py`](../src/detection/color_hog_svm/pipeline/stage1_classify.py)
+  * Đánh giá bổ trợ báo cáo: [`tsr_pipeline/evaluate_for_report.py`](../src/detection/color_hog_svm/pipeline/evaluate_for_report.py)
 
 ### 14.2. Lệnh tái lập kết quả (Reproducibility Commands)
 Kích hoạt môi trường ảo và chạy:

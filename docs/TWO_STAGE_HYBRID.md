@@ -58,11 +58,11 @@ Toàn bộ thực nghiệm được đánh giá trên tập kiểm thử **Test 
 ## 3. Lộ trình đọc tài liệu đề xuất
 
 Để nắm bắt nhanh và toàn diện, bạn nên xem theo thứ tự:
-1. **[`README.md`](README.md)** (tài liệu này): Nắm tổng quan kiến trúc và kết quả.
-2. **[`notebooks/tsr_walkthrough.ipynb`](notebooks/tsr_walkthrough.ipynb)**: Chạy thử walkthrough tương tác với visual charts, data tables và code mẫu kiểm tra trực tiếp.
-3. **[`docs/JOURNEY.md`](docs/JOURNEY.md)**: Đọc nhật ký chi tiết 2 tuần thực nghiệm (từ CCTSDB, phát hiện data leakage, đến bài toán trôi màu và cách HOG giải quyết nhầm lẫn).
-4. **[`docs/SPLIT_NOTES.md`](docs/SPLIT_NOTES.md)**: Phân tích kỹ thuật về hiện tượng rò rỉ dữ liệu giữa Random Split và Block Split.
-5. **[`docs/YOLO_DETECT.md`](docs/YOLO_DETECT.md)**: Chi tiết về detector YOLO11s, các kịch bản bắt trúng và phân tích 14.39% biển bỏ sót.
+1. **[`README.md`](../README.md)** (tài liệu này): Nắm tổng quan kiến trúc và kết quả.
+2. **[`notebooks/tsr_walkthrough.ipynb`](../notebooks/tsr_walkthrough.ipynb)**: Chạy thử walkthrough tương tác với visual charts, data tables và code mẫu kiểm tra trực tiếp.
+3. **[`docs/JOURNEY.md`](JOURNEY.md)**: Đọc nhật ký chi tiết 2 tuần thực nghiệm (từ CCTSDB, phát hiện data leakage, đến bài toán trôi màu và cách HOG giải quyết nhầm lẫn).
+4. **[`docs/SPLIT_NOTES.md`](SPLIT_NOTES.md)**: Phân tích kỹ thuật về hiện tượng rò rỉ dữ liệu giữa Random Split và Block Split.
+5. **[`docs/YOLO_DETECT.md`](YOLO_DETECT.md)**: Chi tiết về detector YOLO11s, các kịch bản bắt trúng và phân tích 14.39% biển bỏ sót.
 
 ---
 
@@ -83,8 +83,10 @@ Toàn bộ weights của hệ thống được lưu trữ tại Google Drive:
 | **Phương pháp phân loại** | Deep Learning (Enhanced LeNet-5). | Feature Engineering truyền thống (HSV + Lưới không gian + Hình học + HOG) kết hợp SVM (RBF) / Boosting. |
 
 ### Đề xuất so sánh công bằng:
-Hai phương pháp hiện đang chạy trên 2 bộ split khác nhau và không gian nhãn khác nhau nên chưa thể đối đầu trực tiếp con số Accuracy:
-- **Đề xuất**: Chúng ta nên **dùng chung 1 bộ split chuẩn hóa chia theo khối video (Block Split, 0% rò rỉ)** và đánh giá trên cùng **4 nhóm chính**. Khi đó, chúng ta sẽ đo đạc được chính xác năng lực tổng quát hóa thực tế của cả hai phương pháp (Deep Learning vs Truyền thống) trên các cung đường mới.
+Hai phương pháp trước đây chạy trên 2 bộ split khác nhau và không gian nhãn khác nhau:
+- **Đề xuất**: Dùng chung 1 bộ split chuẩn hóa chia theo khối video (Block Split, 0% rò rỉ) và đánh giá trên cùng **4 nhóm chính**. Khi đó, chúng ta sẽ đo đạc được chính xác năng lực tổng quát hóa thực tế của cả hai phương pháp (Deep Learning vs Truyền thống) trên các cung đường mới.
+
+> ✅ **Cập nhật tích hợp chung**: Đề xuất này đã được hiện thực hóa trọn vẹn trong codebase chính thức (main): Cả hai mô hình (Enhanced LeNet-5 của TV2 và SVM RBF của TV1) đã được đồng bộ đánh giá trên cùng bộ dữ liệu chuẩn hóa 4 nhóm chính qua CLI python app.py --mode evaluate và giao diện Web pp_streamlit.py.
 
 ---
 

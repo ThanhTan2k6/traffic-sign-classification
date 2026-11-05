@@ -204,7 +204,7 @@ Toàn bộ dữ liệu 18.496 mẫu được đánh giá chéo qua 5 folds độ
 ### 5.2 Biểu đồ tiến triển chuỗi đặc trưng qua các mô hình
 Sự tiến triển của điểm GroupKFold Macro-F1 qua chuỗi nấc đặc trưng $S0 \rightarrow S1 \rightarrow S2 \rightarrow S3$ được mô phỏng trực quan với thanh sai số độ lệch chuẩn ($\pm 1\sigma$) cho cả 5 mô hình:
 
-![Biểu đồ chuỗi đặc trưng](../assets/figures/chain.png)
+![Biểu đồ chuỗi đặc trưng](assets/figures/chain.png)
 
 ### 5.3 Đánh giá F1 trên 4 nhóm chính (Major4 F1) & Kiểm chứng tính tay
 
@@ -368,7 +368,7 @@ Bảng theo dõi số lượng mẫu nhầm lẫn thực tế giữa hai nhóm n
 ### 7.2 Phân tích trực quan qua Ma trận nhầm lẫn (Confusion Matrix)
 Ma trận nhầm lẫn trực quan đối đầu giữa Mốc xuất phát $S0$ (Random Forest) và Nấc hoàn thiện $S3$ (SVM) trên cả Mức (A) và Mức (B):
 
-![So sánh Ma trận nhầm lẫn S0 vs S3](../assets/figures/cm_compare_S0_vs_S3.png)
+![So sánh Ma trận nhầm lẫn S0 vs S3](assets/figures/cm_compare_S0_vs_S3.png)
 
 Chi tiết ma trận phân loại Level A (1.821 mẫu) của $S3$ SVM:
 - **Cấm (1.096 mẫu)**: Đoán đúng **1.096** (100.0%), sai 0 mẫu.
@@ -386,11 +386,11 @@ Dưới đây là các trường hợp sai sót thực tế của mô hình tố
 
 | Hình ảnh Crop thực tế | Bbox Size | Ground Truth | Nhãn dự đoán | Phân tích nguyên nhân kỹ thuật *(giả định, chưa kiểm chứng)* |
 |:---:|:---:|:---:|:---:|---|
-| ![](../assets/figures/stage2_misclassified/err_s3_01_stem0326_True_chi_Pred_hieu.jpg) | $20 \times 21$ px | **Chỉ dẫn** | **Hiệu lệnh** | Biển vuông chỉ dẫn quay đầu nhưng góc chụp nghiêng khiến viền ngoài bo tròn, cộng với kích thước nhỏ làm biến dạng góc vuông HOG *(giả định)*. |
-| ![](../assets/figures/stage2_misclassified/err_s3_02_stem0365_True_hieu_Pred_chi.jpg) | $17 \times 17$ px | **Hiệu lệnh** | **Chỉ dẫn** | Biển tròn hiệu lệnh R.301 ở khoảng cách xa, độ phân giải thấp ($17 \times 17$) khiến viền tròn bị hóa vuông (blocky pixels), dẫn tới nhầm sang biển chỉ dẫn *(giả định)*. |
-| ![](../assets/figures/stage2_misclassified/err_s3_03_stem0366_True_hieu_Pred_chi.jpg) | $17 \times 18$ px | **Hiệu lệnh** | **Chỉ dẫn** | Khung hình liền kề của stem 0365, biển bị nhòe chuyển động (motion blur), viền mũi tên bên trong bị suy giảm nét gradient *(giả định)*. |
-| ![](../assets/figures/stage2_misclassified/err_s3_04_stem0367_True_hieu_Pred_chi.jpg) | $18 \times 18$ px | **Hiệu lệnh** | **Chỉ dẫn** | Chuỗi frame liên tiếp của biển trên, ánh sáng ngược làm giảm độ tương phản kênh màu *(giả định)*. |
-| ![](../assets/figures/stage2_misclassified/err_s3_12_stem0376_True_hieu_Pred_cam.jpg) | $28 \times 28$ px | **Hiệu lệnh** | **Cấm** | Biển hiệu lệnh nhưng viền kim loại bị ố vàng rỉ sét và phản quang đèn đường, kênh Hue bị dịch sang dải màu đỏ của nhóm Cấm *(giả định)*. |
+| ![](assets/figures/stage2_misclassified/err_s3_01_stem0326_True_chi_Pred_hieu.jpg) | $20 \times 21$ px | **Chỉ dẫn** | **Hiệu lệnh** | Biển vuông chỉ dẫn quay đầu nhưng góc chụp nghiêng khiến viền ngoài bo tròn, cộng với kích thước nhỏ làm biến dạng góc vuông HOG *(giả định)*. |
+| ![](assets/figures/stage2_misclassified/err_s3_02_stem0365_True_hieu_Pred_chi.jpg) | $17 \times 17$ px | **Hiệu lệnh** | **Chỉ dẫn** | Biển tròn hiệu lệnh R.301 ở khoảng cách xa, độ phân giải thấp ($17 \times 17$) khiến viền tròn bị hóa vuông (blocky pixels), dẫn tới nhầm sang biển chỉ dẫn *(giả định)*. |
+| ![](assets/figures/stage2_misclassified/err_s3_03_stem0366_True_hieu_Pred_chi.jpg) | $17 \times 18$ px | **Hiệu lệnh** | **Chỉ dẫn** | Khung hình liền kề của stem 0365, biển bị nhòe chuyển động (motion blur), viền mũi tên bên trong bị suy giảm nét gradient *(giả định)*. |
+| ![](assets/figures/stage2_misclassified/err_s3_04_stem0367_True_hieu_Pred_chi.jpg) | $18 \times 18$ px | **Hiệu lệnh** | **Chỉ dẫn** | Chuỗi frame liên tiếp của biển trên, ánh sáng ngược làm giảm độ tương phản kênh màu *(giả định)*. |
+| ![](assets/figures/stage2_misclassified/err_s3_12_stem0376_True_hieu_Pred_cam.jpg) | $28 \times 28$ px | **Hiệu lệnh** | **Cấm** | Biển hiệu lệnh nhưng viền kim loại bị ố vàng rỉ sét và phản quang đèn đường, kênh Hue bị dịch sang dải màu đỏ của nhóm Cấm *(giả định)*. |
 
 > **Quy luật lỗi**: 100% các ca phân loại sai của $S3$ đều xảy ra trên các crop có kích thước dưới $25 \times 25$ pixel hoặc nằm trong chuỗi video stem 0365–0377 (một biển hiệu lệnh bị xe chạy ngang qua trong điều kiện ánh sáng gắt).
 
@@ -399,11 +399,11 @@ Các mẫu đối chiếu tại `reports/stage2_vn/fixed_samples/` minh chứng 
 
 | Hình ảnh Crop thực tế | Bbox Size | Ground Truth | S0 đoán (Sai) | S3 đoán (Đúng) | Cơ chế khắc phục thành công *(giả định, chưa kiểm chứng)* |
 |:---:|:---:|:---:|:---:|:---:|---|
-| ![](../assets/figures/stage2_fixed/fixed_01_stem0315_True_chi_S0_hieu_S3_chi.jpg) | $46 \times 44$ px | **Chỉ dẫn** | Hiệu lệnh | **Chỉ dẫn** | Kích thước đủ lớn ($46 \times 44$), HOG trích xuất rõ nét 4 góc vuông của biển chỉ dẫn, khắc phục sự phân vân về màu xanh lam của HSV *(giả định)*. |
-| ![](../assets/figures/stage2_fixed/fixed_02_stem0335_True_chi_S0_hieu_S3_chi.jpg) | $29 \times 30$ px | **Chỉ dẫn** | Hiệu lệnh | **Chỉ dẫn** | Lưới không gian $2 \times 2$ phân biệt được ký hiệu màu trắng phân bố ở nửa trên so với mũi tên đồng tâm của biển hiệu lệnh *(giả định)*. |
-| ![](../assets/figures/stage2_fixed/fixed_04_stem2633_True_chi_S0_hieu_S3_chi.jpg) | $35 \times 40$ px | **Chỉ dẫn** | Hiệu lệnh | **Chỉ dẫn** | Tỉ lệ khung hình $w/h = 0.875$ (chữ nhật đứng) triệt tiêu hoàn toàn khả năng rơi vào biển tròn hiệu lệnh ($w/h \approx 1.0$) *(giả định)*. |
-| ![](../assets/figures/stage2_fixed/fixed_05_stem2633_True_hieu_S0_chi_S3_hieu.jpg) | $32 \times 32$ px | **Hiệu lệnh** | Chỉ dẫn | **Hiệu lệnh** | Biển tròn chuẩn, HOG bắt trọn vẹn gradient xoay vòng tròn của viền biển, sửa đúng nhầm lẫn của S0 *(giả định)*. |
-| ![](../assets/figures/stage2_fixed/fixed_08_stem2659_True_hieu_S0_cam_S3_hieu.jpg) | $30 \times 29$ px | **Hiệu lệnh** | Cấm | **Hiệu lệnh** | Biển bị bóng cây râm che phủ khiến màu xanh bị tối đen; HOG dựa trên tương phản cấu trúc hình thái học thay vì màu sắc tuyệt đối nên nhận diện chính xác *(giả định)*. |
+| ![](assets/figures/stage2_fixed/fixed_01_stem0315_True_chi_S0_hieu_S3_chi.jpg) | $46 \times 44$ px | **Chỉ dẫn** | Hiệu lệnh | **Chỉ dẫn** | Kích thước đủ lớn ($46 \times 44$), HOG trích xuất rõ nét 4 góc vuông của biển chỉ dẫn, khắc phục sự phân vân về màu xanh lam của HSV *(giả định)*. |
+| ![](assets/figures/stage2_fixed/fixed_02_stem0335_True_chi_S0_hieu_S3_chi.jpg) | $29 \times 30$ px | **Chỉ dẫn** | Hiệu lệnh | **Chỉ dẫn** | Lưới không gian $2 \times 2$ phân biệt được ký hiệu màu trắng phân bố ở nửa trên so với mũi tên đồng tâm của biển hiệu lệnh *(giả định)*. |
+| ![](assets/figures/stage2_fixed/fixed_04_stem2633_True_chi_S0_hieu_S3_chi.jpg) | $35 \times 40$ px | **Chỉ dẫn** | Hiệu lệnh | **Chỉ dẫn** | Tỉ lệ khung hình $w/h = 0.875$ (chữ nhật đứng) triệt tiêu hoàn toàn khả năng rơi vào biển tròn hiệu lệnh ($w/h \approx 1.0$) *(giả định)*. |
+| ![](assets/figures/stage2_fixed/fixed_05_stem2633_True_hieu_S0_chi_S3_hieu.jpg) | $32 \times 32$ px | **Hiệu lệnh** | Chỉ dẫn | **Hiệu lệnh** | Biển tròn chuẩn, HOG bắt trọn vẹn gradient xoay vòng tròn của viền biển, sửa đúng nhầm lẫn của S0 *(giả định)*. |
+| ![](assets/figures/stage2_fixed/fixed_08_stem2659_True_hieu_S0_cam_S3_hieu.jpg) | $30 \times 29$ px | **Hiệu lệnh** | Cấm | **Hiệu lệnh** | Biển bị bóng cây râm che phủ khiến màu xanh bị tối đen; HOG dựa trên tương phản cấu trúc hình thái học thay vì màu sắc tuyệt đối nên nhận diện chính xác *(giả định)*. |
 
 ---
 

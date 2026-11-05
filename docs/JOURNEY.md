@@ -150,7 +150,7 @@ Tại Stage 2, hệ thống nâng cấp đặc trưng qua chuỗi 4 nấc tiến
 | | | XGBoost | $0.8838 \pm 0.0851$ | 98.68% | 0.9421 | 0.9554 |
 | | | LightGBM | $0.8885 \pm 0.0882$ | 98.74% | 0.9517 | 0.9544 |
 
-![Biểu đồ chuỗi đặc trưng](../assets/figures/chain.png)
+![Biểu đồ chuỗi đặc trưng](assets/figures/chain.png)
 
 ### Kiểm định Paired Difference tại nấc S3:
 - So sánh bắt cặp từng fold giữa SVM (mô hình tốt nhất) và các mô hình khác:
