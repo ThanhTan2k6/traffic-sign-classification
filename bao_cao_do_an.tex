@@ -1,0 +1,400 @@
+\documentclass[12pt,a4paper]{article}
+
+% ==============================================================================
+% GÓI THƯ VIỆN CƠ BẢN & TIẾNG VIỆT
+% ==============================================================================
+\usepackage[utf8]{inputenc}
+\usepackage[vietnamese]{babel}
+\usepackage[top=2.5cm, bottom=2.5cm, left=2.5cm, right=2cm]{geometry}
+\usepackage{amsmath, amsfonts, amssymb}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{multirow}
+\usepackage{float}
+\usepackage{xcolor}
+\usepackage{fancyhdr}
+\usepackage{lastpage}
+\usepackage{caption}
+\usepackage{subcaption}
+\usepackage{hyperref}
+\usepackage{tikz}
+\usetikzlibrary{shapes.geometric, arrows, positioning}
+
+% ==============================================================================
+% CẤU HÌNH LIÊN KẾT & MÀU SẮC
+% ==============================================================================
+\hypersetup{
+    colorlinks=true,
+    linkcolor=blue!80!black,
+    citecolor=blue!80!black,
+    urlcolor=blue!80!black
+}
+
+% ==============================================================================
+% ĐỊNH DẠNG HEADER & FOOTER (THEO PHONG CÁCH UIT CS231)
+% ==============================================================================
+\pagestyle{fancy}
+\fancyhf{}
+\renewcommand{\headrulewidth}{0.5pt}
+\renewcommand{\footrulewidth}{0.5pt}
+
+\lhead{\small \textbf{University of Information Technology} \\ \footnotesize Computer Science}
+\rhead{\small \textbf{Báo Cáo Đồ Án CS231} \\ \footnotesize Thị Giác Máy Tính}
+\lfoot{\footnotesize Nhận Diện \& Đối Chuẩn Biển Báo Giao Thông VN}
+\rfoot{\footnotesize Trang \thepage/\pageref{LastPage}}
+
+% ==============================================================================
+% BẮT ĐẦU TÀI LIỆU
+% ==============================================================================
+\begin{document}
+
+% ------------------------------------------------------------------------------
+% TRANG BÌA (TITLE PAGE)
+% ------------------------------------------------------------------------------
+\begin{titlepage}
+    \centering
+    {\large \textbf{VIETNAM NATIONAL UNIVERSITY, HO CHI MINH CITY}}\\[0.2cm]
+    {\large \textbf{UNIVERSITY OF INFORMATION \& TECHNOLOGY}}\\[0.2cm]
+    {\large \textbf{FACULTY OF COMPUTER SCIENCE}}\\[1.5cm]
+
+    % Logo hoặc biểu tượng khung đồ án
+    \begin{tikzpicture}
+        \draw[line width=1.5pt, color=blue!70!black] (0,0) circle (1.8cm);
+        \draw[line width=1pt, color=blue!50!black] (-1.2,-0.5) arc (200:340:1.3cm);
+        \node at (0,0.3) {\Huge \color{blue!80!black} \textbf{UIT}};
+        \node at (0,-0.6) {\footnotesize \color{blue!80!black} KHOA KHMT};
+    \end{tikzpicture}\\[1.5cm]
+
+    {\huge \textbf{CS231}}\\[0.5cm]
+    {\Large \textbf{MÔN HỌC: THỊ GIÁC MÁY TÍNH}}\\[1.2cm]
+
+    \rule{\textwidth}{1.2pt}\\[0.4cm]
+    {\LARGE \textbf{HỆ THỐNG NHẬN DIỆN VÀ ĐÁNH GIÁ ĐỐI CHUẨN BIỂN BÁO GIAO THÔNG VIỆT NAM}}\\[0.2cm]
+    {\large \textit{Kiến Trúc Lai Hai Giai Đoạn (Two-Stage Hybrid): YOLO11s Detector + Handcrafted Features SVM vs Enhanced LeNet-5 CNN}}\\[0.3cm]
+    \rule{\textwidth}{1.2pt}\\[1.8cm]
+
+    \begin{flushleft}
+        \large
+        \textbf{Danh sách thành viên:}\\[0.3cm]
+        \begin{tabular}{llll}
+            \textbf{Thành viên 1:} & \texttt{[Họ và tên]} & \texttt{2452xxxx} & Triển khai YOLO11s \& HOG+Grid+HSV+SVM. \\
+            \textbf{Thành viên 2:} & \texttt{[Họ và tên]} & \texttt{2452xxxx} & Triển khai Enhanced LeNet-5 (PyTorch) \& Dual-Tier Benchmark. \\
+        \end{tabular}
+    \end{flushleft}
+
+    \vfill
+    {\large TP. Hồ Chí Minh, Năm học 2026 -- 2027}
+\end{titlepage}
+
+% ------------------------------------------------------------------------------
+% MỤC LỤC
+% ------------------------------------------------------------------------------
+\newpage
+\pagenumbering{roman}
+\tableofcontents
+\newpage
+\pagenumbering{arabic}
+\setcounter{page}{1}
+
+% ==============================================================================
+% NỘI DUNG CHÍNH (THEO BAREM ĐÁNH GIÁ UIT KHOA KHMT)
+% ==============================================================================
+
+\section{Mô tả bài toán và lý do thực hiện đề tài}
+
+\subsection{Lý do thực hiện đề tài và tính cấp thiết}
+Trong những năm gần đây, bài toán nhận dạng biển báo giao thông (Traffic Sign Recognition -- TSR) đóng vai trò nền tảng trong các hệ thống Hỗ trợ Lái xe Nâng cao (ADAS) và Xe tự hành (Autonomous Vehicles). Việc phát hiện kịp thời các biển báo giúp người điều khiển phương tiện hoặc hệ thống lái tự động tuân thủ đúng tốc độ, hướng di chuyển và cảnh báo các khu vực nguy hiểm, giảm thiểu tối đa tai nạn giao thông.
+
+Tại Việt Nam, điều kiện giao thông đường bộ mang nhiều đặc thù phức tạp:
+\begin{enumerate}
+    \item \textbf{Bối cảnh đường sá hỗn hợp:} Mật độ phương tiện dày đặc, biển báo có kích thước biểu kiến đa dạng trên khung hình (từ biển ở cự ly xa chỉ đạt $10 \times 10\text{ px}$ đến biển cự ly gần $> 100 \times 100\text{ px}$), thường xuyên bị che khuất một phần bởi tán cây, cột điện hoặc xe buýt/xe tải.
+    \item \textbf{Hiện tượng trôi màu và biến thiên quang học:} Khí hậu nhiệt đới nắng gắt gây chói sáng, mưa ẩm, sương mù hoặc bóng râm gắt làm sai lệch đáng kể không gian màu RGB nguyên bản.
+    \item \textbf{Ràng buộc tài nguyên tính toán:} Các thiết bị vi xử lý nhúng (Edge AI) trên ô tô đòi hỏi hệ thống phải vận hành theo thời gian thực ($\ge 30\text{ FPS}$) với chi phí năng lượng và phần cứng tối thiểu, không thể liên tục chạy các mạng nơ-ron sâu đa lớp quá nặng nề.
+\end{enumerate}
+
+\subsection{Mô tả bài toán và cơ sở giải pháp}
+Hệ thống nhận đầu vào là khung hình ảnh $\mathbf{I} \in \mathbb{R}^{H \times W \times 3}$ thu được từ camera hành trình phía trước phương tiện di chuyển trên đường sá Việt Nam.
+
+Bài toán được phát biểu hình thức qua hai bài toán con tuần tự:
+\begin{enumerate}
+    \item \textbf{Bài toán định vị (Object Detection):} Xác định tập hợp $K$ hộp bao (bounding box) chứa biển báo:
+    \begin{equation}
+        \mathcal{B} = \left\{ \mathbf{b}_k = (x_1, y_1, x_2, y_2)_k \;\middle|\; \text{conf}_k \ge \tau_{\text{conf}}, \; k = 1, \dots, K \right\}
+    \end{equation}
+    và trích xuất các vùng ảnh con (Region of Interest -- ROI): $\mathbf{I}_{\text{crop}}^{(k)} = \mathbf{I}[y_1:y_2, x_1:x_2]$.
+    
+    \item \textbf{Bài toán phân loại ngữ nghĩa (Multi-class Classification):} Với mỗi ảnh ROI $\mathbf{I}_{\text{crop}}^{(k)}$, dự đoán nhãn lớp $\hat{y}_k \in \mathcal{C}$ theo Quy chuẩn kỹ thuật quốc gia \textbf{QCVN 41:2019/BGTVT} gồm 4 nhóm biển báo chính:
+    \begin{equation}
+        \mathcal{C} = \{\text{Bien\_Cam (P)}, \; \text{Bien\_Nguy\_Hiem (W)}, \; \text{Bien\_Hieu\_Lenh (R)}, \; \text{Bien\_Chi\_Dan (I)}\}
+    \end{equation}
+\end{enumerate}
+
+\textbf{Ý tưởng tiếp cận phân tách (Two-Stage Decoupling):} Thay vì sử dụng một mô hình duy nhất vừa tìm vừa phân loại, nhóm tách biệt bài toán: khâu định vị diện rộng được giao cho mạng nơ-ron học sâu tối ưu bắt trúng vật thể (YOLO11s 1-class), còn khâu phân loại ảnh con kích thước cố định được đối chuẩn so sánh giữa \textbf{Thị giác máy tính truyền thống (Color + Spatial Grid + HOG + SVM)} và \textbf{Học sâu hiện đại (Enhanced LeNet-5)}.
+
+% ------------------------------------------------------------------------------
+\section{Mô tả hệ thống}
+
+\subsection{Tổng quan pipeline xử lý của hệ thống}
+Hệ thống được thiết kế theo quy trình 2 giai đoạn khép kín như mô tả trong Hình~\ref{fig:pipeline_overview}.
+
+\begin{figure}[H]
+    \centering
+    \begin{tikzpicture}[node distance=1.5cm, auto,
+        block/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, text width=3.2cm, align=center, minimum height=1.2cm},
+        line/.style={draw=blue!80!black, -latex', thick}]
+        
+        \node [block] (input) {Ảnh Toàn Cảnh\\(960$\times$540 / 1920$\times$1080)};
+        \node [block, right=1.2cm of input] (detector) {Giai đoạn 1: YOLO11s\\1-Class ("sign")};
+        \node [block, right=1.2cm of detector] (crop) {Tập Candidate Boxes\\\& Crop ảnh ROI};
+        \node [block, above right=0.3cm and 1.2cm of crop] (m1) {Giai đoạn 2A: TV1\\HSV+Grid+HOG\\Phân loại SVM};
+        \node [block, below right=0.3cm and 1.2cm of crop] (m2) {Giai đoạn 2B: TV2\\Enhanced LeNet-5\\Mạng CNN PyTorch};
+        \node [block, right=1.2cm of crop] (output) [xshift=4.5cm] {Nhãn 4 nhóm\\QCVN 41:2019\\\& Độ tin cậy};
+
+        \path [line] (input) -- (detector);
+        \path [line] (detector) -- (crop);
+        \path [line] (crop) |- (m1);
+        \path [line] (crop) |- (m2);
+        \path [line] (m1) -| (output);
+        \path [line] (m2) -| (output);
+    \end{tikzpicture}
+    \caption{Sơ đồ luồng xử lý tổng thể của hệ thống Two-Stage Hybrid TSR.}
+    \label{fig:pipeline_overview}
+\end{figure}
+
+\subsection{Giai đoạn huấn luyện mô hình}
+Để đảm bảo tính toàn vẹn và công bằng khoa học:
+\begin{itemize}
+    \item \textbf{Tập dữ liệu huấn luyện phân loại:} Cả hai mô hình phân loại (LeNet-5 và SVM) đều được huấn luyện trên tập ảnh ROI cắt chuẩn xác theo tọa độ Ground-Truth (\texttt{data/cropped/train/}). Tuyệt đối không huấn luyện bộ phân loại trên bounding box do detector tự cắt nhằm loại trừ nhiễu lệch tọa độ.
+    \item \textbf{Mô-đun phát hiện:} Huấn luyện độc lập trên tập ảnh đường phố toàn cảnh (\texttt{dataset/images/}) với nhãn gộp 1-class \texttt{sign}.
+\end{itemize}
+
+\subsection{Giai đoạn suy luận và minh họa hệ thống trên ảnh cảnh thực tế}
+Khi thực thi thực tế (Inference / Demo):
+\begin{enumerate}
+    \item YOLO11s quét toàn cảnh khung hình và sinh ra các bounding box có $\text{conf} \ge 0.25$.
+    \item Các vùng ROI tương ứng được tự động cắt, tiền xử lý và gửi đồng thời tới bộ phân loại.
+    \item Kết quả dự đoán nhãn nhóm biển báo cùng hộp bao được vẽ phủ trực tiếp lên khung hình đầu ra.
+\end{enumerate}
+
+% ------------------------------------------------------------------------------
+\section{Tiền xử lý dữ liệu và chiến lược phân chia}
+
+\subsection{Bộ dữ liệu Biển báo Giao thông Việt Nam và cách chia tập}
+Bộ dữ liệu gồm \textbf{3.216 ảnh} chụp từ camera hành trình trên đường phố Việt Nam, gán nhãn 52 lớp chi tiết theo chuẩn QCVN 41:2019 với tổng cộng \textbf{7.858 bounding box} biển báo hợp lệ ($\ge 10\text{px}$).
+
+\textbf{Triệt tiêu rò rỉ dữ liệu (Block Split -- Zero Data Leakage):}  
+Do các ảnh được trích xuất từ chuỗi video liên tục, việc chia ngẫu nhiên (\texttt{random split}) khiến \textbf{46.84\%} cặp frame kề nhau ($t, t+1$) bị xé lẻ giữa train và test, gây hiện tượng học vẹt và thổi phồng độ chính xác. Nhóm áp dụng kỹ thuật \textbf{Block Split theo khối 100 frame} với khoảng đệm $\text{gap}=5$ frame:
+\begin{itemize}
+    \item Tỷ lệ vi phạm ranh giới giữa Train và Test: Đúng \textbf{0.00\%}.
+    \item Tỷ lệ phân chia: \textbf{70\% Train} (5.496 crops), \textbf{15\% Val} (1.226 crops), \textbf{15\% Test} (1.136 crops độc lập).
+\end{itemize}
+
+\subsection{Chuẩn hóa không gian nhãn và kiểm toán dữ liệu}
+\begin{table}[H]
+    \centering
+    \small
+    \caption{Chuẩn hóa 4 nhóm biển báo chính theo QCVN 41:2019.}
+    \label{tab:classes_qcvn}
+    \begin{tabular}{clccl}
+        \toprule
+        \textbf{ID} & \textbf{Tên nhóm} & \textbf{Tiền tố} & \textbf{Số lượng mẫu} & \textbf{Đặc trưng nhận dạng} \\
+        \midrule
+        0 & \texttt{Bien\_Cam} & P.*, B.8a & 4.874 & Hình tròn, viền đỏ, nền trắng hoặc xanh \\
+        1 & \texttt{Bien\_Nguy\_Hiem} & W.* & 1.643 & Hình tam giác đều, viền đỏ, nền vàng \\
+        2 & \texttt{Bien\_Hieu\_Lenh} & R.* & 768 & Hình tròn, nền xanh lam, ký hiệu trắng \\
+        3 & \texttt{Bien\_Chi\_Dan} & I.* & 573 & Hình chữ nhật/vuông, nền xanh lam \\
+        \bottomrule
+    \end{tabular}
+\end{table}
+
+\textbf{Kiểm toán nhãn (Data Auditing):}
+\begin{itemize}
+    \item Lớp \texttt{Camera} (40 mẫu thực tế chỉ từ 3 thiết bị lặp lại): Loại bỏ hoàn toàn vì không phải biển báo.
+    \item Lớp biển phụ \texttt{phụ}: Chỉ có 8 mẫu trong tập test, kích thước $< 15\text{px}$ và bị detector bỏ sót $100\%$, do đó được loại trừ khỏi bài toán đối chuẩn 4 nhóm chính.
+    \item Lớp \texttt{B.8a}: Biển cấm xe kéo rơ-moóc được gộp chuẩn xác vào nhóm \texttt{Bien\_Cam}.
+\end{itemize}
+
+\subsection{Tiền xử lý dữ liệu cho từng mô hình}
+\begin{table}[H]
+    \centering
+    \small
+    \caption{Tóm tắt các bước tiền xử lý cho từng mô hình.}
+    \label{tab:preprocessing_summary}
+    \begin{tabular}{lp{12cm}}
+        \toprule
+        \textbf{Mô hình} & \textbf{Quy trình tiền xử lý chính} \\
+        \midrule
+        \textbf{YOLO11s} & Resize ảnh toàn cảnh về $800 \times 800$, nắn chỉnh padding letterbox, chuẩn hóa pixel về dải $[0, 1]$. \\
+        \textbf{HOG+SVM} & Resize ROI về $64 \times 64$, cân bằng lược đồ sáng bằng CLAHE, trích xuất histogram HSV phân vùng không gian và tính gradient HOG. \\
+        \textbf{LeNet-5} & Resize ROI về $64 \times 64$, chuyển tensor PyTorch, chuẩn hóa phân phối theo ImageNet ($\mu=[0.485, 0.456, 0.406]$, $\sigma=[0.229, 0.224, 0.225]$). \\
+        \bottomrule
+    \end{tabular}
+\end{table}
+
+% ------------------------------------------------------------------------------
+\section{Quá trình huấn luyện và cấu hình mô hình}
+
+\subsection{Mô-đun phát hiện YOLO11s (1-Class Detector) -- Thành viên 1}
+Nhằm tối ưu hóa khả năng định vị biển báo ở cự ly xa:
+\begin{enumerate}
+    \item \textbf{Pretraining:} Huấn luyện trên bộ dữ liệu quy mô lớn CCTSDB 2021 (18.356 ảnh) trong 30 epochs để học biểu diễn hình học tổng quát của biển báo.
+    \item \textbf{Finetuning:} Nạp trọng số tốt nhất tiếp tục huấn luyện 30 epochs trên dữ liệu giao thông Việt Nam với cấu hình: $\text{imgsz}=800$, $\text{batch}=4$, $\text{optimizer}=\text{AdamW}$, $\text{single\_cls}=\text{True}$.
+\end{enumerate}
+
+\subsection{Phương pháp truyền thống: Color + Grid + HOG + SVM -- Thành viên 1}
+Để giải quyết bài toán phân biệt biển báo giao thông không dùng Deep Learning, Thành viên 1 xây dựng chuỗi vector đặc trưng đa tầng $S_3$ tổng cộng \textbf{457 chiều}:
+\begin{equation}
+    \mathbf{x}_{S_3} = \left[ \mathbf{h}_{\text{HSV}} \; (44\text{d}) \;\|\; \text{AR} \; (1\text{d}) \;\|\; \mathbf{g}_{\text{Spatial}} \; (384\text{d}) \;\|\; \mathbf{f}_{\text{HOG}} \; (28\text{d}) \right] \in \mathbb{R}^{457}
+\end{equation}
+Trong đó:
+\begin{itemize}
+    \item $\mathbf{h}_{\text{HSV}}$: Histogram Hue (36 bins, dịch pha $+30^\circ$) và Saturation (8 bins) chuẩn hóa $L_1$.
+    \item $\text{AR} = W / H$: Tỷ lệ khung hình (Aspect Ratio) giúp phân biệt biển chữ nhật nằm ngang.
+    \item $\mathbf{g}_{\text{Spatial}}$: Lưới không gian Spatial Grid $2 \times 2$, mỗi ô trích xuất phân bố màu chi tiết (giúp nhận diện viền ngoài đỏ và tâm trong trắng của biển cấm).
+    \item $\mathbf{f}_{\text{HOG}}$: Trích xuất HOG trên ảnh $64 \times 64$ (`pixels\_per\_cell=(32, 32)`, 7 bins hướng), mô tả trực tiếp đường cong viền tròn của biển Hiệu lệnh đối lập với góc vuông của biển Chỉ dẫn.
+\end{itemize}
+Bộ phân loại SVM sử dụng kernel RBF với siêu tham số tối ưu $C=10.0, \gamma=\text{'scale'}$.
+
+\subsection{Phương pháp học sâu: Mạng nơ-ron tích chập Enhanced LeNet-5 -- Thành viên 2}
+Thành viên 2 thiết kế kiến trúc CNN hiện đại hóa từ LeNet-5 kinh điển:
+\begin{itemize}
+    \item \textbf{Khối trích xuất đặc trưng (Feature Extractor):}
+    \begin{align*}
+        \mathbf{x}_1 &= \text{MaxPool2d}\left(\text{ReLU}\left(\text{BatchNorm2d}\left(\text{Conv2D}(3 \to 32, k=3, p=1)\right)\right)\right) \in \mathbb{R}^{32 \times 32 \times 32} \\
+        \mathbf{x}_2 &= \text{MaxPool2d}\left(\text{ReLU}\left(\text{BatchNorm2d}\left(\text{Conv2D}(32 \to 64, k=3, p=1)\right)\right)\right) \in \mathbb{R}^{64 \times 16 \times 16} \\
+        \mathbf{x}_3 &= \text{MaxPool2d}\left(\text{ReLU}\left(\text{BatchNorm2d}\left(\text{Conv2D}(64 \to 128, k=3, p=1)\right)\right)\right) \in \mathbb{R}^{128 \times 8 \times 8}
+    \end{align*}
+    \item \textbf{Khối phân loại (Classifier Head):}
+    Duỗi phẳng vector $\mathbf{v} \in \mathbb{R}^{8192} \to \text{Dropout}(0.3) \to \text{Linear}(8192 \to 256) \to \text{ReLU} \to \text{Dropout}(0.3) \to \text{Linear}(256 \to 4)$.
+    \item \textbf{Huấn luyện:} Hàm mất mát $\text{CrossEntropyLoss}$, Adam Optimizer ($\text{lr}=10^{-3}$, weight decay $=10^{-4}$), batch size 32, huấn luyện 20 epochs trên PyTorch.
+\end{itemize}
+
+% ------------------------------------------------------------------------------
+\section{Các module hỗ trợ trong pipeline demo}
+
+\subsection{CLI Runner trung tâm (\texttt{app.py})}
+Cung cấp giao diện thực thi chuẩn hóa cho toàn bộ quy trình:
+\begin{itemize}
+    \item Đánh giá Tầng 1 (ROI Benchmark): \texttt{python app.py --mode evaluate --split test}
+    \item Đánh giá Tầng 2 (Scene Benchmark): \texttt{python app.py --mode evaluate-scene --split test}
+    \item Thử nghiệm suy luận đơn ảnh: \texttt{python app.py --mode demo --model deep\_learning --input test.jpg --scene}
+\end{itemize}
+
+\subsection{Web Dashboard tương tác (\texttt{app\_streamlit.py})}
+Xây dựng ứng dụng web tương tác bằng Streamlit:
+\begin{itemize}
+    \item \textbf{Chế độ so sánh song song (Side-by-Side):} Cho phép tải ảnh biển báo bất kỳ và so sánh trực tiếp dự đoán, xác suất tin cậy và thời gian suy luận giữa LeNet-5 và SVM.
+    \item \textbf{Chế độ quét toàn cảnh (Full Scene):} Trực quan hóa hộp bao YOLO11s phát hiện và nhãn phân loại trên ảnh chụp thực tế.
+    \item \textbf{Bảng Leaderboard động:} Hiển thị biểu đồ cột so sánh Accuracy, Macro-F1, Latency và FPS.
+\end{itemize}
+
+% ------------------------------------------------------------------------------
+\section{Đánh giá thực nghiệm và kết quả đối chuẩn}
+
+\subsection{Độ đo đánh giá kết quả}
+\begin{itemize}
+    \item \textbf{Detection Recall \& mAP:} $\text{Recall}_{\text{det}} = \frac{\text{TP}}{\text{TP} + \text{FN}}$ với ngưỡng ghép cặp $\text{IoU} \ge 0.5$.
+    \item \textbf{Accuracy \& Macro-F1:}
+    \begin{equation}
+        \text{Accuracy} = \frac{\sum_{c} \text{TP}_c}{N}, \qquad \text{Macro-F1} = \frac{1}{|\mathcal{C}|} \sum_{c \in \mathcal{C}} \frac{2 \cdot P_c \cdot R_c}{P_c + R_c}
+    \end{equation}
+    \item \textbf{Độ trễ (Latency, ms) \& Tốc độ xử lý (FPS):} Đo đạc thời gian suy luận trung bình trên từng ảnh.
+\end{itemize}
+
+\subsection{Đánh giá Tầng 1: Blind Test ROI (1.136 mẫu Ground-Truth)}
+Đo đạc độc lập năng lực phân loại thuần túy trên tập Test được trình bày trong Bảng~\ref{tab:roi_benchmark}.
+
+\begin{table}[H]
+    \centering
+    \caption{Kết quả đối chuẩn phân loại trên tập Blind Test (1.136 mẫu ROI).}
+    \label{tab:roi_benchmark}
+    \begin{tabular}{lcccccc}
+        \toprule
+        \textbf{Phương pháp} & \textbf{Người làm} & \textbf{Accuracy} & \textbf{Precision} & \textbf{Recall} & \textbf{Macro-F1} & \textbf{FPS} \\
+        \midrule
+        \textbf{Enhanced LeNet-5} & Thành viên 2 & \textbf{99.74\%} & \textbf{99.49\%} & \textbf{99.69\%} & \textbf{99.59\%} & \textbf{768.4} \\
+        \textbf{Color+HOG+SVM} & Thành viên 1 & 99.47\% & 98.14\% & 98.96\% & 98.51\% & 357.9 \\
+        \bottomrule
+    \end{tabular}
+\end{table}
+
+\textbf{Nhận xét chi tiết Tầng 1:}
+\begin{itemize}
+    \item Cả hai mô hình đều đạt độ chính xác xuất sắc ($> 99.4\%$).
+    \item Enhanced LeNet-5 vượt trội hơn ở chỉ số Macro-F1 ($99.59\%$ so với $98.51\%$) nhờ khả năng tự động trích xuất các biểu trưng hoa văn tinh xảo trong lòng biển báo.
+    \item Về tốc độ suy luận, LeNet-5 đạt độ trễ siêu tốc $1.30\text{ ms/crop}$ ($768.4\text{ FPS}$), trong khi SVM đạt $2.79\text{ ms/crop}$ ($357.9\text{ FPS}$) trên CPU.
+\end{itemize}
+
+\subsection{Đánh giá Tầng 2: End-to-End Scene Benchmark trên ảnh toàn cảnh}
+Đo đạc hệ thống hoàn chỉnh kết hợp YOLO11s và bộ phân loại được trình bày trong Bảng~\ref{tab:scene_benchmark}.
+
+\begin{table}[H]
+    \centering
+    \caption{Kết quả đối chuẩn toàn trình trên ảnh đường phố toàn cảnh.}
+    \label{tab:scene_benchmark}
+    \begin{tabular}{lccccc}
+        \toprule
+        \textbf{Pipeline hoàn chỉnh} & \textbf{Định vị} & \textbf{Phân loại} & \textbf{Tỷ lệ định vị} & \textbf{Đoán đúng khi thấy} & \textbf{E2E Recall} \\
+        \midrule
+        \textbf{Two-Stage LeNet} & YOLO11s & LeNet-5 & \textbf{85.61\%} & \textbf{99.40\%} & \textbf{85.10\%} \\
+        \textbf{Two-Stage SVM} & YOLO11s & SVM RBF & 85.61\% & 99.17\% & 84.90\% \\
+        \bottomrule
+    \end{tabular}
+\end{table}
+
+\subsection{Làm nổi bật điểm khác biệt so với các phương pháp khác}
+\begin{table}[H]
+    \centering
+    \small
+    \caption{Bảng đối chiếu điểm khác biệt của đề tài.}
+    \label{tab:comparison_approaches}
+    \begin{tabular}{lp{4cm}p{4cm}p{4.2cm}}
+        \toprule
+        \textbf{Tiêu chí} & \textbf{Thuần truyền thống (Sliding Window)} & \textbf{Học sâu End-to-End (Heavy One-Stage)} & \textbf{Đề tài: Two-Stage Hybrid (YOLO11s + SVM/LeNet)} \\
+        \midrule
+        \textbf{Định vị} & Cửa sổ trượt rất chậm, dễ sót & Tích hợp trong mạng lớn & YOLO11s 1-class tối ưu Recall ($85.61\%$) \\
+        \textbf{Phân biệt R vs I} & Thất bại (cùng màu xanh) & Tốt nhưng tốn tài nguyên & HOG tách viền tròn vs chữ nhật triệt để \\
+        \textbf{Độ trễ phân loại} & $15 - 30\text{ ms}$ & $10 - 20\text{ ms}$ (trên GPU) & $\mathbf{1.30\text{ ms}}$ (LeNet) / $\mathbf{2.79\text{ ms}}$ (SVM) \\
+        \textbf{Độ tin cậy dữ liệu} & Thường bị rò rỉ dữ liệu & Dễ overfitting theo bối cảnh & Block Split triệt tiêu rò rỉ ($0.00\%$ Leakage) \\
+        \bottomrule
+    \end{tabular}
+\end{table}
+
+% ------------------------------------------------------------------------------
+\section{Kết luận}
+
+\subsection{Tổng kết}
+Đồ án đã nghiên cứu, hiện thực hóa và đánh giá đối chuẩn thành công hệ thống Nhận diện Biển báo Giao thông Việt Nam theo kiến trúc Two-Stage Hybrid:
+\begin{enumerate}
+    \item Xây dựng pipeline xử lý khép kín, giải quyết triệt để vấn đề rò rỉ dữ liệu video bằng kỹ thuật Block Split.
+    \item Chứng minh tính hiệu quả vượt bậc của mô hình Học sâu Enhanced LeNet-5 ($99.74\%$ Acc, $768\text{ FPS}$) song hành cùng sức mạnh bền bỉ của phương pháp truyền thống Color+Grid+HOG+SVM ($99.47\%$ Acc, $358\text{ FPS}$).
+    \item Cung cấp giải pháp phần mềm hoàn chỉnh gồm CLI Engine và Web Dashboard phục vụ trình diễn và ứng dụng thực tiễn.
+\end{enumerate}
+
+\subsection{Hạn chế}
+\begin{enumerate}
+    \item Khâu phát hiện YOLO11s vẫn còn bỏ sót khoảng $14.39\%$ biển báo cự ly xa, kích thước $< 20\text{px}$.
+    \item Không gian màu HSV có thể bị ảnh hưởng khi gặp thời tiết cực đoan ban đêm có ánh đèn pha chiếu trực diện.
+\end{enumerate}
+
+\subsection{Hướng phát triển}
+\begin{enumerate}
+    \item Ứng dụng kỹ thuật SAHI (Slicing Aided Hyper Inference) để nâng cao khả năng phát hiện biển báo kích thước siêu nhỏ.
+    \item Phát triển mô hình phân loại phân cấp (Hierarchical Classification) để nhận diện chi tiết toàn bộ 52 mã hiệu biển con.
+\end{enumerate}
+
+% ------------------------------------------------------------------------------
+% TÀI LIỆU THAM KHẢO
+% ------------------------------------------------------------------------------
+\newpage
+\begin{thebibliography}{99}
+\bibitem{qcvn41} Bộ Giao thông Vận tải, \emph{Quy chuẩn kỹ thuật quốc gia về báo hiệu đường bộ (QCVN 41:2019/BGTVT)}, Nhà xuất bản Giao thông Vận tải, Hà Nội, 2019.
+\bibitem{dalal2005} N. Dalal and B. Triggs, ``Histograms of oriented gradients for human detection,'' in \emph{IEEE Computer Society Conference on Computer Vision and Pattern Recognition (CVPR)}, vol. 1, pp. 886--893, 2005.
+\bibitem{lecun1998} Y. LeCun, L. Bottou, Y. Bengio, and P. Haffner, ``Gradient-based learning applied to document recognition,'' \emph{Proceedings of the IEEE}, vol. 86, no. 11, pp. 2278--2324, 1998.
+\bibitem{cortes1995} C. Cortes and V. Vapnik, ``Support-vector networks,'' \emph{Machine Learning}, vol. 20, no. 3, pp. 273--297, 1995.
+\bibitem{yolo11} G. Jocher, A. Chaurasia, and J. Qiu, ``Ultralytics YOLO11,'' 2024. [Online]. Available: \url{https://github.com/ultralytics/ultralytics}.
+\bibitem{uit_cs231} Trường Đại học Công nghệ Thông tin -- ĐHQG-HCM, \emph{Phiếu đánh giá đồ án môn học Thị giác máy tính (CS231)}, TP.HCM, 2026.
+\end{thebibliography}
+
+\end{document}
