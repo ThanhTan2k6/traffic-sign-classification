@@ -56,6 +56,7 @@ class ColorHogSvmDetector(BaseDetector):
         if checkpoint_path is None:
             # Ưu tiên Stage 2 release
             cand_paths = [
+                CHECKPOINTS_DIR / "color_hog_svm" / "stage2_best.joblib",
                 PROJECT_ROOT / "models" / "stage2_best.joblib",
                 CHECKPOINTS_DIR / "color_hog_svm" / "best_svm.pkl",
                 PROJECT_ROOT / "models" / "stage1_hsv_vn_best.joblib",

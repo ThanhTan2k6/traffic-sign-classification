@@ -52,12 +52,20 @@ def load_yolo_detector(weights_path: Path = None):
     from ultralytics import YOLO
 
     if weights_path is None or not weights_path.exists():
-        weights_path = PROJECT_ROOT / "runs" / "detect" / "vn_s" / "weights" / "best.pt"
+        cand_paths = [
+            PROJECT_ROOT / "checkpoints" / "yolo" / "best.pt",
+            PROJECT_ROOT / "runs" / "detect" / "vn_s" / "weights" / "best.pt",
+            PROJECT_ROOT / "checkpoints" / "deep_learning" / "best_yolo.pt",
+        ]
+        for p in cand_paths:
+            if p.exists():
+                weights_path = p
+                break
 
-    if not weights_path.exists():
+    if weights_path is None or not weights_path.exists():
         raise FileNotFoundError(
-            f"Không tìm thấy checkpoint YOLO detector tại: {weights_path}. "
-            "Vui lòng tải weights theo hướng dẫn trong tsr_hsv_release/WEIGHTS.md"
+            "Không tìm thấy checkpoint YOLO detector tại checkpoints/yolo/best.pt hoặc runs/detect/vn_s/weights/best.pt. "
+            "Vui lòng tải weights theo hướng dẫn trong docs/WEIGHTS.md"
         )
     return YOLO(str(weights_path))
 

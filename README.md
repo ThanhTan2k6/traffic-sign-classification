@@ -57,14 +57,13 @@ Dữ liệu biển báo giao thông Việt Nam gồm 52 lớp chi tiết đượ
 
 ```text
 traffic-sign-classification/
-├── checkpoints/                        # Trọng số mô hình (.pkl, .pt, .pth) [ĐÃ IGNORE]
-│   └── deep_learning/                  # Lưu best_cnn.pth hoặc best_yolo.pt
-├── data/                               # Dữ liệu xử lý trung gian
-│   ├── cropped/                        # [TỰ ĐỘNG SINH] Ảnh ROI biển báo cắt sẵn theo nhóm
-│   │   ├── train/
-│   │   ├── val/
-│   │   └── test/
-│   ├── global_splits/                  # Danh sách split toàn cục (train_ids, val_ids, test_ids, yolo_*.txt)
+├── checkpoints/                        # Trọng số tất cả mô hình [ĐÃ IGNORE TRÊN GIT]
+│   ├── color_hog_svm/                  # Checkpoint SVM Stage 2 S3 (stage2_best.joblib)
+│   ├── deep_learning/                  # Checkpoint LeNet-5 PyTorch (best_cnn.pth)
+│   └── yolo/                           # Checkpoint YOLO11s Detector (best.pt)
+├── data/                               # Dữ liệu phân chia và cấu hình
+│   ├── cropped/                        # Ảnh ROI biển báo cắt sẵn (train, val, test)
+│   ├── global_splits/                  # Danh sách split toàn cục (test_ids.txt, val_ids.txt, yolo_*.txt)
 │   └── traffic_signs_4cls.yaml         # File config huấn luyện YOLO (4 lớp QCVN 41:2019)
 ├── dataset/                            # Dataset gốc (YOLO Format) [IMAGES & LABELS ĐÃ IGNORE]
 │   ├── images/                         # 3,216 ảnh đường phố (.jpg)
@@ -72,31 +71,42 @@ traffic-sign-classification/
 │   ├── classes.txt                     # 52 mã hiệu biển báo
 │   ├── classes_vie.txt                 # Tên tiếng Việt của 52 biển báo
 │   └── classes_en.txt                  # Tên tiếng Anh của 52 biển báo
-├── notebooks/                          # Jupyter Notebooks phân tích dữ liệu EDA
-├── src/
+├── docs/                               # Toàn bộ tài liệu báo cáo nghiên cứu & Lý thuyết
+│   ├── assets/                         # Hình ảnh minh họa, sơ đồ kiến trúc, crops thực nghiệm
+│   ├── JOURNEY.md                      # Báo cáo hành trình thực nghiệm
+│   ├── SPLIT_NOTES.md                  # Phân tích kỹ thuật rò rỉ dữ liệu (Block Split 0% Leakage)
+│   ├── STAGE1_REPORT.md                # Báo cáo Giai đoạn 1 (Lọc màu HSV)
+│   ├── STAGE2_REPORT.md                # Báo cáo Giai đoạn 2 (Spatial Grid + HOG + SVM)
+│   ├── TWO_STAGE_HYBRID.md             # Tài liệu tổng quan kiến trúc 2 giai đoạn kết hợp
+│   ├── WEIGHTS.md                      # Hướng dẫn tải trọng số Google Drive & Checksum SHA-256
+│   └── YOLO_DETECT.md                  # Báo cáo mô-đun phát hiện YOLO11s (Single Class)
+├── notebooks/                          # Jupyter Notebooks nghiên cứu & trực quan hóa
+│   ├── eda_dataset.py                  # Script phân tích khám phá dữ liệu (EDA)
+│   ├── eda_traffic_signs.ipynb         # Notebook EDA trực quan
+│   └── tsr_walkthrough.ipynb           # Notebook Walkthrough tương tác đối chuẩn toàn hệ thống
+├── res/                                # Kết quả, biểu đồ & tài nguyên đối chuẩn
+│   ├── experiments/                    # Dữ liệu đo đạc chi tiết (JSON metrics, CSVs)
+│   └── outputs/                        # Biểu đồ đối chuẩn tự động (benchmark charts, confusion matrix)
+├── src/                                # Mã nguồn hệ thống (Module hóa chuyên nghiệp)
 │   ├── config.py                       # Cấu hình tập trung (Context, Paths, Classes, Seed)
-│   ├── utils/                          # Tiện ích đọc/ghi ảnh Unicode tiếng Việt an toàn
-│   │   ├── __init__.py
-│   │   └── image_io.py
 │   ├── detection/                      # CÁC PHƯƠNG PHÁP NHẬN DẠNG (2 THÀNH VIÊN)
-│   │   ├── __init__.py
-│   │   ├── base_detector.py            # [RULE] Lớp trừu tượng chuẩn hóa Interface
-│   │   ├── color_hog_svm/              # 👉 THÀNH VIÊN 1 (HSV + Morphology + HOG + SVM)
-│   │   │   ├── __init__.py
-│   │   │   ├── detector.py             # Kế thừa BaseDetector
-│   │   │   └── train.py                # Script train SVM
-│   │   └── deep_learning/              # 👉 THÀNH VIÊN 2 (TÙY CHỌN: CNN HOẶC YOLO)
-│   │       ├── __init__.py
-│   │       ├── detector.py             # Kế thừa BaseDetector (hỗ trợ cả checkpoint CNN & YOLO)
-│   │       ├── train_cnn.py            # Template huấn luyện Custom CNN (PyTorch) trên data/cropped
-│   │       ├── train_yolo.py           # Template huấn luyện YOLOv8 trên traffic_signs_4cls.yaml
-│   │       └── train.py                # Entrypoint thống nhất (chọn --arch cnn hoặc --arch yolo)
-│   └── evaluation/                     # BỘ ĐÁNH GIÁ CHUNG (BENCHMARKING ENGINE)
-│       ├── __init__.py
-│       ├── eval_metrics.py             # Tính Accuracy, Precision, Recall, F1, Latency, FPS, Leaderboard
-│       └── plotter.py                  # Xuất biểu đồ so sánh & Heatmap Confusion Matrix
-├── app.py                              # Controller trung tâm (Evaluate Benchmark & Demo ảnh)
-├── global_data_split.py                # Pipeline phân chia dữ liệu toàn cục & Cắt ROI
+│   │   ├── base_detector.py            # [RULE] Lớp trừu tượng chuẩn hóa Interface (BaseDetector)
+│   │   ├── color_hog_svm/              # 👉 THÀNH VIÊN 1: HSV + Lưới không gian + HOG + SVM
+│   │   │   ├── detector.py             # Lớp suy luận ColorHogSvmDetector (BaseDetector)
+│   │   │   ├── features.py             # Trích xuất vector đặc trưng S3 (457 chiều)
+│   │   │   └── pipeline/               # Toàn bộ kịch bản huấn luyện, chuẩn bị data & đánh giá
+│   │   └── deep_learning/              # 👉 THÀNH VIÊN 2: Deep Learning (Enhanced LeNet-5)
+│   │       ├── detector.py             # Lớp suy luận DeepLearningDetector (BaseDetector)
+│   │       ├── lenet_model.py          # Kiến trúc PyTorch Enhanced LeNet
+│   │       ├── train_cnn.py            # Huấn luyện Custom CNN trên data/cropped
+│   │       └── train.py                # Entrypoint thống nhất
+│   ├── evaluation/                     # BỘ ĐÁNH GIÁ CHUNG (BENCHMARKING ENGINE 2 TẦNG)
+│   │   ├── eval_metrics.py             # Tính Accuracy, Precision, Recall, F1, Latency, FPS, Leaderboard
+│   │   ├── plotter.py                  # Xuất biểu đồ so sánh & Heatmap Confusion Matrix
+│   │   └── scene_eval.py               # Đối chuẩn toàn cảnh đường phố (Two-Stage: YOLO11s + Classifier)
+│   └── utils/                          # Tiện ích đọc/ghi ảnh Unicode tiếng Việt an toàn
+├── app.py                              # CLI thực thi trung tâm (Evaluate Benchmark ROI & Scene, Demo ảnh)
+├── app_streamlit.py                    # Giao diện Web tương tác đa năng (Streamlit Live Dashboard)
 ├── requirements.txt                    # Danh sách thư viện phụ thuộc
 ├── .gitignore                          # Chặn commit dataset ảnh và checkpoints nặng
 └── README.md                           # Tài liệu hướng dẫn & Quy tắc nhóm
