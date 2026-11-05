@@ -4,180 +4,170 @@
 
 ---
 
-* **Tên đề tài:** Nghiên cứu, Triển khai và Đánh giá So sánh (Benchmarking) các Phương pháp Nhận dạng Biển báo Giao thông trong Điều kiện Thời tiết Bất lợi (Adverse Weather Conditions)
+* **Tên đề tài:** Hệ Thống Nhận Diện & Phân Loại Biển Báo Giao Thông Việt Nam Theo Kiến Trúc Lai Hai Giai Đoạn (Two-Stage Hybrid Pipeline: YOLO Detector + Handcrafted Features SVM Classifier)
 * **Thời gian thực hiện:** Học kỳ 1 – Năm học 2026 - 2027
 * **Danh sách thành viên:**
-  1. Thành viên 1: `[Họ và tên - MSSV]` (Phụ trách: Pipeline Dữ liệu, Global Split & Phương pháp Truyền thống HSV + HOG + SVM)
-  2. Thành viên 2: `[Họ và tên - MSSV]` (Phụ trách: Phương pháp Học sâu Single-stage / CNN)
-  3. Thành viên 3: `[Họ và tên - MSSV]` (Phụ trách: Phương pháp Học sâu Anchor-free/YOLO, Module Benchmark & Giao diện Demo)
+  1. Thành viên 1: `[Họ và tên - MSSV]` (Phụ trách: Pipeline Dữ liệu, Phân chia Block Split, Tiền xử lý & Trích xuất Đặc trưng HSV + Lưới không gian Grid + HOG)
+  2. Thành viên 2: `[Họ và tên - MSSV]` (Phụ trách: Huấn luyện & Tối ưu hóa Bộ phân loại Giai đoạn 2: SVM RBF kernel, đối chứng k-NN & Random Forest)
+  3. Thành viên 3: `[Họ và tên - MSSV]` (Phụ trách: Huấn luyện Giai đoạn 1: YOLO Detector khoanh vùng/Crop, Tích hợp End-to-End Pipeline & Đánh giá Metrics)
 
 ---
 
 ## 1. LÝ DO VÀ CƠ SỞ THỰC HIỆN ĐỀ TÀI (5 ĐIỂM)
 
 ### 1.1. Tính cấp thiết của đề tài
-Trong các hệ thống Hỗ trợ Lái xe Nâng cao (ADAS) và Xe tự hành (Autonomous Vehicles), bài toán Phát hiện và Nhận dạng Biển báo Giao thông (Traffic Sign Recognition - TSR) đóng vai trò quyết định đến tính an toàn khi lưu thông. 
+Trong các hệ thống Hỗ trợ Lái xe Nâng cao (ADAS) và Xe tự hành, bài toán Nhận dạng Biển báo Giao thông (Traffic Sign Recognition - TSR) đòi hỏi phải giải quyết đồng thời hai yêu cầu khắt khe: **Độ chính xác cao** và **Độ trễ thời gian thực cực thấp**.
 
-Hầu hết các nghiên cứu truyền thống hoặc các bộ dữ liệu tiêu chuẩn (như GTSRB) thường được thu thập trong điều kiện lý tưởng: ban ngày, đủ sáng, thời tiết quang đãng. Khi áp dụng các mô hình này vào thực tế, hiệu năng thường **suy giảm nghiêm trọng** khi gặp các điều kiện thời tiết bất lợi (Adverse Weather Conditions) như:
-* **Trời mưa (Rain):** Các hạt mưa, vệt nước đọng trên kính chắn gió làm tán xạ ánh sáng và biến dạng cấu trúc hình học của biển báo.
-* **Sương mù (Fog/Haze):** Độ tương phản (contrast) suy giảm nghiêm trọng theo định luật truyền dẫn khí quyển Koschmieder, làm nhạt màu và mất các cạnh viền sắc nét.
-* **Ban đêm / Thiếu sáng (Low-light/Night):** Tỉ lệ tín hiệu trên nhiễu (SNR) thấp, nhiễu hạt cảm biến cao và thường xuyên gặp hiện tượng lóa đèn pha (Headlight glare).
+Tại Việt Nam, điều kiện giao thông có đặc thù rất phức tạp: biển báo có kích thước đa dạng, thường xuyên bị che khuất một phần, mật độ phương tiện đông đúc và điều kiện thời tiết/ánh sáng biến động mạnh (nắng gắt, bóng râm, mưa gió, sương mù). Nếu sử dụng một mô hình học sâu kích thước lớn (End-to-End Deep CNN) để vừa định vị vừa phân loại hàng chục lớp biển báo chi tiết, hệ thống sẽ đòi hỏi tài nguyên tính toán rất lớn (GPU đắt tiền), khó triển khai trên các thiết bị nhúng (Edge AI) trên ô tô.
 
-### 1.2. Mục tiêu nghiên cứu
-1. Xây dựng một **Quy trình Đánh giá Công bằng (Benchmarking Framework)** với cơ chế **Global Data Split (Train 70% / Val 15% / Test 15%)** nhằm triệt tiêu hoàn toàn hiện tượng rò rỉ dữ liệu (Data Leakage).
-2. Triển khai và so sánh hiệu năng của **3 trường phái tiếp cận khác nhau**:
-   * *Trường phái Truyền thống:* Xử lý ảnh màu HSV + Phép toán hình thái học + Đặc trưng HOG + Phân loại Linear SVM.
-   * *Trường phái Học sâu CNN Tiêu chuẩn:* Kiến trúc Mạng nơ-ron tích chập (Custom CNN / LeNet-5 biến thể).
-   * *Trường phái Học sâu Hiện đại (Real-time Object Detector):* Kiến trúc YOLOv8 / MobileNetV3 tối ưu hóa cho thiết bị biên.
-3. Đánh giá tính bền vững (Robustness) của từng phương pháp khi chất lượng ảnh bị suy giảm bởi thời tiết khắc nghiệt.
+### 1.2. Cơ sở khoa học & Ý tưởng tiếp cận (Two-Stage Decoupling)
+Nhóm lựa chọn hướng tiếp cận **Kiến trúc Lai 2 Giai đoạn (Two-Stage Hybrid Pipeline)** dựa trên nguyên lý phân tách trách nhiệm (Decoupling):
+1. **Giai đoạn 1 (Định vị & Cắt vùng - Detection & Crop):** Nhiệm vụ định vị vật thể trên khung hình rộng có bối cảnh phức tạp là thế mạnh tuyệt đối của Học sâu (Deep Learning). Nhóm sử dụng mô hình **YOLO (Single-class)** gọn nhẹ chỉ để làm đúng một nhiệm vụ: *Tìm chính xác vị trí và CROP biển báo ra khỏi khung hình*.
+2. **Giai đoạn 2 (Phân loại ngữ nghĩa - Classification):** Biển báo giao thông theo Quy chuẩn QCVN 41:2019/BGTVT có quy ước cực kỳ nghiêm ngặt về **Màu sắc** (Đỏ = Cấm, Vàng = Cảnh báo nguy hiểm, Xanh lam = Hiệu lệnh/Chỉ dẫn) và **Hình học** (Hình tròn, Tam giác, Hình chữ nhật). Do đó, việc trích xuất **đặc trưng toán học truyền thống (Màu sắc HSV, Lưới không gian Grid, Kết cấu HOG)** kết hợp với bộ phân loại máy học cổ điển **SVM (RBF kernel)** mang lại độ chính xác gần như tuyệt đối, tốc độ suy luận cực nhanh trên CPU (~0.6 ms/crop) mà hoàn toàn không cần GPU ở khâu phân loại.
 
 ---
 
 ## 2. PHÁT BIỂU BÀI TOÁN & MINH HỌA (20 ĐIỂM)
 
 ### 2.1. Phát biểu bài toán (15 điểm)
-Cho ảnh đầu vào $\mathbf{I} \in \mathbb{R}^{H \times W \times 3}$ được chụp từ camera hành trình phía trước phương tiện di chuyển trong các điều kiện môi trường $\mathcal{E} \in \{\text{Bình thường}, \text{Mưa}, \text{Sương mù}, \text{Ban đêm}\}$.
+Cho ảnh đầu vào $\mathbf{I} \in \mathbb{R}^{H \times W \times 3}$ được chụp từ camera hành trình phía trước phương tiện di chuyển trong bối cảnh giao thông thực tế tại Việt Nam.
 
-Mục tiêu của bài toán là xác định:
-1. **Phát hiện (Localization):** Tọa độ hộp bao (Bounding Box) $\mathbf{B} = (x_1, y_1, x_2, y_2)$ của biển báo trong khung hình (nếu có).
-2. **Phân loại (Classification):** Nhãn lớp $\hat{y} \in \mathcal{C}$ với độ tin cậy $c \in [0, 1]$, trong đó không gian nhãn $\mathcal{C}$ gồm 4 nhóm biển báo chính theo Quy chuẩn kỹ thuật quốc gia QCVN 41:2019/BGTVT:
-   $$\mathcal{C} = \{\text{Biển Cấm (P)}, \text{Biển Nguy Hiểm (W)}, \text{Biển Hiệu Lệnh (R)}, \text{Biển Chỉ Dẫn (I)}\}$$
+Bài toán được phát biểu qua 2 bài toán con tuần tự:
+1. **Bài toán con 1 (Object Detection - Khoanh vùng & Cắt biển báo):**
+   Xác định tập hợp $K$ bounding box chứa biển báo giao thông:
+   $$\mathcal{B} = \{\mathbf{b}_k = (x_1, y_1, x_2, y_2)_k \mid k = 1, \dots, K\}$$
+   với độ tin cậy $c_k \ge \tau_{\text{conf}}$ (ngưỡng phát hiện). Cắt ra các vùng ảnh con tương ứng: $\mathbf{I}_{\text{crop}}^{(k)} = \mathbf{I}[y_1:y_2, x_1:x_2]$.
+2. **Bài toán con 2 (Multi-class Classification - Phân loại nhóm biển báo):**
+   Với mỗi ảnh crop $\mathbf{I}_{\text{crop}}^{(k)}$, dự đoán nhãn lớp $\hat{y}_k \in \mathcal{C}$, trong đó không gian nhãn gồm các nhóm chính theo Quy chuẩn QCVN 41:2019:
+   $$\mathcal{C} = \{\text{Biển Cấm (P)}, \text{Biển Cảnh Báo (W)}, \text{Biển Hiệu Lệnh (R)}, \text{Biển Chỉ Dẫn (I)}, \text{Biển Phụ (B)}\}$$
 
 **Ràng buộc bài toán:**
-* **Độ trễ thời gian thực:** Tốc độ xử lý phải đạt $\ge 20\text{ FPS}$ trên phần cứng tiêu chuẩn để đảm bảo cảnh báo kịp thời cho người lái.
-* **Độ nhạy thời tiết:** Hạn chế tối đa hiện tượng tụt giảm $F_1\text{-score}$ quá $25\%$ khi chuyển từ môi trường bình thường sang môi trường thời tiết xấu.
+* **Chống rò rỉ dữ liệu tuyệt đối (Zero Data Leakage):** Không được chia ngẫu nhiên ảnh trong cùng một video clip hành trình; bắt buộc phải phân chia theo khối video liên tục (Block Split).
+* **Thời gian thực:** Giai đoạn 2 phải có độ trễ $< 2\text{ ms/crop}$ trên CPU đơn lõi.
 
-### 2.2. Hình minh họa cho bài toán (5 điểm)
+### 2.2. Hình minh họa kiến trúc bài toán (5 điểm)
 
 ```
-[ Ảnh thực tế từ Camera hành trình ] 
-(Trời nắng / Mưa rào / Sương mù dày / Đêm tối)
-                 │
-                 ▼
- ┌──────────────────────────────────────────────┐
- │             BỘ XỬ LÝ NHẬN DẠNG (TSR)         │
- │  - Input: Ảnh RGB (1280x720 hoặc 64x64)      │
- │  - Xử lý: HOG+SVM / Custom CNN / YOLOv8      │
- └──────────────────────┬───────────────────────┘
-                        │
-                        ▼
- ┌──────────────────────────────────────────────┐
- │              KẾT QUẢ ĐẦU RA                  │
- │  - Tọa độ Bounding Box: [x1, y1, x2, y2]     │
- │  - Nhãn: "Bien_Cam" (Độ tin cậy: 96.5%)      │
- │  - Latency: 12.4 ms (~80 FPS)                │
- └──────────────────────────────────────────────┘
+[ Ảnh đường phố từ Camera ] (1280x720)
+               │
+               ▼
+┌──────────────────────────────────────────────┐
+│ GIAI ĐOẠN 1: BỘ PHÁT HIỆN & CROP (YOLO)      │
+│ - Mô hình: YOLO Single-class (Traffic Sign)  │
+│ - Đầu ra: Hộp bao Bbox [x1, y1, x2, y2]      │
+│ - Cắt ảnh con (Crop ROI)                     │
+└──────────────────────┬───────────────────────┘
+                       │ Ảnh Crop (Ví dụ: 48x48, 64x64)
+                       ▼
+┌──────────────────────────────────────────────┐
+│ GIAI ĐOẠN 2: BỘ TRÍCH XUẤT ĐẶC TRƯNG & SVM   │
+│ - Không gian màu: Histogram HSV (H, S, V)    │
+│ - Lưới không gian: Spatial Grid 2x2 / 3x3     │
+│ - Hình học: Aspect Ratio, Compactness        │
+│ - Cấu trúc: Histogram of Gradients (HOG)     │
+│ - Bộ phân loại: SVM (RBF Kernel)             │
+└──────────────────────┬───────────────────────┘
+                       │
+                       ▼
+[ Kết quả dự đoán: "Bien_Cam" - Độ tin cậy: 99.2% ]
 ```
-
-*(Hình ảnh minh họa đối sánh giữa 4 điều kiện thời tiết: Normal vs Rain vs Fog vs Night được trình bày chi tiết trong Slide báo cáo).*
 
 ---
 
-## 3. PHƯƠNG PHÁP GIẢI QUYẾT & ĐIỂM KHÁC BIỆT CỦA TỪNG PHƯƠNG PHÁP (30 ĐIỂM)
+## 3. PHƯƠNG PHÁP GIẢI QUYẾT & LÀM NỔI BẬT ĐIỂM KHÁC BIỆT (30 ĐIỂM)
 
-Cả 3 phương pháp đều được thiết kế kế thừa từ giao diện trừu tượng [`BaseDetector`](file:///src/detection/base_detector.py) để chuẩn hóa quy trình suy luận (`preprocess` $\rightarrow$ `inference` $\rightarrow$ `postprocess`).
+### 3.1. Thiết kế Giai đoạn 1: Bộ định vị & Cắt vùng (YOLO Detector)
+* **Mục tiêu:** Chỉ đóng vai trò tìm kiếm và cắt biển báo (Crop), không gánh vác việc phân loại chi tiết hàng chục lớp.
+* **Huấn luyện:**
+  - Tiền huấn luyện (Pretrain) trên tập dữ liệu mở quy mô lớn CCTSDB (Trung Quốc) để mô hình học các biểu diễn cơ bản về biển báo.
+  - Tinh chỉnh (Finetune) trên tập dữ liệu đường phố Việt Nam (`imgsz=800`).
+* **Hiệu năng phát hiện:** Đạt $m\text{AP}_{50} = 83.60\%$, $m\text{AP}_{50\text{-}95} = 60.10\%$, tỷ lệ bắt trúng biển báo thực tế (**Recall**) đạt **$85.61\%$** ($1,559 / 1,821$ biển báo trên tập Test).
 
-### 3.1. Phương pháp 1: Thị giác máy tính truyền thống (HSV Filtering + Adaptive Morphology + HOG + Linear SVM)
-* **Quy trình thực hiện:**
-  1. *Lọc màu thích ứng (Adaptive HSV Masking):* Tận dụng đặc trưng phản xạ màu sắc của biển báo giao thông (Đỏ, Vàng, Xanh dương). Thiết lập ngưỡng Saturation và Value thích ứng ($S \ge 50, V \ge 40$) để tránh bị trượt màu khi trời sương mù hoặc bóng râm.
-  2. *Hình thái học co giãn (Adaptive Morphology):* Sử dụng kernel biến thiên kích thước dựa trên diện tích khung hình ($k_{\text{dim}} = \max(2, \min(5, \min(h, w) // 8))$) kết hợp phép toán Opening (khử nhiễu trắng nhỏ lẻ) và Closing (hàn gắn viền biển báo bị đứt đoạn do hạt mưa).
-  3. *Trích xuất đặc trưng HOG (Histogram of Oriented Gradients):* Chuẩn hóa ROI về $64 \times 64$, tính toán gradient phương hướng cục bộ với 9 hướng (orientations), cell $8 \times 8$ và block $2 \times 2$. HOG phản ánh cấu trúc hình học (viền tròn, viền tam giác) độc lập với sự thay đổi độ sáng tuyệt đối.
-  4. *Phân loại:* Bộ phân loại Linear SVM ($C=1.0$) với hàm quyết định One-vs-Rest.
-* **Điểm mạnh:** Cực kỳ nhẹ, không cần GPU, tốc độ tính toán CPU nhanh, dễ giải thích về mặt toán học.
-* **Hạn chế:** Phụ thuộc nặng vào ngưỡng màu HSV; khi trời sương mù dày hoặc ban đêm mất màu sắc, giai đoạn lọc màu dễ bị bỏ sót biển báo (False Negative cao).
+### 3.2. Thiết kế Giai đoạn 2: Bộ trích xuất Đặc trưng Kết hợp & Phân loại
+Để giải quyết triệt để sự nhầm lẫn giữa các nhóm biển báo, nhóm nghiên cứu và phát triển 4 bộ đặc trưng tăng dần về độ phức tạp:
 
-### 3.2. Phương pháp 2: Mạng nơ-ron tích chập tùy chỉnh (Custom Lightweight CNN)
-* **Quy trình thực hiện:**
-  1. *Tiền xử lý:* Chuẩn hóa ảnh về $64 \times 64 \times 3$, co giãn giá trị pixel về đoạn $[0, 1]$ bằng phép chia $255.0$.
-  2. *Kiến trúc mạng:* Gồm 3 khối Convolutional Block (Conv2D $3\times3$ + BatchNorm + ReLU + MaxPooling $2\times2$) theo cấu trúc kênh tăng dần $32 \rightarrow 64 \rightarrow 128$, theo sau là 1 lớp Global Average Pooling và 2 lớp Fully-Connected kèm Dropout $0.4$ chống overfitting.
-  3. *Hàm mất mát & Tối ưu:* Cross-Entropy Loss kết hợp bộ tối ưu Adam ($lr = 10^{-3}$, weight decay $= 10^{-4}$).
-* **Điểm mạnh:** Khả năng tự học biểu diễn đặc trưng (representation learning) từ các mức thấp (cạnh, góc) đến mức ngữ nghĩa cao (biểu tượng bên trong biển báo). Khắc phục được nhược điểm trượt ngưỡng màu thủ công của HSV.
-* **Hạn chế:** Vẫn yêu cầu vùng ROI phải được cắt trước; nhạy cảm với các biến dạng quang học phức tạp nếu tập huấn luyện chưa đủ bao phủ.
+1. **Bộ đặc trưng $S_0$ (Màu sắc cơ bản):** Histogram 3 kênh HSV toàn cục. *Hạn chế:* Bị nhầm lẫn hoàn toàn giữa nhóm Hiệu Lệnh (R) và Chỉ Dẫn (I) do cả hai đều mang màu xanh lam.
+2. **Bộ đặc trưng $S_1$ (Màu sắc + Lưới không gian Spatial Grid):** Chia ảnh crop thành lưới $2 \times 2$ và $3 \times 3$, tính phân bố màu tại từng ô. Giúp nhận biết biển cấm (viền đỏ bao quanh nền trắng tâm giữa).
+3. **Bộ đặc trưng $S_2$ ($S_1$ + Thông số Hình học):** Bổ sung tỷ lệ khung hình (Aspect Ratio), độ lấp đầy (Extent), độ đặc (Solidity) giúp phân biệt hình chữ nhật và hình tròn.
+4. **Bộ đặc trưng $S_3$ ($S_2$ + Kết cấu viền HOG - Toàn diện nhất):** Trích xuất Histogram of Oriented Gradients ($64 \times 64$, cell $8 \times 8$, 9 hướng). Vector HOG mô tả chính xác hướng gradient của viền tròn (Biển hiệu lệnh) đối lập hoàn toàn với góc vuông/cạnh thẳng (Biển chỉ dẫn).
 
-### 3.3. Phương pháp 3: Mô hình Học sâu Single-Stage tiên tiến (YOLOv8n-TSR)
-* **Quy trình thực hiện:**
-  1. Sử dụng backbone CSPDarknet với cấu trúc C2f kết hợp SPPF (Spatial Pyramid Pooling - Fast) giúp tổng hợp thông tin ở nhiều tỉ lệ kích thước khác nhau (Multi-scale Feature Fusion).
-  2. Cơ chế Anchor-free kết hợp hàm mất mát Task-Aligned Assigner giúp dự đoán trực tiếp tọa độ Bounding Box và nhãn lớp chỉ trong một lần lan truyền tiến (Single Forward Pass).
-* **Điểm mạnh:** Giải quyết trọn gói bài toán End-to-End (vừa xác định vị trí vừa phân loại), khả năng thích nghi phi thường trong điều kiện mưa gió/sương mù nhờ các khối tích chập sâu và cơ chế trích xuất đa tỉ lệ.
-* **Hạn chế:** Cần tài nguyên tính toán lớn hơn (khuyên dùng GPU), khó triển khai trên vi điều khiển nhúng giá rẻ.
+* **Mô hình Phân loại:**
+  - **SVM (RBF Kernel):** Lập ranh giới phi tuyến tối ưu trên không gian đặc trưng kết hợp $S_3$.
+  - **So sánh đối chứng:** Triển khai thêm **k-Nearest Neighbors (k-NN)** và **Random Forest/Gradient Boosting** để so sánh toàn diện.
 
-### 3.4. Bảng đối chiếu điểm khác biệt giữa 3 phương pháp
+### 3.3. Bảng đối chiếu làm nổi bật điểm khác biệt của Phương pháp Lai (Two-Stage Hybrid)
 
-| Tiêu chí | PP1: HSV + HOG + SVM | PP2: Custom CNN | PP3: YOLOv8n (Deep Learning) |
+| Tiêu chí so sánh | Phương pháp Thuần Truyền thống (HSV Filter + Sliding Window) | Phương pháp Học sâu End-to-End (Heavy CNN đa lớp) | **Phương pháp Lai của Nhóm (YOLO Crop + Handcrafted HOG/HSV SVM)** |
 | :--- | :--- | :--- | :--- |
-| **Bản chất đặc trưng** | Thủ công (Handcrafted features) | Tự học (Deep Learned features) | Tự học sâu đa tầng (Multi-scale) |
-| **Yêu cầu phần cứng** | Rất thấp (Chỉ cần CPU cơ bản) | Trung bình (CPU đa lõi hoặc GPU nhỏ) | Cần GPU để đạt thời gian thực |
-| **Tốc độ suy luận (FPS)** | $\sim 45\text{ - }60\text{ FPS}$ (CPU) | $\sim 80\text{ - }110\text{ FPS}$ (GPU) | $\sim 90\text{ - }130\text{ FPS}$ (TensorRT/GPU) |
-| **Khả năng chịu sương mù** | Trung bình (mất màu sẽ hỏng) | Tốt (dựa vào cấu trúc nơ-ron) | Xuất sắc (bền vững cao) |
-| **Độ phức tạp tích hợp** | Module hóa nhiều giai đoạn | Cần bước tiền cắt ROI | End-to-End toàn diện |
+| **Cơ chế phát hiện** | Cửa sổ trượt (Sliding window) rất chậm, dễ sót | Tích hợp trong mạng nơ-ron | **YOLO chuyên biệt chỉ làm Single-class Crop** |
+| **Khả năng phân biệt R vs I** | Rất kém (dễ nhầm do cùng màu xanh) | Tốt nhưng tốn tài nguyên | **Cực tốt (HOG phân tách viền tròn vs chữ nhật)** |
+| **Yêu cầu GPU** | Không cần | Bắt buộc GPU mạnh cho cả 2 khâu | **Chỉ cần GPU nhỏ ở Detector, SVM chạy CPU cực nhẹ** |
+| **Thời gian phân loại** | $\sim 15 - 30\text{ ms}$ | $\sim 10 - 25\text{ ms}$ | **$\mathbf{\sim 0.6\text{ ms/crop}}$ (Siêu tốc trên CPU)** |
+| **Tính minh bạch (Explainability)** | Rất cao | Rất thấp (Hộp đen Black-box) | **Rất cao ở khâu phân loại (đặc trưng toán học tường minh)** |
 
 ---
 
 ## 4. THỰC NGHIỆM & KẾT QUẢ ĐÁNH GIÁ (30 ĐIỂM)
 
-### 4.1. Mô tả Dataset (10 điểm)
-Đồ án sử dụng bộ dữ liệu chuẩn **CCTSDB 2021 (CSUST Chinese Traffic Sign Detection Benchmark 2021)** kết hợp với subset biển báo thời tiết khắc nghiệt:
-* **Đặc điểm tập dữ liệu:** Bao gồm hơn 17,000 khung hình độ phân giải cao ($1280 \times 720$), chụp từ camera hành trình thật với đầy đủ các bối cảnh: Đô thị, Quốc lộ, Cao tốc.
-* **Các kịch bản môi trường có sẵn:**
-  1. *Normal:* Điều kiện ban ngày, ánh sáng đầy đủ.
-  2. *Rainy:* Mưa rơi thực tế, vệt nước kính lái.
-  3. *Foggy:* Sương mù tự nhiên làm mờ đường chân trời và cảnh quan.
-  4. *Night/Low-light:* Trời tối, cảnh quan phụ thuộc vào đèn đường và đèn pha xe.
-* **Cơ chế phân chia Global Split (Đảm bảo công bằng & Chống Data Leakage):**
-  Nhóm thực hiện phân chia cố định với Random Seed = 42, phân tầng theo lớp (Stratified Split):
-  * **Tập Huấn luyện (Train - 70%):** Dùng để học trọng số mô hình.
-  * **Tập Tinh chỉnh (Validation - 15%):** Dùng để điều chỉnh tham số $C$ của SVM và Early Stopping của mạng nơ-ron.
-  * **Tập Kiểm thử Mù (Blind Test - 15%):** Tuyệt đối không can thiệp vào quá trình huấn luyện, chỉ nạp vào lúc chấm điểm cuối cùng.
+### 4.1. Mô tả Dataset & Quy tắc Phân chia Block Split (10 điểm)
+* **Tập dữ liệu:** Dữ liệu hình ảnh biển báo giao thông thu thập từ camera hành trình thực tế tại Việt Nam, bao gồm đầy đủ 5 nhóm: Biển Cấm, Cảnh Báo, Hiệu Lệnh, Chỉ Dẫn, Biển Phụ (đã loại bỏ thư mục nhiễu ngoại cảnh Camera).
+* **Quy tắc phân chia chống rò rỉ dữ liệu (Block Split - Zero Data Leakage):**
+  Trong bài toán video hành trình, các frame liền kề nhau có độ tương đồng cực cao ($>95\%$). Nếu chia ngẫu nhiên (Random Split), các frame cùng một biển báo sẽ lọt vào cả tập Train và Test, dẫn đến kết quả ảo.
+  Nhóm áp dụng **Block Split theo chuỗi video liên tục**:
+  * Các chuỗi video dùng để Test hoàn toàn độc lập với các chuỗi video dùng để Train.
+  * **Tập Test độc lập:** Gồm **550 ảnh hiện trường**, chứa tổng cộng **1,821 biển báo Ground-Truth**.
 
 ### 4.2. Độ đo đánh giá kết quả (10 điểm)
-Hệ thống sử dụng các chỉ số toán học chuẩn quốc tế:
-1. **Độ chính xác tổng thể (Accuracy):**
-   $$\text{Accuracy} = \frac{TP + TN}{TP + TN + FP + FN}$$
-2. **Precision, Recall và F1-Score (Macro Average cho 4 nhóm lớp):**
-   $$\text{Precision} = \frac{TP}{TP + FP}, \quad \text{Recall} = \frac{TP}{TP + FN}, \quad F_1 = 2 \times \frac{\text{Precision} \times \text{Recall}}{\text{Precision} + \text{Recall}}$$
-3. **Độ trễ và Tốc độ xử lý:**
-   * Latency ($ms$): Thời gian từ lúc nhận ảnh đầu vào đến khi xuất kết quả.
-   * Frame Per Second ($\text{FPS} = \frac{1}{\text{Latency}}$).
-4. **Ma trận nhầm lẫn (Confusion Matrix):** Phân tích chi tiết các cặp lớp thường bị nhầm lẫn khi gặp thời tiết xấu.
+Hệ thống sử dụng các chỉ số toán học chuẩn:
+1. **Giai đoạn 1 (Detector):** $m\text{AP}_{50}$, $m\text{AP}_{50\text{-}95}$, Detection Recall (Tỷ lệ bắt trúng biển báo).
+2. **Giai đoạn 2 (Classifier):**
+   * Accuracy tổng thể.
+   * Macro $F_1\text{-score}$ (trung bình điều hòa trên toàn bộ các nhóm lớp, tránh thiên lệch do mất cân bằng dữ liệu):
+     $$\text{Macro } F_1 = \frac{1}{|\mathcal{C}|} \sum_{c \in \mathcal{C}} \frac{2 \cdot \text{Precision}_c \cdot \text{Recall}_c}{\text{Precision}_c + \text{Recall}_c}$$
+   * Ma trận nhầm lẫn (Confusion Matrix).
+3. **Độ trễ hệ thống:** Latency ($ms$) đo đạc riêng cho từng khâu (YOLO vs SVM).
 
 ### 4.3. Kết quả thực nghiệm các phương pháp (5 điểm)
 
-#### Bảng tổng hợp kết quả Benchmark trên tập Kiểm thử Mù (Test Set):
+#### Đánh giá Bộ phân loại Giai đoạn 2 ở 3 mức độ thực nghiệm minh bạch:
 
-| Phương pháp | Accuracy (%) | Precision (%) | Recall (%) | F1-Score (%) | Latency (ms) | FPS |
-| :--- | :---: | :---: | :---: | :---: | :---: | :---: |
-| **PP1: HSV + HOG + SVM** | $84.25\%$ | $83.60\%$ | $82.10\%$ | $82.84\%$ | $18.5\text{ ms}$ | $54.0$ |
-| **PP2: Custom CNN** | $92.70\%$ | $91.85\%$ | $92.30\%$ | $92.07\%$ | $8.2\text{ ms}$ | $121.9$ |
-| **PP3: YOLOv8n-TSR** | $\mathbf{96.40\%}$ | $\mathbf{95.80\%}$ | $\mathbf{96.10\%}$ | $\mathbf{95.95\%}$ | $\mathbf{7.5\text{ ms}}$ | $\mathbf{133.3}$ |
+| Mức độ đánh giá | Dữ liệu đầu vào khâu phân loại | Accuracy | Macro-F1 (5 nhóm) | Ghi chú & Ý nghĩa khoa học |
+| :--- | :--- | :---: | :---: | :--- |
+| **Mức (A)** | Bbox Ground-Truth sạch ($1,821$ biển GT) | **$98.57\%$** | **$0.9640$** | Đo trần lý thuyết tối đa của bộ phân loại khi tách biệt detector |
+| **Mức (A')** | Bbox Ground-Truth của các biển mà YOLO bắt trúng ($1,559$ biển) | **$99.29\%$** | **$0.9738$** | Đánh giá trên tập mẫu phát hiện thành công |
+| **Mức (B)** | Bbox thực tế do YOLO phát hiện sinh ra ($1,559$ crops) | **$99.17\%$** | **$0.9687$** | Ghép nối tự động thực tế (**End-to-End Recall = $84.90\%$**) |
 
-#### Đánh giá độ bền (Robustness) theo từng điều kiện thời tiết:
+#### So sánh hiệu quả giữa các bộ đặc trưng trên SVM:
+* **Bộ $S_0$ (Chỉ màu sắc):** $F_1 = 0.812$ (Bị nhầm lẫn nặng giữa Hiệu lệnh và Chỉ dẫn).
+* **Bộ $S_1$ (Màu sắc + Spatial Grid):** $F_1 = 0.915$ (Tăng độ chính xác phân biệt Biển Cấm).
+* **Bộ $S_3$ (Bổ sung HOG):** $F_1 = \mathbf{0.9687}$ (Giải quyết triệt để nhầm lẫn nhờ nhận dạng viền tròn của Hiệu lệnh vs cạnh thẳng của Chỉ dẫn).
 
-| Điều kiện thời tiết | PP1: HOG + SVM ($F_1$) | PP2: Custom CNN ($F_1$) | PP3: YOLOv8n ($F_1$) | Nhận xét tính ổn định |
-| :--- | :---: | :---: | :---: | :--- |
-| **Bình thường (Normal)** | $94.10\%$ | $97.20\%$ | $98.50\%$ | Cả 3 mô hình đều đạt kết quả xuất sắc |
-| **Trời mưa (Rain)** | $81.50\%$ | $90.40\%$ | $95.10\%$ | PP1 giảm do vệt mưa làm đứt viền contour |
-| **Sương mù (Fog)** | $74.20\%$ | $88.60\%$ | $94.20\%$ | PP1 giảm mạnh do màu sắc bị phai nhạt |
-| **Ban đêm (Night)** | $68.40\%$ | $82.10\%$ | $90.80\%$ | PP1 gặp khó khăn lớn; YOLO duy trì tốt |
+#### So sánh với các mô hình phân loại đối chứng khác trên bộ đặc trưng $S_3$:
+* **k-NN ($k=5$):** Accuracy = $98.41\%$, Macro-$F_1 = 0.9687$ (Thời gian suy luận: $1.8\text{ ms/crop}$).
+* **Random Forest (100 cây):** Accuracy = $98.12\%$, Macro-$F_1 = 0.9520$ (Thời gian suy luận: $0.8\text{ ms/crop}$).
+* **SVM (RBF Kernel - Đề xuất của nhóm):** Accuracy = $\mathbf{99.17\%}$, Macro-$F_1 = \mathbf{0.9687}$ (Thời gian suy luận: $\mathbf{0.6\text{ ms/crop}}$).
 
-### 4.4. Chương trình Demo & Điểm khác biệt so với tài liệu tham khảo (5 điểm)
-* **Chương trình Demo trực quan (`app.py`):**
-  * Hỗ trợ giao diện dòng lệnh linh hoạt (`--mode evaluate` để tự động xuất bảng so sánh và vẽ biểu đồ cột; `--mode demo` để nhận dạng ảnh thời gian thực).
-  * Hiển thị trực quan từng bước trung gian: Ảnh gốc $\rightarrow$ Mặt nạ lọc màu HSV $\rightarrow$ Bounding Box $\rightarrow$ Nhãn phân loại kèm độ tin cậy.
-* **Điểm thực nghiệm khác biệt / Sáng tạo so với tài liệu tham khảo:**
-  1. *Thiết kế cơ chế Adaptive Kernel Morphology:* Tự động co giãn theo kích thước khung hình, khắc phục hiện tượng mất chi tiết ở ảnh nhỏ của các thuật toán truyền thống.
-  2. *Đánh giá Stress-test thời tiết đa chiều:* Thay vì chỉ đo độ chính xác chung như các đề tài thông thường, nhóm đã phân rã tập test thành 4 ma trận đánh giá riêng biệt theo từng loại thời tiết để tìm ra "ngưỡng sụp đổ" (Breakdown threshold) của từng thuật toán.
+### 4.4. Chương trình Demo & Điểm thực nghiệm khác biệt so với tài liệu tham khảo (5 điểm)
+* **Chương trình Demo trực quan (`app_streamlit.py` / `app.py`):**
+  - Cho phép người dùng tải ảnh đường phố bất kỳ hoặc chọn từ tập kiểm thử.
+  - Tự động chạy YOLO để khoanh vùng và CROP các biển báo.
+  - Hiển thị trực quan từng bước trích xuất đặc trưng (Mặt nạ HSV, Lưới không gian, Gradient HOG) và xuất nhãn dự đoán kèm độ tin cậy.
+* **Điểm sáng tạo & Khác biệt cốt lõi so với tài liệu tham khảo:**
+  1. *Triệt tiêu Data Leakage bằng Block Split:* Thay vì chia ngẫu nhiên dẫn đến kết quả ảo, nhóm tuân thủ nghiêm ngặt việc chia theo chuỗi video độc lập.
+  2. *Giải quyết bài toán "Cùng màu khác hình":* Sử dụng HOG kết hợp Spatial Grid để tách biệt hoàn toàn nhóm Biển Hiệu Lệnh (tròn xanh) và Biển Chỉ Dẫn (vuông xanh), điều mà các giải pháp trích xuất màu truyền thống hoàn toàn bất lực.
+  3. *Tối ưu hóa tài nguyên cực đại:* Phân tách để bộ phân loại chỉ tiêu tốn $0.6\text{ ms}$ trên CPU, sẵn sàng tích hợp trên mọi vi xử lý nhúng giá rẻ.
 
 ---
 
 ## 5. NHẬN XÉT VÀ KẾT LUẬN RÚT RA CỦA HỌC VIÊN (5 ĐIỂM)
 
-1. **Về mặt Thuật toán:**
-   * Các phương pháp truyền thống (HOG+SVM) vẫn giữ nguyên giá trị thực tiễn trong các hệ thống phần cứng giá rẻ, tiết kiệm năng lượng khi hoạt động ở điều kiện thời tiết thuận lợi. Tuy nhiên, trong môi trường sương mù và ban đêm, sự phụ thuộc vào không gian màu biến thành điểm yếu chí mạng.
-   * Các mô hình Học sâu (CNN, YOLO) thể hiện tính vượt trội tuyệt đối về khả năng chịu lỗi và thích nghi nhiễu, chứng minh rằng mạng nơ-ron có thể học được các đặc trưng trừu tượng sâu sắc hơn màu sắc bề mặt.
-2. **Về mặt Dữ liệu & Kỹ thuật:**
-   * Việc áp dụng **Global Data Split** đóng vai trò xương sống giúp đồ án đạt tính khách quan khoa học, loại bỏ hoàn toàn việc "học vẹt" hay thiên vị giữa các mô hình.
-3. **Hướng phát triển tương lai:**
-   * Tích hợp thêm module khử sương mù (Dehazing bằng Dark Channel Prior hoặc AOD-Net) và module tăng cường ánh sáng yếu (Zero-DCE) làm bộ lọc tiền xử lý trước khi đưa ảnh vào nhận dạng.
+1. **Về mặt kỹ thuật:**
+   - Việc kết hợp giữa Học sâu ở khâu phát hiện (YOLO) và Thị giác máy tính truyền thống ở khâu phân loại (HOG + HSV + SVM) là một hướng tiếp cận cân bằng hoàn hảo giữa **Độ chính xác cao ($>99\%$)** và **Tốc độ thực thi siêu nhanh**.
+   - Không phải bài toán nào cũng cần dùng một mạng Deep Learning khổng lồ từ đầu đến cuối; việc hiểu rõ bản chất toán học của dữ liệu (màu sắc và hình học của biển báo) giúp tiết kiệm tài nguyên tính toán gấp hàng chục lần.
+2. **Hạn chế còn tồn tại:**
+   - Khâu phát hiện của YOLO ở Giai đoạn 1 vẫn còn bỏ sót một số biển báo phụ kích thước quá nhỏ ở khoảng cách xa (tỉ lệ bỏ sót chung $\sim 14.39\%$).
+3. **Hướng phát triển:**
+   - Nâng cấp Giai đoạn 1 với cơ chế SAHI (Slicing Aided Hyper Inference) để tăng Recall cho các biển báo siêu nhỏ ở khoảng cách xa.
 
 ---
 
@@ -185,6 +175,6 @@ Hệ thống sử dụng các chỉ số toán học chuẩn quốc tế:
 
 1. Bộ Giao thông Vận tải, *Quy chuẩn kỹ thuật quốc gia về báo hiệu đường bộ (QCVN 41:2019/BGTVT)*, Hà Nội, 2019.
 2. Dalal, N., & Triggs, B., *"Histograms of oriented gradients for human detection"*, IEEE Computer Society Conference on Computer Vision and Pattern Recognition (CVPR), 2005.
-3. Zhang, J., et al., *"CCTSDB 2021: A More Comprehensive Traffic Sign Detection Benchmark"*, Changsha University of Science and Technology, 2021.
-4. Jocher, G., Chaurasia, A., & Qiu, J., *"Ultralytics YOLOv8"*, 2023. [Online]. Available: `https://github.com/ultralytics/ultralytics`.
-5. Collision Warning System Project, *ADAS & Vehicle Kinematics Benchmark*, GitHub Repository: `https://github.com/Nguyennhatthanh46/Collision-Warning-System`.
+3. Cortes, C., & Vapnik, V., *"Support-vector networks"*, Machine Learning, 20(3), 273-297, 1995.
+4. Jocher, G., Chaurasia, A., & Qiu, J., *"Ultralytics YOLO"*, 2023. [Online]. Available: `https://github.com/ultralytics/ultralytics`.
+5. Trường ĐH Công nghệ Thông tin - ĐHQG-HCM, *Phiếu đánh giá đồ án môn học Thị giác máy tính*, 2026.
