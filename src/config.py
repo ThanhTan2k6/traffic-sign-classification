@@ -121,7 +121,8 @@ RANDOM_SEED = 42
 # 4. DANH SÁCH MÔ HÌNH BENCHMARK (2 THÀNH VIÊN)
 # ==============================================================================
 SUPPORTED_MODELS = [
-    "deep_learning",  # Enhanced LeNet-5 (Thành viên 2)
+    "color_hog_svm",  # Phương pháp 1 (Thành viên 1): HSV + Geometry + HOG + SVM
+    "deep_learning",  # Phương pháp 2 (Thành viên 2): Enhanced LeNet-5 (PyTorch CNN)
 ]
 
 # Kích thước ảnh chuẩn hóa cho việc trích xuất đặc trưng phân loại

@@ -211,27 +211,50 @@ pip install -r requirements.txt
 python -m src.detection.deep_learning.train --arch cnn --epochs 20
 ```
 
-### Bước 3: Chạy Đánh giá (Benchmarking) & Demo qua `app.py`
+### Bước 3: Chạy Đánh giá Đối chuẩn (Benchmarking) & Demo qua `app.py`
 ```bash
-# 1. Chạy Benchmark phân loại (Classification) trên tập Test ROI:
+# 1. Chạy Đối chuẩn phân loại (Classification) trên toàn bộ tập Test (So sánh cả 2 mô hình):
 python app.py --mode evaluate --split test
 
-# 2. Chạy thử nghiệm Demo qua CLI:
-python app.py --mode demo --model deep_learning --input data/cropped/test/Bien_Cam/0002_00.jpg
+# 2. Chạy Đối chuẩn toàn trình trên ảnh đường phố toàn cảnh (Two-Stage: YOLO11s + Classifier):
+python app.py --mode evaluate-scene --split test
 
-# 3. Khởi chạy Giao diện Web tương tác (Streamlit):
+# 3. Chạy đánh giá từng mô hình riêng lẻ:
+python app.py --mode evaluate --model deep_learning --split test
+python app.py --mode evaluate --model color_hog_svm --split test
+
+# 4. Chạy thử nghiệm Demo qua CLI:
+# Chế độ ảnh ROI biển báo cắt sẵn:
+python app.py --mode demo --model deep_learning --input data/cropped/test/Bien_Cam/0002_00.jpg
+python app.py --mode demo --model color_hog_svm --input data/cropped/test/Bien_Cam/0002_00.jpg
+# Chế độ ảnh toàn cảnh đường phố (YOLO11s tự động phát hiện + đóng khung + phân loại):
+python app.py --mode demo --model deep_learning --input dataset/images/0001.jpg --scene
+
+# 5. Khởi chạy Giao diện Web tương tác (Streamlit):
 streamlit run app_streamlit.py
 ```
 
 ---
 
-## 🏆 6. KẾT QUẢ BENCHMARKING THỰC TẾ
+## 🏆 6. KẾT QUẢ BENCHMARKING THỰC TẾ (2 TẦNG ĐỐI CHUẨN)
 
-### Đánh Giá Năng Lực Phân Loại Trên Ảnh Cắt Sẵn (Blind Test - 1.136 Mẫu)
+### 🥇 Tầng 1: Đánh Giá Năng Lực Phân Loại Trên Ảnh Cắt Sẵn (Blind Test - 1.136 Mẫu)
 Đánh giá độc lập trên tập **Blind Test** ($1,136$ mẫu ROI biển báo chưa từng xuất hiện trong quá trình huấn luyện):
 
-| Mô Hình / Phương Pháp | Thành Viên | Accuracy | Precision | Recall | Macro F1 | Độ Trễ (Latency) | Tốc Độ (FPS) |
+| Mô Hình / Phương Pháp | Thành Viên Phụ Trách | Accuracy | Precision | Recall | Macro F1 | Độ Trễ (Latency) | Tốc Độ (FPS) |
 | :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
-| **Enhanced LeNet-5 (Deep Learning)** | **Thành viên 2** | **99.74%** | **99.49%** | **99.69%** | **99.59%** | **1.12 ms** | **890.6 FPS** |
+| **Enhanced LeNet-5 (Học Sâu)** | **Thành viên 2** | **99.74%** | **99.49%** | **99.69%** | **99.59%** | **1.30 ms** | **768.4 FPS** |
+| **Color + HOG + SVM (Cổ Điển)** | **Thành viên 1** | **99.47%** | **98.14%** | **98.96%** | **98.51%** | **2.79 ms** | **357.9 FPS** |
 
+*Biểu đồ so sánh trực quan được xuất tự động tại:* `res/outputs/benchmark_comparison.png`  
 *Ma trận nhầm lẫn chi tiết được lưu tại:* `res/outputs/confusion_matrix_deep_learning.png`
+
+### 🥈 Tầng 2: Đánh Giá Toàn Trình Trên Ảnh Chụp Đường Phố Toàn Cảnh (End-to-End Scene Benchmark)
+Đánh giá hệ thống Two-Stage hoàn chỉnh (Định vị ứng viên qua YOLO11s + Phân loại mô hình) trên tập ảnh đường phố toàn cảnh:
+
+| Phương Pháp / Pipeline | Người Phụ Trách | Tỷ Lệ Định Vị (%) | Đoán Đúng Khi Tìm Thấy (%) | E2E Recall (%) | Độ Trễ Toàn Cảnh | Tốc Độ (FPS) |
+| :--- | :---: | :---: | :---: | :---: | :---: | :---: |
+| **Two-Stage LeNet (YOLO11s + LeNet)** | **Thành viên 2** | **85.61%** | **99.40%** | **85.10%** | **91.45 ms** | **10.9 FPS** |
+| **Two-Stage SVM (YOLO11s + SVM RBF)** | **Thành viên 1** | **85.61%** | **99.17%** | **84.90%** | **105.20 ms** | **9.5 FPS** |
+
+*Biểu đồ đối chuẩn toàn cảnh được xuất tự động tại:* `res/outputs/scene_benchmark_comparison.png`

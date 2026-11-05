@@ -123,7 +123,11 @@ def evaluate_detector(
     return metrics
 
 
-def benchmark_all_models(detectors: List[BaseDetector], split_file: Path) -> pd.DataFrame:
+def benchmark_all_models(
+    detectors: List[BaseDetector],
+    split_file: Path,
+    max_samples: int = None,
+) -> pd.DataFrame:
     """
     Chạy đánh giá toàn diện tất cả các mô hình và in Bảng Xếp Hạng (Leaderboard).
     """
@@ -136,7 +140,7 @@ def benchmark_all_models(detectors: List[BaseDetector], split_file: Path) -> pd.
 
     for detector in detectors:
         try:
-            m = evaluate_detector(detector, split_file)
+            m = evaluate_detector(detector, split_file, max_samples=max_samples)
             if m:
                 results.append({
                     "Phương Pháp / Model": m["model_name"],
