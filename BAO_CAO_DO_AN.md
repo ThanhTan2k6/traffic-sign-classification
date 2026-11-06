@@ -8,12 +8,12 @@
 * **Quy chuẩn áp dụng:** Quy chuẩn kỹ thuật quốc gia về báo hiệu đường bộ **QCVN 41:2019/BGTVT**
 * **Chiến lược phân chia:** **Block Split theo khối video liên tục (Zero Data Leakage)**
 * **Danh sách thành viên:**
-  1. **Thành viên 1:** `[Họ và tên - MSSV]` (Phụ trách: Mô-đun phát hiện YOLO11s 1-Class `sign`, Pipeline phân loại Thị giác truyền thống: Trích xuất đặc trưng đa tầng HSV + Grid + HOG + Bộ phân loại SVM RBF).
-  2. **Thành viên 2:** `[Họ và tên - MSSV]` (Phụ trách: Pipeline phân loại Học sâu Hiện đại: Thiết kế kiến trúc Mạng nơ-ron tích chập Enhanced LeNet-5 PyTorch, Huấn luyện & Đánh giá Đối chuẩn đa tầng).
+  1. **Từ Lê Tuấn Anh** - MSSV: **24520133** (Phụ trách: Mô-đun phát hiện YOLO11s để cắt biển báo + Pipeline thị giác máy tính truyền thống Color + Spatial Grid + HOG + SVM).
+  2. **Nguyễn Thanh Tân** - MSSV: **24521581** (Phụ trách: Pipeline phân loại Học sâu CNN - Enhanced LeNet-5 PyTorch + Hệ thống đối chuẩn Dual-Tier Benchmark).
 
 ---
 
-## 1. NÊU ĐƯỢC LÝ DO, CƠ SỞ THỰC HIỆN ĐỀ TÀI (5 ĐIỂM)
+## 1. LÝ DO VÀ CƠ SỞ THỰC HIỆN ĐỀ TÀI
 
 ### 1.1. Lý do chọn đề tài & Tính cấp thiết
 Trong các hệ thống Hỗ trợ Lái xe Nâng cao (ADAS) và Xe tự hành (Autonomous Vehicles), bài toán **Nhận dạng Biển báo Giao thông (Traffic Sign Recognition - TSR)** đóng vai trò sống còn nhằm đảm bảo an toàn giao thông, hỗ trợ người điều khiển phương tiện tuân thủ luật lệ và phòng ngừa tai nạn.
@@ -33,9 +33,9 @@ Tại Việt Nam, việc triển khai bài toán TSR gặp nhiều thách thức
 
 ---
 
-## 2. PHÁT BIỂU BÀI TOÁN & MINH HỌA (20 ĐIỂM)
+## 2. PHÁT BIỂU BÀI TOÁN & MINH HỌA
 
-### 2.1. Phát biểu bài toán (15 điểm)
+### 2.1. Phát biểu bài toán
 Cho ảnh đầu vào $\mathbf{I} \in \mathbb{R}^{H \times W \times 3}$ được chụp từ camera hành trình phía trước phương tiện di chuyển trong bối cảnh giao thông đường bộ Việt Nam.
 
 Hệ thống giải quyết bài toán qua hai pha tuần tự:
@@ -56,7 +56,7 @@ Hệ thống giải quyết bài toán qua hai pha tuần tự:
 
 ---
 
-### 2.2. Hình minh họa cho bài toán (5 điểm)
+### 2.2. Hình minh họa cho bài toán
 
 #### A. Sơ đồ luồng dữ liệu tổng thể (Architectural Pipeline)
 
@@ -81,9 +81,9 @@ flowchart LR
 
 ---
 
-## 3. PHƯƠNG PHÁP GIẢI QUYẾT & LÀM NỔI BẬT ĐIỂM KHÁC BIỆT (30 ĐIỂM)
+## 3. PHƯƠNG PHÁP GIẢI QUYẾT & LÀM NỔI BẬT ĐIỂM KHÁC BIỆT
 
-### 3.1. Phương pháp Giai đoạn 1: Bộ định vị YOLO11s (1-Class Detector) - Thành viên 1
+### 3.1. Phương pháp Giai đoạn 1: Bộ định vị YOLO11s (1-Class Detector) - Từ Lê Tuấn Anh
 * **Ý tưởng:** Huấn luyện bộ phát hiện YOLO11s chỉ học một lớp duy nhất `sign`. Nhờ không phải phân tán năng lực học để phân loại hàng chục lớp chi tiết, mạng tập trung toàn bộ trọng số vào việc phân biệt biển báo với nền cảnh phức tạp (tán cây, nhà cửa, xe cộ).
 * **Quy trình huấn luyện 2 bước:**
   1. *Pretrain:* Huấn luyện 30 epochs trên tập dữ liệu mở CCTSDB 2021 (Trung Quốc) quy mô hơn 18,000 ảnh để học biểu diễn biên cạnh tổng quát của biển báo giao thông.
@@ -92,8 +92,8 @@ flowchart LR
 
 ---
 
-### 3.2. Phương pháp Giai đoạn 2A: Thị giác truyền thống (Color + Grid + HOG + SVM) - Thành viên 1
-Để giải quyết bài toán phân loại biển báo mà không dùng mạng nơ-ron sâu, Thành viên 1 nghiên cứu chuỗi tiến hóa đặc trưng qua 4 bước:
+### 3.2. Phương pháp Giai đoạn 2A: Thị giác truyền thống (Color + Grid + HOG + SVM) - Từ Lê Tuấn Anh
+Để giải quyết bài toán phân loại biển báo mà không dùng mạng nơ-ron sâu, Từ Lê Tuấn Anh nghiên cứu chuỗi tiến hóa đặc trưng qua 4 bước:
 
 1. **Bộ đặc trưng $S_0$ (Lọc màu HSV 44 chiều):**
    - Resize ảnh crop về $32 \times 32$. Chuyển đổi sang không gian màu HSV.
@@ -111,8 +111,8 @@ flowchart LR
 
 ---
 
-### 3.3. Phương pháp Giai đoạn 2B: Học sâu Hiện đại (Enhanced LeNet-5 CNN) - Thành viên 2
-Thành viên 2 thiết kế và xây dựng mạng nơ-ron tích chập tùy biến dựa trên kiến trúc kinh điển LeNet-5 nhưng được cải tiến hiện đại (**Enhanced LeNet-5**) để trích xuất đặc trưng không gian tự động:
+### 3.3. Phương pháp Giai đoạn 2B: Học sâu Hiện đại (Enhanced LeNet-5 CNN) - Nguyễn Thanh Tân
+Nguyễn Thanh Tân thiết kế và xây dựng mạng nơ-ron tích chập tùy biến dựa trên kiến trúc kinh điển LeNet-5 nhưng được cải tiến hiện đại (**Enhanced LeNet-5**) để trích xuất đặc trưng không gian tự động:
 
 * **Kiến trúc mạng:**
   1. *Khối trích xuất đặc trưng (Feature Extractor):* Gồm 3 khối tích chập liên tiếp:
@@ -141,9 +141,9 @@ Thành viên 2 thiết kế và xây dựng mạng nơ-ron tích chập tùy bi�
 
 ---
 
-## 4. THỰC NGHIỆM & KẾT QUẢ ĐÁNH GIÁ (30 ĐIỂM)
+## 4. THỰC NGHIỆM & KẾT QUẢ ĐÁNH GIÁ
 
-### 4.1. Thực nghiệm: Mô tả Dataset & Quy tắc Phân chia Block Split (10 điểm)
+### 4.1. Thực nghiệm: Mô tả Dataset & Quy tắc Phân chia Block Split
 
 #### A. Thống kê bộ dữ liệu
 * **Tổng số ảnh toàn cảnh:** 3,216 ảnh chụp từ camera hành trình trên đường phố Việt Nam (độ phân giải 960x540 và 1920x1080).
@@ -168,7 +168,7 @@ Thành viên 2 thiết kế và xây dựng mạng nơ-ron tích chập tùy bi�
 
 ---
 
-### 4.2. Thực nghiệm: Độ đo đánh giá kết quả (10 điểm)
+### 4.2. Thực nghiệm: Độ đo đánh giá kết quả
 Hệ thống sử dụng hệ thống độ đo toán học chặt chẽ ở cả 2 tầng:
 
 1. **Độ đo khâu Định vị (Object Detection):**
@@ -188,19 +188,19 @@ Hệ thống sử dụng hệ thống độ đo toán học chặt chẽ ở c�
 
 ---
 
-### 4.3. Thực nghiệm: Kết quả các phương pháp (5 điểm)
+### 4.3. Thực nghiệm: Kết quả các phương pháp
 
 #### 🥇 Tầng 1: Đánh giá phân loại độc lập trên 1,813 mẫu Blind Test Block Split (ROI Benchmark)
 Đo đạc thực tế trên tập ảnh crop Ground-Truth của tập Test độc lập (550 ảnh không rò rỉ):
 
 | Mô hình / Phương pháp | Người phụ trách | Accuracy | Macro-Precision | Macro-Recall | Macro-F1 | Độ trễ (Latency) | Tốc độ (FPS) |
 | :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
-| **Enhanced LeNet-5 (Học sâu)** | **Thành viên 2** | **98.73%** | **94.46%** | **97.43%** | **95.66%** | **1.10 ms** | **911.1 FPS** |
-| **Color + HOG + SVM (Truyền thống)** | **Thành viên 1** | **98.57%** | **94.82%** | **96.81%** | **95.51%** | **2.63 ms** | **379.7 FPS** |
+| **Enhanced LeNet-5 (Học sâu)** | **Nguyễn Thanh Tân** | **98.73%** | **94.46%** | **97.43%** | **95.66%** | **1.10 ms** | **911.1 FPS** |
+| **Color + HOG + SVM (Truyền thống)** | **Từ Lê Tuấn Anh** | **98.57%** | **94.82%** | **96.81%** | **95.51%** | **2.63 ms** | **379.7 FPS** |
 
 * **Phân tích kết quả:**
-  - Mô hình **Enhanced LeNet-5 (Thành viên 2)** đạt độ chính xác cao nhất (**98.73%** Acc, **95.66%** Macro-F1) với tốc độ xử lý vượt trội (**911.1 FPS**, độ trễ chỉ $1.10\text{ ms}$).
-  - Mô hình **Color + HOG + SVM (Thành viên 1)** đạt kết quả ấn tượng (**98.57%** Acc, **95.51%** Macro-F1), khẳng định sức mạnh vững chắc của chuỗi đặc trưng $S_3$ trên tập kiểm thử hoàn toàn độc lập.
+  - Mô hình **Enhanced LeNet-5 (Nguyễn Thanh Tân)** đạt độ chính xác cao nhất (**98.73%** Acc, **95.66%** Macro-F1) với tốc độ xử lý vượt trội (**911.1 FPS**, độ trễ chỉ $1.10\text{ ms}$).
+  - Mô hình **Color + HOG + SVM (Từ Lê Tuấn Anh)** đạt kết quả ấn tượng (**98.57%** Acc, **95.51%** Macro-F1), khẳng định sức mạnh vững chắc của chuỗi đặc trưng $S_3$ trên tập kiểm thử hoàn toàn độc lập.
 
 ---
 
@@ -216,7 +216,7 @@ Hệ thống sử dụng hệ thống độ đo toán học chặt chẽ ở c�
 
 ---
 
-### 4.4. Thực nghiệm: Có chương trình Demo, có thực nghiệm khác với tài liệu tham khảo (5 điểm)
+### 4.4. Thực nghiệm: Có chương trình Demo, có thực nghiệm khác với tài liệu tham khảo
 
 #### A. Chương trình Demo hoàn chỉnh (`app_streamlit.py` & `app.py`)
 Hệ thống cung cấp cả 2 giao diện thực thi:
@@ -236,7 +236,7 @@ Hệ thống cung cấp cả 2 giao diện thực thi:
 
 ---
 
-## 5. NHỮNG NHẬN XÉT VÀ KẾT LUẬN RÚT RA CỦA HỌC VIÊN (5 ĐIỂM)
+## 5. NHỮNG NHẬN XÉT VÀ KẾT LUẬN RÚT RA CỦA HỌC VIÊN
 
 ### 5.1. Nhận xét và kết luận kỹ thuật
 1. **Hiệu quả của việc phân tách trách nhiệm (Decoupling):**

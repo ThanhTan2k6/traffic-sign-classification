@@ -78,8 +78,8 @@
         \large
         \textbf{Danh sách thành viên nhóm:}\\[0.3cm]
         \begin{tabular}{llll}
-            \textbf{Thành viên 1:} & \texttt{[Họ và tên]} & \texttt{2452xxxx} & Phụ trách: YOLO11s Detector \& Color+HOG+SVM. \\
-            \textbf{Thành viên 2:} & \texttt{[Họ và tên]} & \texttt{2452xxxx} & Phụ trách: Enhanced LeNet-5 (PyTorch) \& Dual-Tier Benchmark. \\
+            \textbf{Thành viên 1:} & \texttt{Từ Lê Tuấn Anh} & \texttt{24520133} & YOLO11s Detector (cắt biển báo) \& Color+Grid+HOG+SVM. \\
+            \textbf{Thành viên 2:} & \texttt{Nguyễn Thanh Tân} & \texttt{24521581} & Mạng nơ-ron tích chập Enhanced LeNet-5 (CNN). \\
         \end{tabular}
     \end{flushleft}
 
@@ -98,9 +98,9 @@
 \setcounter{page}{1}
 
 % ==============================================================================
-% 1. NÊU ĐƯỢC LÝ DO, CƠ SỞ THỰC HIỆN ĐỀ TÀI (5 ĐIỂM)
+% 1. LÝ DO VÀ CƠ SỞ THỰC HIỆN ĐỀ TÀI
 % ==============================================================================
-\section{Lý do và cơ sở thực hiện đề tài (Tiêu chí 1 -- 5 điểm)}
+\section{Lý do và cơ sở thực hiện đề tài}
 
 \subsection{Lý do thực hiện đề tài và tính cấp thiết}
 Trong các hệ thống Hỗ trợ Lái xe Nâng cao (Advanced Driver Assistance Systems -- ADAS) và phương tiện tự hành (Autonomous Vehicles), bài toán \textbf{Nhận dạng Biển báo Giao thông (Traffic Sign Recognition -- TSR)} là một mô-đun tối quan trọng. Hệ thống đảm bảo việc phát hiện sớm và chính xác các quy định giới hạn tốc độ, làn đường ưu tiên hoặc các chướng ngại vật nguy hiểm phía trước, trực tiếp giảm thiểu nguy cơ tai nạn giao thông.
@@ -124,11 +124,11 @@ Tại Việt Nam, điều kiện giao thông đường bộ mang các thách th�
 \end{itemize}
 
 % ==============================================================================
-% 2. PHÁT BIỂU BÀI TOÁN & MINH HỌA (20 ĐIỂM)
+% 2. PHÁT BIỂU BÀI TOÁN & MINH HỌA
 % ==============================================================================
-\section{Phát biểu bài toán và hình minh họa (Tiêu chí 2 -- 20 điểm)}
+\section{Phát biểu bài toán và hình minh họa}
 
-\subsection{Phát biểu bài toán (Tiêu chí 2.1 -- 15 điểm)}
+\subsection{Phát biểu bài toán}
 Cho khung hình ảnh đầu vào $\mathbf{I} \in \mathbb{R}^{H \times W \times 3}$ thu từ camera hành trình phía trước phương tiện di chuyển trên đường phố Việt Nam.
 
 Hệ thống giải quyết bài toán qua hai bài toán con tuần tự:
@@ -156,7 +156,7 @@ Hệ thống giải quyết bài toán qua hai bài toán con tuần tự:
     \item \textbf{Độ trễ thời gian thực:} Khâu phân loại trên ảnh crop phải đạt tốc độ $\ge 300\text{ FPS}$ (độ trễ $< 3\text{ ms/crop}$) trên CPU đơn lõi.
 \end{itemize}
 
-\subsection{Hình minh họa cho bài toán (Tiêu chí 2.2 -- 5 điểm)}
+\subsection{Hình minh họa cho bài toán}
 
 \subsubsection{Sơ đồ kiến trúc luồng dữ liệu của hệ thống}
 \begin{figure}[H]
@@ -201,11 +201,11 @@ Hệ thống giải quyết bài toán qua hai bài toán con tuần tự:
 \end{table}
 
 % ==============================================================================
-% 3. PHƯƠNG PHÁP GIẢI QUYẾT & ĐIỂM KHÁC BIỆT (30 ĐIỂM)
+% 3. PHƯƠNG PHÁP GIẢI QUYẾT & ĐIỂM KHÁC BIỆT
 % ==============================================================================
-\section{Phương pháp giải quyết và điểm khác biệt (Tiêu chí 3 -- 30 điểm)}
+\section{Phương pháp giải quyết và điểm khác biệt}
 
-\subsection{Giai đoạn 1: Mô-đun phát hiện YOLO11s (1-Class Detector) -- Thành viên 1}
+\subsection{Giai đoạn 1: Mô-đun phát hiện YOLO11s (1-Class Detector) -- Từ Lê Tuấn Anh}
 \begin{itemize}
     \item \textbf{Mục tiêu:} Chỉ tập trung định vị chính xác vị trí biển báo trên ảnh lớn, không phân tán năng lực học để phân loại hàng chục lớp chi tiết.
     \item \textbf{Huấn luyện 2 bước:}
@@ -216,8 +216,8 @@ Hệ thống giải quyết bài toán qua hai bài toán con tuần tự:
     \item \textbf{Hiệu năng:} Đạt $\text{mAP}_{50} = 83.60\%$, $\text{mAP}_{50\text{-}95} = 60.10\%$, tỷ lệ bắt trúng thực tế (\textbf{Detection Recall}) đạt \textbf{85.61\%} (1.559 / 1.821 biển báo trên tập Test 550 ảnh).
 \end{itemize}
 
-\subsection{Giai đoạn 2A: Thị giác truyền thống (Color + Grid + HOG + SVM) -- Thành viên 1}
-Để giải quyết bài toán phân loại mà không dùng Deep Learning, Thành viên 1 nghiên cứu chuỗi tiến hóa đặc trưng qua 4 bước:
+\subsection{Giai đoạn 2A: Thị giác truyền thống (Color + Grid + HOG + SVM) -- Từ Lê Tuấn Anh}
+Để giải quyết bài toán phân loại mà không dùng Deep Learning, thành viên Từ Lê Tuấn Anh nghiên cứu chuỗi tiến hóa đặc trưng qua 4 bước:
 \begin{enumerate}
     \item \textbf{Bộ đặc trưng $S_0$ (Màu sắc HSV 44 chiều):} Histogram Hue (36 bins, có dịch pha $+30^\circ \pmod{180}$ để gom dải màu đỏ) và Saturation (8 bins). \textit{Hạn chế:} Bị nhầm lẫn hoàn toàn giữa nhóm Hiệu Lệnh và Chỉ Dẫn do cùng mang màu xanh lam.
     \item \textbf{Bộ đặc trưng $S_1$ (Bổ sung tỷ lệ khung hình AR -- 45 chiều):} Thêm $\text{AR} = W / H$ để phân biệt biển chữ nhật nằm ngang với biển tròn.
@@ -226,8 +226,8 @@ Hệ thống giải quyết bài toán qua hai bài toán con tuần tự:
     \item \textbf{Bộ phân loại SVM:} Sử dụng kernel RBF với siêu tham số $C=10.0, \gamma=\text{'scale'}$, chuẩn hóa StandardScaler.
 \end{enumerate}
 
-\subsection{Giai đoạn 2B: Học sâu Hiện đại (Enhanced LeNet-5 CNN) -- Thành viên 2}
-Thành viên 2 thiết kế mạng nơ-ron tích chập tùy biến dựa trên kiến trúc kinh điển LeNet-5 nhưng được hiện đại hóa (\textbf{Enhanced LeNet-5}):
+\subsection{Giai đoạn 2B: Học sâu Hiện đại (Enhanced LeNet-5 CNN) -- Nguyễn Thanh Tân}
+Thành viên Nguyễn Thanh Tân thiết kế mạng nơ-ron tích chập tùy biến dựa trên kiến trúc kinh điển LeNet-5 nhưng được hiện đại hóa (\textbf{Enhanced LeNet-5}):
 \begin{itemize}
     \item \textbf{Khối trích xuất đặc trưng (Feature Extractor):} Gồm 3 khối tích chập liên tiếp:
     \begin{align*}
@@ -239,7 +239,7 @@ Thành viên 2 thiết kế mạng nơ-ron tích chập tùy biến dựa trên 
     \item \textbf{Huấn luyện:} Hàm mất mát $\text{CrossEntropyLoss}$, Adam Optimizer ($\text{lr}=10^{-3}$, weight decay $=10^{-4}$), huấn luyện 20 epochs trên PyTorch với tập ảnh crop Ground-Truth Block Split (5.254 ảnh train), checkpoint lưu tự động dựa trên Validation Accuracy cao nhất (đạt \textbf{99.82\%} trên Val).
 \end{itemize}
 
-\subsection{Bảng làm nổi bật điểm khác biệt của đề tài (Tiêu chí 3)}
+\subsection{Bảng làm nổi bật điểm khác biệt của đề tài}
 \begin{table}[H]
     \centering
     \small
@@ -258,11 +258,11 @@ Thành viên 2 thiết kế mạng nơ-ron tích chập tùy biến dựa trên 
 \end{table}
 
 % ==============================================================================
-% 4. THỰC NGHIỆM & KẾT QUẢ ĐÁNH GIÁ (30 ĐIỂM)
+% 4. THỰC NGHIỆM & KẾT QUẢ ĐÁNH GIÁ
 % ==============================================================================
-\section{Thực nghiệm và kết quả đánh giá (Tiêu chí 4 -- 30 điểm)}
+\section{Thực nghiệm và kết quả đánh giá}
 
-\subsection{Thực nghiệm: Mô tả Dataset và Phân chia Block Split (Tiêu chí 4.1 -- 10 điểm)}
+\subsection{Mô tả tập dữ liệu và phân chia Block Split}
 \begin{itemize}
     \item \textbf{Quy mô bộ dữ liệu:} 3.216 ảnh chụp từ camera hành trình trên đường phố Việt Nam, gán nhãn 52 mã hiệu chi tiết theo QCVN 41:2019 với tổng cộng \textbf{7.858 bounding box} biển báo hợp lệ ($\ge 10\text{px}$).
     \item \textbf{Kiểm toán nhãn (Data Auditing):}
@@ -280,7 +280,7 @@ Thành viên 2 thiết kế mạng nơ-ron tích chập tùy biến dựa trên 
     \end{itemize}
 \end{itemize}
 
-\subsection{Thực nghiệm: Độ đo đánh giá kết quả (Tiêu chí 4.2 -- 10 điểm)}
+\subsection{Độ đo đánh giá kết quả}
 \begin{enumerate}
     \item \textbf{Độ đo khâu Định vị (Object Detection):}
     \begin{itemize}
@@ -297,7 +297,7 @@ Thành viên 2 thiết kế mạng nơ-ron tích chập tùy biến dựa trên 
     \item \textbf{Độ trễ và tốc độ xử lý:} Latency ($\text{ms}$) và Throughput ($\text{FPS} = 1000 / \text{Latency}$).
 \end{enumerate}
 
-\subsection{Thực nghiệm: Kết quả các phương pháp (Tiêu chí 4.3 -- 5 điểm)}
+\subsection{Kết quả thực nghiệm các phương pháp}
 
 \subsubsection{Tầng 1: Đánh giá phân loại trên 1.813 mẫu Blind Test Block Split (ROI Benchmark)}
 \begin{table}[H]
@@ -308,16 +308,16 @@ Thành viên 2 thiết kế mạng nơ-ron tích chập tùy biến dựa trên 
         \toprule
         \textbf{Mô hình} & \textbf{Người làm} & \textbf{Accuracy} & \textbf{Precision} & \textbf{Recall} & \textbf{Macro-F1} & \textbf{FPS} \\
         \midrule
-        \textbf{Enhanced LeNet-5} & Thành viên 2 & \textbf{98.73\%} & \textbf{94.46\%} & \textbf{97.43\%} & \textbf{95.66\%} & \textbf{911.1} \\
-        \textbf{Color+HOG+SVM} & Thành viên 1 & 98.57\% & 94.82\% & 96.81\% & 95.51\% & 379.7 \\
+        \textbf{Enhanced LeNet-5} & Nguyễn Thanh Tân & \textbf{98.73\%} & \textbf{94.46\%} & \textbf{97.43\%} & \textbf{95.66\%} & \textbf{911.1} \\
+        \textbf{Color+HOG+SVM} & Từ Lê Tuấn Anh & 98.57\% & 94.82\% & 96.81\% & 95.51\% & 379.7 \\
         \bottomrule
     \end{tabular}
 \end{table}
 
 \textbf{Phân tích kết quả Tầng 1:}
 \begin{itemize}
-    \item \textbf{Enhanced LeNet-5 (Thành viên 2):} Đạt độ chính xác xuất sắc (\textbf{98.73\%} Acc, \textbf{95.66\%} Macro-F1). Tốc độ suy luận siêu tốc đạt $1.10\text{ ms/crop}$ (\textbf{911.1 FPS}) trên CPU.
-    \item \textbf{Color+HOG+SVM (Thành viên 1):} Đạt độ chính xác rất cao (\textbf{98.57\%} Acc, \textbf{95.51\%} Macro-F1), tốc độ đạt $2.63\text{ ms/crop}$ (\textbf{379.7 FPS}). Kết quả thực nghiệm hoàn toàn trùng khớp với báo cáo Stage 2 của Thành viên 1 trên tập Mức A.
+    \item \textbf{Enhanced LeNet-5 (Nguyễn Thanh Tân):} Đạt độ chính xác xuất sắc (\textbf{98.73\%} Acc, \textbf{95.66\%} Macro-F1). Tốc độ suy luận siêu tốc đạt $1.10\text{ ms/crop}$ (\textbf{911.1 FPS}) trên CPU.
+    \item \textbf{Color+HOG+SVM (Từ Lê Tuấn Anh):} Đạt độ chính xác rất cao (\textbf{98.57\%} Acc, \textbf{95.51\%} Macro-F1), tốc độ đạt $2.63\text{ ms/crop}$ (\textbf{379.7 FPS}). Kết quả thực nghiệm hoàn toàn trùng khớp với báo cáo Stage 2 của Từ Lê Tuấn Anh trên tập Mức A.
 \end{itemize}
 
 \subsubsection{Tầng 2: Đánh giá toàn trình trên ảnh đường phố toàn cảnh (End-to-End Scene Benchmark)}
@@ -335,7 +335,7 @@ Thành viên 2 thiết kế mạng nơ-ron tích chập tùy biến dựa trên 
     \end{tabular}
 \end{table}
 
-\subsection{Thực nghiệm: Chương trình Demo & Điểm khác biệt sáng tạo (Tiêu chí 4.4 -- 5 điểm)}
+\subsection{Chương trình Demo và điểm khác biệt sáng tạo}
 
 \subsubsection{Chương trình Demo hoàn chỉnh (\texttt{app\_streamlit.py} \& \texttt{app.py})}
 \begin{itemize}
@@ -356,9 +356,9 @@ Thành viên 2 thiết kế mạng nơ-ron tích chập tùy biến dựa trên 
 \end{enumerate}
 
 % ==============================================================================
-% 5. NHẬN XÉT VÀ KẾT LUẬN RÚT RA CỦA HỌC VIÊN (5 ĐIỂM)
+% 5. NHẬN XÉT VÀ KẾT LUẬN RÚT RA CỦA HỌC VIÊN
 % ==============================================================================
-\section{Những nhận xét và kết luận rút ra của học viên (Tiêu chí 5 -- 5 điểm)}
+\section{Những nhận xét và kết luận rút ra của học viên}
 
 \subsection{Nhận xét và kết luận kỹ thuật}
 \begin{enumerate}
