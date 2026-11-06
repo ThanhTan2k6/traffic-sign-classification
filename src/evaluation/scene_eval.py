@@ -27,6 +27,8 @@ from src.config import (
     CLASS_TO_IDX,
     YOLO_TEST_FILE,
     YOLO_VAL_FILE,
+    load_52_classes,
+    get_target_category,
 )
 from src.detection.base_detector import BaseDetector
 from src.detection.color_hog_svm import ColorHogSvmDetector
@@ -101,6 +103,7 @@ def evaluate_detector_on_scenes(
 
     print(f"\n[*] Đang đánh giá toàn trình [{detector.model_name}] trên {len(img_lines)} ảnh toàn cảnh...")
 
+    classes_52 = load_52_classes()
     for img_rel in tqdm(img_lines, desc=f"Scene Eval [{detector.model_name}]", leave=False):
         img_path = PROJECT_ROOT / img_rel
         if not img_path.exists():
@@ -125,13 +128,16 @@ def evaluate_detector_on_scenes(
                     parts = line.strip().split()
                     if len(parts) >= 5:
                         cid = int(float(parts[0]))
-                        if cid < len(TARGET_CLASSES):
-                            xc, yc, bw, bh = [float(x) for x in parts[1:5]]
-                            gx1 = (xc - bw / 2.0) * iw
-                            gy1 = (yc - bh / 2.0) * ih
-                            gx2 = (xc + bw / 2.0) * iw
-                            gy2 = (yc + bh / 2.0) * ih
-                            gt_boxes.append((gx1, gy1, gx2, gy2, TARGET_CLASSES[cid]))
+                        if cid < len(classes_52):
+                            cname = classes_52[cid]
+                            cat = get_target_category(cname)
+                            if cat is not None:
+                                xc, yc, bw, bh = [float(x) for x in parts[1:5]]
+                                gx1 = (xc - bw / 2.0) * iw
+                                gy1 = (yc - bh / 2.0) * ih
+                                gx2 = (xc + bw / 2.0) * iw
+                                gy2 = (yc + bh / 2.0) * ih
+                                gt_boxes.append((gx1, gy1, gx2, gy2, cat))
 
         total_gt += len(gt_boxes)
 

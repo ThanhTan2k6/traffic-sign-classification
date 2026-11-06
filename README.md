@@ -2,7 +2,7 @@
 
 Dự án nghiên cứu, xây dựng và đánh giá so sánh (**Benchmarking**) các phương pháp nhận dạng và phân loại biển báo giao thông đường bộ Việt Nam theo Quy chuẩn kỹ thuật quốc gia **QCVN 41:2019/BGTVT**.
 
-Hệ thống được thiết kế theo kiến trúc chuẩn hóa (**Two-Stage Modular Architecture**) cho **nhóm 2 thành viên**, cùng chạy trên **cùng một bộ dữ liệu toàn cục cố định (Global Data Split)** để đảm bảo tính khách quan và công bằng tuyệt đối:
+Hệ thống được thiết kế theo kiến trúc chuẩn hóa (**Two-Stage Modular Architecture**) cho **nhóm 2 thành viên**, cùng chạy thống nhất trên bộ dữ liệu **Block Split theo khối video liên tục (Zero Data Leakage)**:
 - **Thành viên 1:** 
   - Xây dựng mô-đun phát hiện ứng viên **YOLO11s (1-Class Detector `sign`)**: Định vị biển báo trên ảnh đường phố toàn cảnh.
   - Xây dựng pipeline phân loại truyền thống **`color_hog_svm`**: Kết hợp đặc trưng đa tầng (Lọc màu HSV + Tỉ lệ AR + Lưới không gian 2x2 + HOG 64x64, vector 457 chiều) với bộ phân loại **SVM (RBF kernel)**.
@@ -30,13 +30,14 @@ Dữ liệu biển báo giao thông Việt Nam gồm 52 lớp chi tiết đượ
 
 ---
 
-### 🛡️ Chiến Lược Phân Chia Dữ Liệu (Zero Data Leakage)
+### 🛡️ Chiến Lược Phân Chia Dữ Liệu (Block Split - Zero Data Leakage)
 Toàn bộ 3,216 ảnh đường phố trong dataset được trích xuất từ chuỗi video hành trình xe chạy liên tục. Nếu phân chia ngẫu nhiên từng frame (`random split`), có tới **46.84%** số cặp frame liên tiếp sẽ bị xé lẻ giữa train và test, gây hiện tượng **rò rỉ dữ liệu (Data Leakage)** nghiêm trọng khiến mô hình "học vẹt".
 
-Hệ thống áp dụng cơ chế phân chia **Block Split theo chuỗi video liên tục**:
-- Chia thành từng khối 100 frame kèm khoảng cách đệm `gap = 5` frame.
+Hệ thống áp dụng cơ chế phân chia **Block Split theo chuỗi video liên tục (chuẩn hóa TV1)**:
+- Chia thành từng khối 100 frame kèm khoảng cách đệm `gap = 5` frame giữa các khối.
 - Đưa tỷ lệ vi phạm ranh giới rò rỉ về đúng **0.00%**.
-- Tỷ lệ phân chia: **70% Train - 15% Validation - 15% Blind Test**.
+- Tỷ lệ phân chia khung hình: **2,236 ảnh Train - 270 ảnh Val - 550 ảnh Blind Test** (loại 160 frame đệm).
+- Tỷ lệ phân chia mẫu ROI biển báo: **5,254 Train - 542 Val - 1,813 Blind Test**.
 
 ---
 
@@ -52,7 +53,7 @@ flowchart TD
     end
 
     subgraph TRAINING_SOURCE ["DỮ LIỆU HUẤN LUYỆN (TRAINING SOURCE)"]
-        GT["Tọa độ Ground-Truth (.txt)<br/>từ Dataset gốc"] --> CROPS["Ảnh ROI cắt chuẩn xác<br/>(data/cropped/train/ & val/)"]
+        GT["Tọa độ Ground-Truth (.txt)<br/>từ Dataset gốc"] --> CROPS["Ảnh ROI cắt chuẩn xác (Block Split)<br/>(5,254 Train & 542 Val)"]
     end
 
     subgraph STAGE_2 ["GIAI ĐOẠN 2: PHÂN LOẠI (CLASSIFICATION) - BENCHMARKING"]
@@ -70,7 +71,7 @@ flowchart TD
 > [!IMPORTANT]
 > **LÀM RÕ RANH GIỚI HUẤN LUYỆN (TRAINING) VÀ SUY LUẬN (INFERENCE):**
 > 1. **Khi Huấn luyện (Training):** Cả mô hình **LeNet-5** (Thành viên 2) và **SVM** (Thành viên 1) đều được huấn luyện trên tập **ảnh ROI cắt chuẩn xác theo tọa độ Ground-Truth** (`data/cropped/train/`). **Tuyệt đối không huấn luyện bộ phân loại trên bounding box do YOLO tự cắt** để tránh nhiễu tọa độ và lệch viền.
-> 2. **Khi Đánh giá Tầng 1 (ROI Benchmarking):** Đo đạc thuần túy năng lực phân loại của LeNet-5 vs SVM trên tập **1,136 ảnh Blind Test Ground-Truth** (`data/cropped/test/`).
+> 2. **Khi Đánh giá Tầng 1 (ROI Benchmarking):** Đo đạc thuần túy năng lực phân loại của LeNet-5 vs SVM trên tập **1,813 ảnh Blind Test Ground-Truth** (`data/cropped/test/`).
 > 3. **Khi Đánh giá Tầng 2 (End-to-End Scene) & Demo:** Nhận ảnh đường phố toàn cảnh, lúc này **YOLO11s** quét tìm vị trí biển báo, cắt ra và gửi cho LeNet-5 hoặc SVM dự đoán nhãn.
 
 ---
@@ -115,8 +116,8 @@ traffic-sign-classification/
 │   ├── STAGE1_REPORT.md            # Báo cáo thực nghiệm Stage 1 (Lọc màu HSV 44 chiều)
 │   ├── STAGE2_REPORT.md            # Báo cáo thực nghiệm Stage 2 (Spatial Grid + HOG + SVM)
 │   ├── YOLO_DETECT.md              # Báo cáo mô-đun phát hiện YOLO11s 1-class
-│   ├── JOURNEY.md                  # Nhật ký hành trình 2 tuần nghiên cứu và khắc phục rò rỉ dữ liệu
-│   ├── SPLIT_NOTES.md              # Phân tích kỹ thuật Block Split vs Random Split
+│   ├── JOURNEY.md                  # Báo cáo nhật ký hành trình nghiên cứu, giải quyết rò rỉ dữ liệu
+│   ├── SPLIT_NOTES.md              # Báo cáo phân tích hiện tượng Data Leakage trên chuỗi video và phương pháp Block Split
 │   ├── WEIGHTS.md                  # Hướng dẫn tải weights Google Drive & Checksum SHA-256
 │   └── assets/                     # Biểu đồ mAP, confusion matrix, ảnh minh họa thực nghiệm
 │
@@ -159,7 +160,7 @@ python -m src.detection.deep_learning.train --epochs 20 --batch-size 32 --lr 0.0
 
 ### Bước 3: Chạy Đánh giá Đối chuẩn (Benchmarking) qua CLI
 ```bash
-# 1. Đánh giá TẦNG 1 (ROI Benchmark) trên 1,136 mẫu Blind Test (So sánh LeNet-5 vs SVM):
+# 1. Đánh giá TẦNG 1 (ROI Benchmark) trên 1,813 mẫu Blind Test (So sánh LeNet-5 vs SVM):
 python app.py --mode evaluate --split test
 
 # 2. Đánh giá TẦNG 2 (End-to-End Scene Benchmark) trên ảnh đường phố (YOLO11s + Classifier):
@@ -173,11 +174,11 @@ python app.py --mode evaluate --model color_hog_svm --split test
 ### Bước 4: Chạy Demo dự đoán ảnh
 ```bash
 # Demo trên 1 ảnh biển báo cắt sẵn (ROI Mode):
-python app.py --mode demo --model deep_learning --input data/cropped/test/Bien_Cam/0002_00.jpg
-python app.py --mode demo --model color_hog_svm --input data/cropped/test/Bien_Cam/0002_00.jpg
+python app.py --mode demo --model deep_learning --input data/cropped/test/Bien_Cam/0306_00.jpg
+python app.py --mode demo --model color_hog_svm --input data/cropped/test/Bien_Cam/0306_00.jpg
 
 # Demo trên 1 ảnh đường phố toàn cảnh (Scene Mode - YOLO11s tự động định vị + Phân loại):
-python app.py --mode demo --model deep_learning --input dataset/images/0001.jpg --scene
+python app.py --mode demo --model deep_learning --input dataset/images/0306.jpg --scene
 ```
 
 ### Bước 5: Khởi chạy Giao diện Web tương tác (Streamlit)
@@ -190,13 +191,13 @@ streamlit run app_streamlit.py
 
 ## 🏆 6. KẾT QUẢ THỰC NGHIỆM ĐỐI CHUẨN (BENCHMARK RESULTS)
 
-### 🥇 Tầng 1: Đánh Giá Năng Lực Phân Loại Trên Ảnh Cắt Sẵn (Blind Test - 1,136 Mẫu)
-Đo đạc độc lập trên tập **Blind Test** ($1,136$ mẫu ROI biển báo Ground-Truth chưa từng xuất hiện trong quá trình huấn luyện):
+### 🥇 Tầng 1: Đánh Giá Năng Lực Phân Loại Trên Ảnh Cắt Sẵn (Blind Test - 1,813 Mẫu Block Split)
+Đo đạc độc lập trên tập **Blind Test** ($1,813$ mẫu ROI biển báo Ground-Truth trên 550 ảnh kiểm thử độc lập):
 
 | Mô Hình / Phương Pháp | Thành Viên Phụ Trách | Accuracy | Macro-Precision | Macro-Recall | Macro-F1 | Độ Trễ (Latency) | Tốc Độ (FPS) |
 | :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
-| **Enhanced LeNet-5 (Học Sâu)** | **Thành viên 2** | **99.74%** | **99.49%** | **99.69%** | **99.59%** | **1.30 ms** | **768.4 FPS** |
-| **Color + HOG + SVM (Truyền Thống)** | **Thành viên 1** | **99.47%** | **98.14%** | **98.96%** | **98.51%** | **2.79 ms** | **357.9 FPS** |
+| **Enhanced LeNet-5 (Học Sâu)** | **Thành viên 2** | **98.73%** | **94.46%** | **97.43%** | **95.66%** | **1.10 ms** | **911.1 FPS** |
+| **Color + HOG + SVM (Truyền Thống)** | **Thành viên 1** | **98.57%** | **94.82%** | **96.81%** | **95.51%** | **2.63 ms** | **379.7 FPS** |
 
 *Biểu đồ đối chuẩn ROI được tự động xuất tại:* `res/outputs/benchmark_comparison.png`  
 *Ma trận nhầm lẫn chi tiết được lưu tại:* `res/outputs/confusion_matrix_deep_learning.png`
@@ -204,7 +205,7 @@ streamlit run app_streamlit.py
 ---
 
 ### 🥈 Tầng 2: Đánh Giá Toàn Trình Trên Ảnh Chụp Đường Phố Toàn Cảnh (End-to-End Scene Benchmark)
-Đo đạc hệ thống Two-Stage hoàn chỉnh (Stage 1: YOLO11s định vị ứng viên + Stage 2: Bộ phân loại) trên ảnh đường phố thực tế:
+Đo đạc hệ thống Two-Stage hoàn chỉnh (Stage 1: YOLO11s định vị ứng viên + Stage 2: Bộ phân loại) trên 550 ảnh đường phố kiểm thử độc lập:
 
 | Phương Pháp / Pipeline | Định Vị (Stage 1) | Phân Loại (Stage 2) | Tỷ Lệ Định Vị (Recall) | Độ Chính Xác Khi Tìm Thấy | E2E Recall | Tốc Độ Toàn Cảnh (FPS) |
 | :--- | :---: | :---: | :---: | :---: | :---: | :---: |

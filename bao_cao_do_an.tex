@@ -153,7 +153,7 @@ Hệ thống giải quyết bài toán qua hai bài toán con tuần tự:
 \textbf{Các ràng buộc kỹ thuật bắt buộc:}
 \begin{itemize}
     \item \textbf{Chống rò rỉ dữ liệu tuyệt đối (Zero Data Leakage):} Không chia ngẫu nhiên từng frame ảnh vì các frame kề nhau trong video hành trình có tính tương đồng $> 95\%$. Bắt buộc phân chia theo khối video liên tục (Block Split).
-    \item \textbf{Độ trễ thời gian thực:} Khâu phân loại trên ảnh crop phải đạt tốc độ $\ge 200\text{ FPS}$ (độ trễ $< 5\text{ ms/crop}$) trên CPU đơn lõi.
+    \item \textbf{Độ trễ thời gian thực:} Khâu phân loại trên ảnh crop phải đạt tốc độ $\ge 300\text{ FPS}$ (độ trễ $< 3\text{ ms/crop}$) trên CPU đơn lõi.
 \end{itemize}
 
 \subsection{Hình minh họa cho bài toán (Tiêu chí 2.2 -- 5 điểm)}
@@ -213,7 +213,7 @@ Hệ thống giải quyết bài toán qua hai bài toán con tuần tự:
         \item \textit{Pretrain:} Huấn luyện 30 epochs trên bộ dữ liệu lớn CCTSDB 2021 (18.356 ảnh) gộp về 1 lớp \texttt{sign} để học đặc trưng biên cạnh tổng quát của biển báo.
         \item \textit{Finetune:} Nạp trọng số tốt nhất tiếp tục huấn luyện 30 epochs trên dữ liệu giao thông Việt Nam (\texttt{imgsz=800}, \texttt{single\_cls=True}).
     \end{enumerate}
-    \item \textbf{Hiệu năng:} Đạt $\text{mAP}_{50} = 83.60\%$, $\text{mAP}_{50\text{-}95} = 60.10\%$, tỷ lệ bắt trúng thực tế (\textbf{Detection Recall}) đạt \textbf{85.61\%} (1.559 / 1.821 biển báo trên tập Test).
+    \item \textbf{Hiệu năng:} Đạt $\text{mAP}_{50} = 83.60\%$, $\text{mAP}_{50\text{-}95} = 60.10\%$, tỷ lệ bắt trúng thực tế (\textbf{Detection Recall}) đạt \textbf{85.61\%} (1.559 / 1.821 biển báo trên tập Test 550 ảnh).
 \end{itemize}
 
 \subsection{Giai đoạn 2A: Thị giác truyền thống (Color + Grid + HOG + SVM) -- Thành viên 1}
@@ -236,7 +236,7 @@ Thành viên 2 thiết kế mạng nơ-ron tích chập tùy biến dựa trên 
         \mathbf{x}_3 &= \text{MaxPool2d}\left(\text{ReLU}\left(\text{BatchNorm2d}\left(\text{Conv2D}(64 \to 128, k=3, p=1)\right)\right)\right) \in \mathbb{R}^{128 \times 8 \times 8}
     \end{align*}
     \item \textbf{Khối phân loại (Classifier Head):} Duỗi phẳng vector $\mathbf{v} \in \mathbb{R}^{8192} \to \text{Dropout}(0.3) \to \text{Linear}(8192 \to 256) \to \text{ReLU} \to \text{Dropout}(0.3) \to \text{Linear}(256 \to 4)$.
-    \item \textbf{Huấn luyện:} Hàm mất mát $\text{CrossEntropyLoss}$, Adam Optimizer ($\text{lr}=10^{-3}$, weight decay $=10^{-4}$), huấn luyện 20 epochs trên PyTorch với tập ảnh crop Ground-Truth.
+    \item \textbf{Huấn luyện:} Hàm mất mát $\text{CrossEntropyLoss}$, Adam Optimizer ($\text{lr}=10^{-3}$, weight decay $=10^{-4}$), huấn luyện 20 epochs trên PyTorch với tập ảnh crop Ground-Truth Block Split (5.254 ảnh train), checkpoint lưu tự động dựa trên Validation Accuracy cao nhất (đạt \textbf{99.82\%} trên Val).
 \end{itemize}
 
 \subsection{Bảng làm nổi bật điểm khác biệt của đề tài (Tiêu chí 3)}
@@ -251,7 +251,7 @@ Thành viên 2 thiết kế mạng nơ-ron tích chập tùy biến dựa trên 
         \midrule
         \textbf{Cơ chế định vị} & Cửa sổ trượt rất chậm, dễ sót biển nhỏ & Tích hợp trong mạng lớn, tính toán nặng & \textbf{YOLO11s 1-class: Tối đa hóa Recall (85.61\%), không tốn tài nguyên phân loại} \\
         \textbf{Phân biệt R vs I} & Thất bại (do cùng màu xanh lam) & Phân biệt tốt nhưng cần GPU mạnh & \textbf{HOG tách viền tròn vs chữ nhật triệt để; LeNet-5 tự học hoa văn nội tại} \\
-        \textbf{Độ trễ phân loại} & $15 - 30\text{ ms/crop}$ (chậm) & $10 - 20\text{ ms/crop}$ (trên GPU) & $\mathbf{1.30\text{ ms}}$ \textbf{(LeNet)} / $\mathbf{2.79\text{ ms}}$ \textbf{(SVM) trên CPU} \\
+        \textbf{Độ trễ phân loại} & $15 - 30\text{ ms/crop}$ (chậm) & $10 - 20\text{ ms/crop}$ (trên GPU) & $\mathbf{1.10\text{ ms}}$ \textbf{(LeNet)} / $\mathbf{2.63\text{ ms}}$ \textbf{(SVM) trên CPU} \\
         \textbf{Tính minh bạch} & Cao nhưng độ chính xác thấp & Hộp đen (Black-box), khó diễn giải & \textbf{Rất cao ở khâu phân loại: Trực quan hóa được từng thành phần HSV và HOG} \\
         \bottomrule
     \end{tabular}
@@ -275,7 +275,8 @@ Thành viên 2 thiết kế mạng nơ-ron tích chập tùy biến dựa trên 
     Do ảnh được cắt từ chuỗi video liên tục, nếu chia ngẫu nhiên (\texttt{random split}) sẽ có \textbf{46.84\%} số cặp frame kề nhau ($t, t+1$) bị xé lẻ giữa train và test $\to$ Gây rò rỉ dữ liệu nghiêm trọng. Nhóm áp dụng phân chia theo khối liên tục 100 frame kèm khoảng cách đệm $\text{gap}=5$ frame:
     \begin{itemize}
         \item Tỷ lệ vi phạm ranh giới rò rỉ giữa Train và Test đưa về đúng \textbf{0.00\%}.
-        \item Tỷ lệ phân chia: \textbf{70\% Train} (5.496 crops), \textbf{15\% Val} (1.226 crops), \textbf{15\% Blind Test} (1.136 crops độc lập).
+        \item Phân chia khung hình: \textbf{2.236 ảnh Train}, \textbf{270 ảnh Val}, \textbf{550 ảnh Blind Test} (160 frame đệm được loại bỏ an toàn).
+        \item Phân chia mẫu ROI biển báo: \textbf{5.254 Train}, \textbf{542 Val}, \textbf{1.813 Blind Test}.
     \end{itemize}
 \end{itemize}
 
@@ -298,31 +299,31 @@ Thành viên 2 thiết kế mạng nơ-ron tích chập tùy biến dựa trên 
 
 \subsection{Thực nghiệm: Kết quả các phương pháp (Tiêu chí 4.3 -- 5 điểm)}
 
-\subsubsection{Tầng 1: Đánh giá phân loại trên 1.136 mẫu Blind Test Ground-Truth (ROI Benchmark)}
+\subsubsection{Tầng 1: Đánh giá phân loại trên 1.813 mẫu Blind Test Block Split (ROI Benchmark)}
 \begin{table}[H]
     \centering
-    \caption{Kết quả đối chuẩn phân loại trên tập Blind Test (1.136 mẫu ROI).}
+    \caption{Kết quả đối chuẩn phân loại trên tập Blind Test Block Split (1.813 mẫu ROI).}
     \label{tab:roi_benchmark}
     \begin{tabular}{lcccccc}
         \toprule
         \textbf{Mô hình} & \textbf{Người làm} & \textbf{Accuracy} & \textbf{Precision} & \textbf{Recall} & \textbf{Macro-F1} & \textbf{FPS} \\
         \midrule
-        \textbf{Enhanced LeNet-5} & Thành viên 2 & \textbf{99.74\%} & \textbf{99.49\%} & \textbf{99.69\%} & \textbf{99.59\%} & \textbf{768.4} \\
-        \textbf{Color+HOG+SVM} & Thành viên 1 & 99.47\% & 98.14\% & 98.96\% & 98.51\% & 357.9 \\
+        \textbf{Enhanced LeNet-5} & Thành viên 2 & \textbf{98.73\%} & \textbf{94.46\%} & \textbf{97.43\%} & \textbf{95.66\%} & \textbf{911.1} \\
+        \textbf{Color+HOG+SVM} & Thành viên 1 & 98.57\% & 94.82\% & 96.81\% & 95.51\% & 379.7 \\
         \bottomrule
     \end{tabular}
 \end{table}
 
 \textbf{Phân tích kết quả Tầng 1:}
 \begin{itemize}
-    \item \textbf{Enhanced LeNet-5 (Thành viên 2):} Đạt độ chính xác gần như hoàn hảo ($99.74\%$), chỉ nhầm lẫn 3 mẫu trên tổng số 1.136 ảnh test. Tốc độ suy luận siêu tốc đạt $1.30\text{ ms/crop}$ ($768.4\text{ FPS}$) trên CPU.
-    \item \textbf{Color+HOG+SVM (Thành viên 1):} Đạt độ chính xác rất cao ($99.47\%$), Macro-F1 đạt $98.51\%$. Việc bổ sung đặc trưng HOG đã tăng vọt Macro-F1 từ $83.15\%$ ($S_0$) lên $98.51\%$ ($S_3$), triệt tiêu hoàn toàn sự nhầm lẫn giữa Biển Hiệu Lệnh và Biển Chỉ Dẫn.
+    \item \textbf{Enhanced LeNet-5 (Thành viên 2):} Đạt độ chính xác xuất sắc (\textbf{98.73\%} Acc, \textbf{95.66\%} Macro-F1). Tốc độ suy luận siêu tốc đạt $1.10\text{ ms/crop}$ (\textbf{911.1 FPS}) trên CPU.
+    \item \textbf{Color+HOG+SVM (Thành viên 1):} Đạt độ chính xác rất cao (\textbf{98.57\%} Acc, \textbf{95.51\%} Macro-F1), tốc độ đạt $2.63\text{ ms/crop}$ (\textbf{379.7 FPS}). Kết quả thực nghiệm hoàn toàn trùng khớp với báo cáo Stage 2 của Thành viên 1 trên tập Mức A.
 \end{itemize}
 
 \subsubsection{Tầng 2: Đánh giá toàn trình trên ảnh đường phố toàn cảnh (End-to-End Scene Benchmark)}
 \begin{table}[H]
     \centering
-    \caption{Kết quả đối chuẩn toàn trình trên ảnh đường phố toàn cảnh.}
+    \caption{Kết quả đối chuẩn toàn trình trên 550 ảnh đường phố toàn cảnh.}
     \label{tab:scene_benchmark}
     \begin{tabular}{lccccc}
         \toprule
@@ -361,11 +362,11 @@ Thành viên 2 thiết kế mạng nơ-ron tích chập tùy biến dựa trên 
 
 \subsection{Nhận xét và kết luận kỹ thuật}
 \begin{enumerate}
-    \item \textbf{Ưu thế của kiến trúc lai (Two-Stage Decoupling):} Việc kết hợp Deep Learning ở khâu phát hiện (YOLO11s) và các mô hình gọn nhẹ ở khâu phân loại (LeNet-5 hoặc SVM) là giải pháp tối ưu cho các thiết bị biên, giúp đạt độ chính xác phân loại $> 99.4\%$ với tốc độ siêu nhanh trên CPU ($1.30\text{ ms}$ với LeNet-5 và $2.79\text{ ms}$ với SVM).
+    \item \textbf{Ưu thế của kiến trúc lai (Two-Stage Decoupling):} Việc kết hợp Deep Learning ở khâu phát hiện (YOLO11s) và các mô hình gọn nhẹ ở khâu phân loại (LeNet-5 hoặc SVM) là giải pháp tối ưu cho các thiết bị biên, giúp đạt độ chính xác phân loại $> 98.5\%$ với tốc độ siêu nhanh trên CPU ($1.10\text{ ms}$ với LeNet-5 và $2.63\text{ ms}$ với SVM).
     \item \textbf{Tương quan giữa Học sâu và Thị giác truyền thống:}
     \begin{itemize}
-        \item \textit{Enhanced LeNet-5 (Học sâu):} Chiếm ưu thế về độ chính xác ($99.74\%$ vs $99.47\%$), Macro-F1 ($99.59\%$ vs $98.51\%$) và tốc độ suy luận ($1.30\text{ ms}$ vs $2.79\text{ ms}$). Mạng nơ-ron tự động biểu diễn được các hoa văn tinh xảo trong biển báo mà không cần căn chỉnh tham số trích xuất thủ công.
-        \item \textit{Color+HOG+SVM (Truyền thống):} Vẫn chứng minh sức mạnh đáng nể ($99.47\%$ Accuracy) với ưu điểm lớn về tính minh bạch toán học (Explainability), dễ diễn giải và không đòi hỏi quá trình huấn luyện phức tạp.
+        \item \textit{Enhanced LeNet-5 (Học sâu):} Chiếm ưu thế về độ chính xác ($98.73\%$ vs $98.57\%$), Macro-F1 ($95.66\%$ vs $95.51\%$) và tốc độ suy luận ($1.10\text{ ms}$ vs $2.63\text{ ms}$). Mạng nơ-ron tự động biểu diễn được các hoa văn tinh xảo trong biển báo mà không cần căn chỉnh tham số trích xuất thủ công.
+        \item \textit{Color+HOG+SVM (Truyền thống):} Vẫn chứng minh sức mạnh đáng nể ($98.57\%$ Accuracy) với ưu điểm lớn về tính minh bạch toán học (Explainability), dễ diễn giải và không đòi hỏi quá trình huấn luyện phức tạp.
     \end{itemize}
 \end{enumerate}
 

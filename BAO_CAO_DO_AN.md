@@ -6,6 +6,7 @@
 
 * **Tên đề tài:** Hệ Thống Nhận Diện & Đánh Giá So Sánh Biển Báo Giao Thông Việt Nam Theo Kiến Trúc Lai Hai Giai Đoạn (Two-Stage Hybrid Benchmarking System: YOLO11s Detector + Handcrafted Features SVM vs Enhanced LeNet-5 CNN)
 * **Quy chuẩn áp dụng:** Quy chuẩn kỹ thuật quốc gia về báo hiệu đường bộ **QCVN 41:2019/BGTVT**
+* **Chiến lược phân chia:** **Block Split theo khối video liên tục (Zero Data Leakage)**
 * **Danh sách thành viên:**
   1. **Thành viên 1:** `[Họ và tên - MSSV]` (Phụ trách: Mô-đun phát hiện YOLO11s 1-Class `sign`, Pipeline phân loại Thị giác truyền thống: Trích xuất đặc trưng đa tầng HSV + Grid + HOG + Bộ phân loại SVM RBF).
   2. **Thành viên 2:** `[Họ và tên - MSSV]` (Phụ trách: Pipeline phân loại Học sâu Hiện đại: Thiết kế kiến trúc Mạng nơ-ron tích chập Enhanced LeNet-5 PyTorch, Huấn luyện & Đánh giá Đối chuẩn đa tầng).
@@ -19,7 +20,7 @@ Trong các hệ thống Hỗ trợ Lái xe Nâng cao (ADAS) và Xe tự hành (A
 
 Tại Việt Nam, việc triển khai bài toán TSR gặp nhiều thách thức đặc thù:
 1. **Bối cảnh đường sá phức tạp:** Biển báo giao thông có kích thước biến thiên rất lớn (từ rất xa $\le 16\text{px}$ đến gần), thường xuyên bị che khuất một phần bởi tán cây, dây điện hoặc phương tiện lớn.
-2. **Điều kiện môi trường khắc nghiệt:** Hiện tượng trôi màu do nắng gắt, thiếu sáng ban đêm, ngược sáng hoặc mưa ẩm làm suy giảm chất lượng tín hiệu thị giác.
+2. **Hiện tượng trôi màu và biến thiên quang học:** Khí hậu nhiệt đới nắng gắt gây chói sáng, mưa ẩm, sương mù hoặc bóng râm gắt làm sai lệch đáng kể không gian màu RGB nguyên bản.
 3. **Ràng buộc tài nguyên tính toán thực tế:** Các thiết bị phần cứng nhúng (Edge AI Devices) trên ô tô thường có năng lực tính toán và bộ nhớ giới hạn. Việc triển khai các mô hình học sâu khổng lồ (End-to-End Heavy CNN) vừa tốn kém chi phí phần cứng, vừa gây độ trễ lớn, không đáp ứng kịp thời gian thực ($< 30\text{ ms}$).
 
 ### 1.2. Cơ sở khoa học & Ý tưởng tiếp cận (Two-Stage Decoupling)
@@ -51,7 +52,7 @@ Hệ thống giải quyết bài toán qua hai pha tuần tự:
 
 **Các ràng buộc kỹ thuật cốt lõi:**
 * **Chống rò rỉ dữ liệu tuyệt đối (Zero Data Leakage):** Không được chia ngẫu nhiên từng khung hình (Random Split) vì các frame kế tiếp nhau trong video hành trình có tính tương đồng cực cao ($> 95\%$). Phải phân chia theo khối video liên tục (Block Split).
-* **Độ trễ thời gian thực:** Khâu phân loại trên ảnh crop phải đạt tốc độ $> 200\text{ FPS}$ (độ trễ $< 5\text{ ms/crop}$) trên CPU.
+* **Độ trễ thời gian thực:** Khâu phân loại trên ảnh crop phải đạt tốc độ $> 300\text{ FPS}$ (độ trễ $< 3\text{ ms/crop}$) trên CPU.
 
 ---
 
@@ -87,7 +88,7 @@ flowchart LR
 * **Quy trình huấn luyện 2 bước:**
   1. *Pretrain:* Huấn luyện 30 epochs trên tập dữ liệu mở CCTSDB 2021 (Trung Quốc) quy mô hơn 18,000 ảnh để học biểu diễn biên cạnh tổng quát của biển báo giao thông.
   2. *Finetune:* Nạp trọng số tốt nhất tiếp tục huấn luyện 30 epochs trên tập dữ liệu đường sá Việt Nam (`imgsz=800`, `single_cls=True`).
-* **Kết quả:** Đạt $\text{mAP}_{50} = 83.60\%$, $\text{mAP}_{50\text{-}95} = 60.10\%$, tỷ lệ bắt trúng thực tế (**Detection Recall**) đạt **$85.61\%$** ($1,559 / 1,821$ biển báo trên tập Test).
+* **Kết quả:** Đạt $\text{mAP}_{50} = 83.60\%$, $\text{mAP}_{50\text{-}95} = 60.10\%$, tỷ lệ bắt trúng thực tế (**Detection Recall**) đạt **$85.61\%$** ($1,559 / 1,821$ biển báo trên tập Test 550 ảnh).
 
 ---
 
@@ -124,7 +125,7 @@ Thành viên 2 thiết kế và xây dựng mạng nơ-ron tích chập tùy bi�
   - Đầu vào: Ảnh ROI kích thước $64 \times 64$, chuẩn hóa kênh với $\mu=[0.485, 0.456, 0.406]$, $\sigma=[0.229, 0.224, 0.225]$.
   - Hàm mất mát: $\text{CrossEntropyLoss}()$.
   - Tối ưu hóa: Adam Optimizer ($\text{lr}=10^{-3}$, weight decay $=10^{-4}$).
-  - Huấn luyện 20 epochs trên tập `data/cropped/train/`, checkpoint lưu tự động dựa trên Validation Accuracy cao nhất.
+  - Huấn luyện 20 epochs trên tập `data/cropped/train/` (Block Split, 5.254 ảnh), checkpoint lưu tự động dựa trên Validation Accuracy cao nhất (đạt **99.82%** trên Val).
 
 ---
 
@@ -134,7 +135,7 @@ Thành viên 2 thiết kế và xây dựng mạng nơ-ron tích chập tùy bi�
 | :--- | :--- | :--- | :--- |
 | **Cơ chế định vị** | Cửa sổ trượt (Sliding Window): Cực kỳ chậm, tỉ lệ sót biển cao | Tích hợp sâu trong mạng nơ-ron: Nhanh nhưng gánh nặng tính toán lớn | **YOLO11s chuyên biệt 1 lớp: Tối đa hóa Recall ($85.61\%$), không tốn tài nguyên phân loại** |
 | **Khả năng phân biệt Hiệu lệnh vs Chỉ dẫn** | Thất bại hoàn toàn (do cả hai cùng mang màu xanh lam) | Phân biệt tốt nhưng cần GPU mạnh | **Phân biệt xuất sắc: HOG giải quyết hình học viền, LeNet-5 tự học hoa văn nội tại** |
-| **Độ trễ phân loại (Latency)** | $15 - 30\text{ ms/crop}$ (chậm) | $10 - 20\text{ ms/crop}$ (trên GPU) | **$1.30\text{ ms}$ (LeNet-5) / $2.79\text{ ms}$ (SVM) — Cực nhanh trên CPU** |
+| **Độ trễ phân loại (Latency)** | $15 - 30\text{ ms/crop}$ (chậm) | $10 - 20\text{ ms/crop}$ (trên GPU) | **$1.10\text{ ms}$ (LeNet-5) / $2.63\text{ ms}$ (SVM) — Cực nhanh trên CPU** |
 | **Yêu cầu tài nguyên** | CPU | Bắt buộc GPU rời đắt tiền | **Linh hoạt: Tách rời module, khâu phân loại hoàn toàn độc lập với phần cứng** |
 | **Tính minh bạch (Explainability)** | Cao nhưng độ chính xác thấp | Hộp đen (Black-box), khó gỡ lỗi | **Rất cao: Trực quan hóa được từng thành phần màu sắc HSV, HOG và Feature Maps** |
 
@@ -142,17 +143,16 @@ Thành viên 2 thiết kế và xây dựng mạng nơ-ron tích chập tùy bi�
 
 ## 4. THỰC NGHIỆM & KẾT QUẢ ĐÁNH GIÁ (30 ĐIỂM)
 
-### 4.1. Thực nghiệm: Mô tả Dataset & Quy tắc Phân chia (10 điểm)
+### 4.1. Thực nghiệm: Mô tả Dataset & Quy tắc Phân chia Block Split (10 điểm)
 
 #### A. Thống kê bộ dữ liệu
 * **Tổng số ảnh toàn cảnh:** 3,216 ảnh chụp từ camera hành trình trên đường phố Việt Nam (độ phân giải 960x540 và 1920x1080).
 * **Định dạng nhãn gốc:** YOLO format (`class x_center y_center width height`) với 52 mã hiệu chi tiết theo QCVN 41:2019.
 * **Gom nhóm mục tiêu:** Toàn bộ 52 mã hiệu được quy chuẩn về 4 nhóm chính:
-  - `Bien_Cam` (P.*, B.8a): 4,874 boxes.
-  - `Bien_Nguy_Hiem` (W.*): 1,643 boxes.
-  - `Bien_Hieu_Lenh` (R.*): 768 boxes.
-  - `Bien_Chi_Dan` (I.*): 573 boxes.
-* **Tổng số mẫu ROI hợp lệ:** 7,858 boxes biển báo (đạt chuẩn kích thước $\ge 10\text{px}$).
+  - `Bien_Cam` (P.*, B.8a)
+  - `Bien_Nguy_Hiem` (W.*)
+  - `Bien_Hieu_Lenh` (R.*)
+  - `Bien_Chi_Dan` (I.*)
 * **Kiểm toán dữ liệu (Data Auditing):**
   - Loại bỏ lớp `Camera` (40 mẫu thực chất chỉ là ~3 camera giám sát được xe chạy qua ghi lại nhiều lần, không phải biển báo giao thông).
   - Loại bỏ nhóm `phụ` khỏi bài toán đối chuẩn (tập test chỉ có 8 mẫu, kích thước $< 15\text{px}$ và detector bỏ sót 100%).
@@ -160,10 +160,11 @@ Thành viên 2 thiết kế và xây dựng mạng nơ-ron tích chập tùy bi�
 
 #### B. Quy tắc phân chia chống rò rỉ dữ liệu (Block Split - Zero Data Leakage)
 * Các ảnh trong dataset được cắt từ các đoạn video hành trình liên tục. Đo đạc thực tế chỉ ra: nếu dùng chia ngẫu nhiên (`random split`), có đến **$46.84\%$** số cặp frame kề nhau ($t, t+1$) bị xé lẻ giữa tập Train và Test $\to$ Mô hình bị hiện tượng **học vẹt (memorization)** và điểm số bị thổi phồng ảo.
-* Nhóm áp dụng kỹ thuật **Block Split theo khối video liên tục**:
+* Nhóm áp dụng thống nhất kỹ thuật **Block Split theo khối video liên tục (chuẩn hóa TV1)**:
   - Gom các frame thành từng khối liên tục 100 frame kèm khoảng cách đệm `gap = 5` frame giữa các khối.
   - Tỷ lệ vi phạm ranh giới frame kề nhau giữa Train và Test đưa về đúng **$0.00\%$**.
-  - Tỷ lệ phân chia toàn cục: **70% Train (5,496 crops) - 15% Val (1,226 crops) - 15% Blind Test (1,136 crops)**.
+  - Phân chia khung hình: **2,236 ảnh Train**, **270 ảnh Val**, **550 ảnh Blind Test** (160 frame đệm được loại bỏ an toàn).
+  - Phân chia mẫu ROI biển báo: **5,254 Train**, **542 Val**, **1,813 Blind Test**.
 
 ---
 
@@ -189,29 +190,24 @@ Hệ thống sử dụng hệ thống độ đo toán học chặt chẽ ở c�
 
 ### 4.3. Thực nghiệm: Kết quả các phương pháp (5 điểm)
 
-#### 🥇 Tầng 1: Đánh giá phân loại độc lập trên 1,136 mẫu Blind Test (ROI Benchmark)
-Đo đạc trên tập ảnh crop Ground-Truth của tập Test độc lập để so sánh thuần túy năng lực phân loại của 2 phương pháp:
+#### 🥇 Tầng 1: Đánh giá phân loại độc lập trên 1,813 mẫu Blind Test Block Split (ROI Benchmark)
+Đo đạc thực tế trên tập ảnh crop Ground-Truth của tập Test độc lập (550 ảnh không rò rỉ):
 
 | Mô hình / Phương pháp | Người phụ trách | Accuracy | Macro-Precision | Macro-Recall | Macro-F1 | Độ trễ (Latency) | Tốc độ (FPS) |
 | :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
-| **Enhanced LeNet-5 (Học sâu)** | **Thành viên 2** | **99.74%** | **99.49%** | **99.69%** | **99.59%** | **1.30 ms** | **768.4 FPS** |
-| **Color + HOG + SVM (Truyền thống)** | **Thành viên 1** | **99.47%** | **98.14%** | **98.96%** | **98.51%** | **2.79 ms** | **357.9 FPS** |
+| **Enhanced LeNet-5 (Học sâu)** | **Thành viên 2** | **98.73%** | **94.46%** | **97.43%** | **95.66%** | **1.10 ms** | **911.1 FPS** |
+| **Color + HOG + SVM (Truyền thống)** | **Thành viên 1** | **98.57%** | **94.82%** | **96.81%** | **95.51%** | **2.63 ms** | **379.7 FPS** |
 
-* **Phân tích chi tiết từng lớp trên LeNet-5 (Thành viên 2):**
-  - `Bien_Cam`: Precision 99.86%, Recall 99.72%, F1 99.79% (708/710 mẫu đúng).
-  - `Bien_Nguy_Hiem`: Precision 100.00%, Recall 99.60%, F1 99.80% (248/249 mẫu đúng).
-  - `Bien_Hieu_Lenh`: Precision 98.97%, Recall 100.00%, F1 99.48% (96/96 mẫu đúng).
-  - `Bien_Chi_Dan`: Precision 99.14%, Recall 99.41%, F1 99.28% (81/81 mẫu đúng).
-* **Phân tích hiệu quả chuỗi đặc trưng của SVM (Thành viên 1):**
-  - Bộ $S_0$ (chỉ dùng HSV): $\text{Macro-F1} = 83.15\%$ (nhầm lẫn 48 biển Hiệu lệnh sang Chỉ dẫn).
-  - Bộ $S_3$ (HSV + Spatial Grid + HOG): $\text{Macro-F1} = \mathbf{98.51\%}$ (triệt tiêu toàn bộ lỗi nhầm lẫn giữa viền tròn và cạnh chữ nhật).
+* **Phân tích kết quả:**
+  - Mô hình **Enhanced LeNet-5 (Thành viên 2)** đạt độ chính xác cao nhất (**98.73%** Acc, **95.66%** Macro-F1) với tốc độ xử lý vượt trội (**911.1 FPS**, độ trễ chỉ $1.10\text{ ms}$).
+  - Mô hình **Color + HOG + SVM (Thành viên 1)** đạt kết quả ấn tượng (**98.57%** Acc, **95.51%** Macro-F1), khẳng định sức mạnh vững chắc của chuỗi đặc trưng $S_3$ trên tập kiểm thử hoàn toàn độc lập.
 
 ---
 
 #### 🥈 Tầng 2: Đánh giá toàn trình trên ảnh đường phố toàn cảnh (End-to-End Scene Benchmark)
-Đo đạc trên toàn bộ các khung hình cảnh thực tế (YOLO11s phát hiện $\to$ crop $\to$ bộ phân loại dự đoán):
+Đo đạc trên 550 ảnh hiện trường kiểm thử (YOLO11s phát hiện $\to$ crop $\to$ bộ phân loại dự đoán):
 
-| Pipeline Toàn Trình | Bộ Định Vị (Stage 1) | Bộ Phân Loại (Stage 2) | Tỷ Lệ Định Vị (Recall) | Độ Chính Xác Khi Thấy | E2E Recall | Tốc Độ Hệ Thống |
+| Pipeline Toàn Trình | Bộ Định Vị (Stage 1) | Bộ Phân Loại (Stage 2) | Tỷ Lệ Định Vị (Recall) | Đoán Đúng Khi Thấy | E2E Recall | Tốc Độ Hệ Thống |
 | :--- | :---: | :---: | :---: | :---: | :---: | :---: |
 | **Two-Stage LeNet** | YOLO11s (TV1) | **Enhanced LeNet-5 (TV2)** | **85.61%** | **99.40%** | **85.10%** | **10.9 FPS** |
 | **Two-Stage SVM** | YOLO11s (TV1) | **SVM RBF (TV1)** | **85.61%** | **99.17%** | **84.90%** | **9.5 FPS** |
@@ -231,12 +227,12 @@ Hệ thống cung cấp cả 2 giao diện thực thi:
 2. **Giao diện dòng lệnh CLI chuẩn hóa (`app.py`):**
    - Chạy benchmark ROI: `python app.py --mode evaluate --split test`
    - Chạy benchmark toàn cảnh: `python app.py --mode evaluate-scene --split test`
-   - Chạy thử nghiệm 1 ảnh: `python app.py --mode demo --model deep_learning --input data/cropped/test/Bien_Cam/0002_00.jpg`
+   - Chạy thử nghiệm 1 ảnh: `python app.py --mode demo --model deep_learning --input data/cropped/test/Bien_Cam/0306_00.jpg`
 
 #### B. Các điểm thực nghiệm sáng tạo, khác biệt với tài liệu tham khảo
 1. **Kỹ thuật Block Split chống Data Leakage:** Đa số tài liệu tham khảo trước đây áp dụng `train_test_split` ngẫu nhiên dẫn đến kết quả ảo trên video hành trình. Nhóm thiết kế giải thuật phân chia theo chuỗi video liên tục, đảm bảo tính khách quan tuyệt đối ($0.00\%$ rò rỉ).
 2. **Kết hợp đặc trưng HOG định hướng để phân tách "cùng màu khác dạng":** Nhóm đã chứng minh bằng toán học và thực nghiệm rằng việc kết hợp vector HOG vào HSV triệt tiêu hoàn toàn sự nhầm lẫn kinh điển giữa biển Hiệu Lệnh (xanh tròn) và biển Chỉ Dẫn (xanh vuông).
-3. **Mô hình đối chuẩn kép (Dual-Tier Benchmarking):** Phân tách độc lập đánh giá Tầng 1 (năng lực phân loại thuần túy trên GT ROI) và Tầng 2 (năng lực vận hành thực tế khi kết hợp phát hiện trên ảnh đường phố), giúp xác định chính xác điểm nghẽn của hệ thống nằm ở khâu định vị ($85.61\%$) chứ không phải ở khâu phân loại ($> 99.4\%$).
+3. **Mô hình đối chuẩn kép (Dual-Tier Benchmarking):** Phân tách độc lập đánh giá Tầng 1 (năng lực phân loại thuần túy trên GT ROI) và Tầng 2 (năng lực vận hành thực tế khi kết hợp phát hiện trên ảnh đường phố), giúp xác định chính xác điểm nghẽn của hệ thống nằm ở khâu định vị ($85.61\%$) chứ không phải ở khâu phân loại ($> 99.1\%$).
 
 ---
 
@@ -244,10 +240,10 @@ Hệ thống cung cấp cả 2 giao diện thực thi:
 
 ### 5.1. Nhận xét và kết luận kỹ thuật
 1. **Hiệu quả của việc phân tách trách nhiệm (Decoupling):**
-   - Kiến trúc Two-Stage Modular chứng minh tính ưu việt vượt trội trong thực tế: Việc sử dụng Deep Learning chuyên biệt cho khâu phát hiện (YOLO11s) kết hợp với các bộ phân loại nhẹ (Enhanced LeNet-5 hoặc SVM) giúp hệ thống đạt độ chính xác phân loại gần như tuyệt đối ($> 99.4\%$) với tốc độ suy luận cực nhanh trên CPU ($1.30\text{ ms}$ với LeNet-5 và $2.79\text{ ms}$ với SVM).
+   - Kiến trúc Two-Stage Modular chứng minh tính ưu việt vượt trội trong thực tế: Việc sử dụng Deep Learning chuyên biệt cho khâu phát hiện (YOLO11s) kết hợp với các bộ phân loại nhẹ (Enhanced LeNet-5 hoặc SVM) giúp hệ thống đạt độ chính xác phân loại gần như tuyệt đối ($> 98.5\%$) với tốc độ suy luận cực nhanh trên CPU ($1.10\text{ ms}$ với LeNet-5 và $2.63\text{ ms}$ với SVM).
 2. **So sánh tương quan giữa Deep Learning và Thị giác máy tính truyền thống:**
-   - **Enhanced LeNet-5 (Học sâu):** Vượt trội hơn về độ chính xác ($99.74\%$ vs $99.47\%$), Macro-F1 ($99.59\%$ vs $98.51\%$) và tốc độ suy luận ($1.30\text{ ms}$ vs $2.79\text{ ms}$). Mạng tích chập có khả năng tự động học các biểu trưng phức tạp bên trong biển báo mà không cần căn chỉnh thủ công các tham số trích xuất.
-   - **Color + HOG + SVM (Truyền thống):** Vẫn cho thấy sức mạnh rất đáng nể ($99.47\%$ Accuracy). Phương pháp truyền thống có ưu điểm lớn về tính tường minh (Explainability), dễ diễn giải các trọng số và không đòi hỏi quá trình huấn luyện phức tạp.
+   - **Enhanced LeNet-5 (Học sâu):** Vượt trội hơn về độ chính xác ($98.73\%$ vs $98.57\%$), Macro-F1 ($95.66\%$ vs $95.51\%$) và tốc độ suy luận ($1.10\text{ ms}$ vs $2.63\text{ ms}$). Mạng tích chập có khả năng tự động học các biểu trưng phức tạp bên trong biển báo mà không cần căn chỉnh thủ công các tham số trích xuất.
+   - **Color + HOG + SVM (Truyền thống):** Vẫn cho thấy sức mạnh rất đáng nể ($98.57\%$ Accuracy). Phương pháp truyền thống có ưu điểm lớn về tính tường minh (Explainability), dễ diễn giải các trọng số và không đòi hỏi quá trình huấn luyện phức tạp.
 
 ### 5.2. Các hạn chế kỹ thuật còn tồn tại
 1. **Điểm nghẽn ở khâu phát hiện biển báo cự ly xa:**

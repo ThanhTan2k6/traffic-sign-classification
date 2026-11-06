@@ -1,4 +1,3 @@
-# Cấu hình dữ liệu YOLOv8 / YOLOv11 cho bài toán Nhận dạng Biển báo (4 nhóm QCVN 41:2019)
 path: D:/HocKy5/thigiacmaytinh/traffic-sign-classification
 train: data/global_splits/yolo_train.txt
 val: data/global_splits/yolo_val.txt

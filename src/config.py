@@ -69,23 +69,25 @@ CLASS_TO_IDX = {cls_name: idx for idx, cls_name in enumerate(TARGET_CLASSES)}
 IDX_TO_CLASS = {idx: cls_name for idx, cls_name in enumerate(TARGET_CLASSES)}
 
 # Lớp loại trừ (nhiễu, biển phụ, ngoại cảnh)
-IGNORED_PREFIXES = ["S", "B", "CAMERA"]
-IGNORED_CLASSES = ["Camera", "B.8a", ".ipynb_checkpoints"]
+IGNORED_PREFIXES = ["S", "CAMERA"]
+IGNORED_CLASSES = ["Camera", ".ipynb_checkpoints"]
 
 
 def get_target_category(class_name: str) -> Optional[str]:
     """
     Ánh xạ tên mã biển báo 52 lớp về 1 trong 4 nhóm mục tiêu:
-    - P.* -> Bien_Cam
+    - P.*, B.8a -> Bien_Cam
     - W.* -> Bien_Nguy_Hiem
     - R.* -> Bien_Hieu_Lenh
     - I.* -> Bien_Chi_Dan
-    - Còn lại (S.*, Camera, B.*) -> None (Ignored)
+    - Còn lại (S.*, Camera) -> None (Ignored)
     """
     cleaned = class_name.strip()
-    prefix = cleaned.split(".")[0].upper()
-    if prefix.startswith("CAMERA"):
+    if cleaned.upper().startswith("CAMERA"):
         return None
+    if cleaned.upper().startswith("B.8A") or cleaned.upper() == "B.8A":
+        return "Bien_Cam"
+    prefix = cleaned.split(".")[0].upper()
     return PREFIX_TO_CLASS.get(prefix, None)
 
 
@@ -108,12 +110,12 @@ def load_52_classes_vie() -> Dict[str, str]:
 
 
 # ==============================================================================
-# 3. TỈ LỆ GLOBAL DATA SPLIT (70% TRAIN / 15% VAL / 15% TEST)
+# 3. TỈ LỆ GLOBAL DATA SPLIT (70% TRAIN / 10% VAL / 20% TEST - BLOCK SPLIT)
 # ==============================================================================
 SPLIT_RATIOS = {
     "train": 0.70,   # 70% huấn luyện trọng số
-    "val": 0.15,     # 15% tinh chỉnh siêu tham số (Tuning)
-    "test": 0.15,    # 15% tập đánh giá mù (Final Benchmarking)
+    "val": 0.10,     # 10% tinh chỉnh siêu tham số (Tuning)
+    "test": 0.20,    # 20% tập đánh giá mù (Final Benchmarking)
 }
 RANDOM_SEED = 42
 
