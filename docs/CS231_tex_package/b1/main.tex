@@ -1,0 +1,29 @@
+\section{Lý do và cơ sở thực hiện đề tài}
+\label{sec:ly_do}
+
+\subsection{Lý do thực hiện đề tài và tính cấp thiết}
+\label{subsec:cap_thiet}
+
+Trong bối cảnh phát triển mạnh mẽ của các hệ thống Hỗ trợ Lái xe Nâng cao (Advanced Driver Assistance Systems -- ADAS) và phương tiện tự hành (Autonomous Vehicles), bài toán \textbf{Nhận dạng Biển báo Giao thông (Traffic Sign Recognition -- TSR)} là một mắt xích cốt lõi bảo đảm an toàn vận hành. Một hệ thống TSR chính xác và kịp thời cho phép phương tiện phát hiện sớm các giới hạn tốc độ, hướng di chuyển bắt buộc và các cảnh báo nguy hiểm tiềm ẩn, từ đó chủ động cảnh báo người lái hoặc can thiệp điều khiển tự động để ngăn ngừa tai nạn giao thông.
+
+Tại Việt Nam, việc triển khai bài toán TSR ngoài thực tế đối mặt với ba thách thức kỹ thuật đặc thù:
+
+\begin{enumerate}
+    \item \textbf{Đặc thù bối cảnh đường sá phức tạp và mật độ giao thông cao:} Biển báo giao thông tại Việt Nam có kích thước biểu kiến biến thiên cực kỳ rộng trên khung hình camera hành trình (từ cự ly xa chỉ đạt dưới $15 \times 15\text{ px}$ đến cự ly gần vượt quá $100 \times 100\text{ px}$). Đồng thời, biển báo thường xuyên bị che khuất một phần bởi tán cây, dây cáp viễn thông, xe tải lớn hoặc các biển quảng cáo thương mại có màu sắc tương tự.
+    \item \textbf{Biến thiên quang học và hiện tượng trôi dạt màu sắc (Color Drift):} Khí hậu nhiệt đới nắng gắt gây ra hiện tượng phản xạ chói lóa (specular glare), bóng râm gắt che cắt ngang mặt biển báo hoặc điều kiện thiếu sáng ban đêm. Các yếu tố này làm suy giảm nghiêm trọng độ tin cậy của không gian màu RGB nguyên bản.
+    \item \textbf{Ràng buộc tài nguyên tính toán trên thiết bị biên (Edge Computing Constraints):} Các vi xử lý nhúng trên xe cơ giới (như dòng NVIDIA Jetson, Raspberry Pi hoặc MCU chuyên dụng) bị giới hạn nghiêm ngặt về công suất tiêu thụ điện và băng thông bộ nhớ. Việc triển khai các mô hình học sâu khổng lồ (End-to-End One-Stage Detectors đa lớp) thường tiêu tốn quá nhiều tài nguyên, gây độ trễ lớn và không thể đáp ứng tần số suy luận thời gian thực ($\ge 30\text{ FPS}$).
+\end{enumerate}
+
+\subsection{Cơ sở khoa học và nguyên lý phân tách nhiệm vụ (Two-Stage Decoupling)}
+\label{subsec:co_so_khoa_hoc}
+
+Nhằm giải quyết triệt để sự đánh đổi giữa độ chính xác nhận dạng và tốc độ thời gian thực, đồ án đề xuất kiến trúc \textbf{Pipeline Lai Hai Giai Đoạn (Two-Stage Hybrid Architecture)} dựa trên nguyên lý phân tách trách nhiệm (Task Decoupling):
+
+\begin{itemize}
+    \item \textbf{Giai đoạn 1 (Candidate Localization -- Định vị vùng ứng viên):} Nhiệm vụ quét và phát hiện vật thể kích thước biến thiên trên toàn cảnh đường phố góc rộng là thế mạnh vượt trội của mạng nơ-ron học sâu hiện đại. Nhóm đề xuất huấn luyện mô hình \textbf{YOLO11s} ở chế độ 1 lớp duy nhất (\texttt{sign}). Bằng cách loại bỏ gánh nặng phân loại ngữ nghĩa chi tiết ở tầng phát hiện, mạng tối đa hóa tỷ lệ bao phủ (Detection Recall) và giảm thiểu chi phí tính toán, chỉ chịu trách nhiệm cung cấp các hộp bao ứng viên (Region of Interest -- ROI).
+    \item \textbf{Giai đoạn 2 (Semantic Classification -- Phân loại ngữ nghĩa biển báo):} Dựa trên Quy chuẩn Kỹ thuật Quốc gia QCVN 41:2019/BGTVT, biển báo giao thông mang tính quy chuẩn hóa rất cao về màu sắc (đỏ, vàng, xanh) và hình học viền (tròn, tam giác đều, chữ nhật/vuông). Nhóm thiết kế và đối chuẩn song song hai mô-đun phân loại độc lập trên CPU:
+    \begin{enumerate}
+        \item \textit{Hướng tiếp cận Thị giác máy tính truyền thống:} Khai thác các đặc trưng toán học tường minh (Lọc màu HSV dịch pha vòng tròn, Lưới không gian $2 \times 2$, Gradient định hướng HOG) kết hợp bộ phân loại Support Vector Machine (SVM) với hàm nhân RBF siêu nhẹ.
+        \item \textit{Hướng tiếp cận Học sâu hiện đại:} Thiết kế mạng nơ-ron tích chập tùy biến \textbf{Enhanced LeNet-5 (PyTorch)} với cấu trúc tối giản gồm 3 khối tích chập, tích hợp Batch Normalization và Dropout nhằm tự động trích xuất các biểu trưng trừu tượng mà vẫn bảo đảm suy luận siêu tốc.
+    \end{enumerate}
+\end{itemize}

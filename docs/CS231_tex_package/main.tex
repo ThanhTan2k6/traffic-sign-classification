@@ -1,0 +1,217 @@
+% !TEX program = xelatex
+\documentclass[a4paper, 11pt]{article}
+
+% ==========================
+% HỖ TRỢ TIẾNG VIỆT & FONT (XELATEX)
+% ==========================
+\usepackage[vietnamese]{babel}
+\usepackage{fontspec}
+\setmainfont{TeX Gyre Termes}
+
+% ==========================
+% BỐ CỤC TRANG & TOÁN HỌC
+% ==========================
+\usepackage[margin=2.5cm]{geometry}
+\usepackage{amsmath, amssymb, amsfonts}
+
+% ==========================
+% HÌNH ẢNH & MÀU SẮC
+% ==========================
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage[table]{xcolor}
+
+% ==========================
+% BẢNG BIỂU
+% ==========================
+\usepackage{array}
+\usepackage{tabularx}
+\usepackage{booktabs}
+\usepackage{multirow}
+\usepackage{makecell}
+\usepackage{longtable}
+
+\newcolumntype{Y}{>{\raggedright\arraybackslash}X}
+
+% ==========================
+% DANH SÁCH & LIỆT KÊ
+% ==========================
+\usepackage{enumitem}
+\setlist[itemize]{leftmargin=1.2em,itemsep=0.1em,topsep=0.15em}
+\setlist[enumerate]{leftmargin=1.2em,itemsep=0.1em,topsep=0.15em}
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{0.35em}
+
+% ==========================
+% TIKZ & ĐỒ HỌA
+% ==========================
+\usepackage{tikz}
+\usetikzlibrary{shapes.geometric, arrows, positioning, calc, decorations, backgrounds}
+
+% ==========================
+% CAPTION & SUB-CAPTION
+% ==========================
+\usepackage{caption}
+\usepackage{subcaption}
+
+% ==========================
+% THUẬT TOÁN (ALGORITHM)
+% ==========================
+\usepackage[lined,boxed,commentsnumbered]{algorithm2e}
+
+% ==========================
+% KHUNG & HỘP (TCOLORBOX & MDFRAMED)
+% ==========================
+\usepackage[framemethod=tikz]{mdframed}
+\usepackage[most]{tcolorbox}
+
+\definecolor{deepgreen}{HTML}{2F4A17}
+\definecolor{maingreen}{HTML}{6EAD42}
+\definecolor{softgreen}{HTML}{EAF4E4}
+\definecolor{cream}{HTML}{FAF8EF}
+\definecolor{warning}{HTML}{C45A2A}
+\definecolor{graytext}{HTML}{4B4B4B}
+
+\newtcolorbox{keybox}[1]{
+    enhanced,
+    colback=softgreen,
+    colframe=maingreen,
+    coltitle=white,
+    colbacktitle=deepgreen,
+    title=\textbf{#1},
+    arc=2mm,
+    boxrule=0.7pt,
+    left=1mm,
+    right=1mm,
+    top=1mm,
+    bottom=1mm
+}
+
+\newtcolorbox{warnbox}[1]{
+    enhanced,
+    colback=cream,
+    colframe=warning,
+    coltitle=white,
+    colbacktitle=warning,
+    title=\textbf{#1},
+    arc=2mm,
+    boxrule=0.7pt,
+    left=1mm,
+    right=1mm,
+    top=1mm,
+    bottom=1mm
+}
+
+% ==========================
+% CODE LISTING
+% ==========================
+\usepackage{listings}
+\definecolor{dkgreen}{rgb}{0,0.6,0}
+\definecolor{gray}{rgb}{0.5,0.5,0.5}
+\definecolor{mauve}{rgb}{0.58,0,0.82}
+
+\lstset{
+    frame=tb,
+    language=matlab,
+    basicstyle={\small\ttfamily},
+    breaklines=true,
+    keywordstyle=\color{blue},
+    commentstyle=\color{dkgreen},
+    stringstyle=\color{mauve},
+    numbers=left,
+    numbersep=4pt,
+    numberstyle=\tiny\color{gray}
+}
+
+% ==========================
+% ĐỊNH DẠNG TIÊU ĐỀ
+% ==========================
+\usepackage{titlesec}
+\titlespacing*{\section}{0pt}{0.75em}{0.35em}
+\titlespacing*{\subsection}{0pt}{0.55em}{0.25em}
+
+% ==========================
+% MỤC LỤC SÂU 4 CẤP
+% ==========================
+\setcounter{secnumdepth}{4}
+\setcounter{tocdepth}{3}
+
+\makeatletter
+\newcounter{subsubsubsection}[subsubsection]
+\renewcommand\thesubsubsubsection{\thesubsubsection.\@alph\c@subsubsubsection}
+\newcommand\subsubsubsection{\@startsection{subsubsubsection}{4}{\z@}
+       {-3.25ex\@plus -1ex \@minus -.2ex}
+       {1.5ex \@plus .2ex}
+       {\normalfont\normalsize\bfseries}}
+\newcommand*\l@subsubsubsection{\@dottedtocline{3}{10.0em}{4.1em}}
+\makeatother
+
+% ==========================
+% HEADER & FOOTER
+% ==========================
+\usepackage{fancyhdr}
+\usepackage{lastpage}
+\usepackage{microtype}
+\setlength{\headheight}{40pt}
+
+\pagestyle{fancy}
+\fancyhead{} 
+\fancyhead[L]{
+ \begin{tabular}{rl}
+    \begin{picture}(25,15)(0,0)
+    \put(0,-8){\includegraphics[width=8mm]{graphics/logo_uit.png}}
+   \end{picture}&
+	\begin{tabular}{l}
+		\textbf{\ttfamily Vietnam National University - Ho Chi Minh City}\\
+  	\textbf{\ttfamily University of Information Technology}
+	\end{tabular}
+ \end{tabular}
+}
+\fancyhead[R]{}
+
+\fancyfoot{}
+\fancyfoot[L]{\scriptsize \ttfamily CS231 Project Report}
+\fancyfoot[R]{\scriptsize \ttfamily Trang \thepage/\pageref{LastPage}}
+
+\renewcommand{\headrulewidth}{0.3pt}
+\renewcommand{\footrulewidth}{0.3pt}
+
+% ==========================
+% HYPERLINK
+% ==========================
+\usepackage{url}
+\usepackage[colorlinks=true, linkcolor=blue!80!black, citecolor=blue!80!black, urlcolor=blue!80!black, breaklinks, plainpages=false, pdfpagelabels=true]{hyperref}
+
+% ==========================
+% LAYOUT VÀ BÌA
+% ==========================
+\usepackage{style}
+\thesislayout
+
+\begin{document}
+
+\coverpage
+
+\cleardoublepage
+\pagenumbering{roman}
+\setcounter{page}{1}
+
+\tableofcontents
+\cleardoublepage
+
+\input{b0/main}
+
+\cleardoublepage
+\pagenumbering{arabic}
+\setcounter{page}{1}
+
+\input{b1/main}
+\input{b2/main}
+\input{b3/main}
+\input{b4/main}
+\input{b5/main}
+\input{b6/main}
+\input{b7/main}
+\input{b8/main}
+
+\end{document}

@@ -1,0 +1,32 @@
+\subsection{Chương trình Demo thực tế và các điểm sáng tạo khác biệt}
+\label{subsec:demo_va_sang_tao}
+
+\subsubsection{Ứng dụng Web tương tác hoàn chỉnh (\texttt{app\_streamlit.py})}
+\label{subsubsec:demo_streamlit}
+
+Nhóm đã xây dựng một giao diện người dùng hoàn chỉnh trên nền tảng Streamlit (\texttt{app\_streamlit.py}) phục vụ kiểm thử trực quan với các tính năng chuyên sâu:
+
+\begin{itemize}
+    \item \textbf{Chế độ ROI Side-by-Side:} Cho phép người dùng tải lên ảnh biển báo bất kỳ, trực quan hóa và so sánh song song kết quả dự đoán, phân phối xác suất và độ trễ mili-giây giữa Enhanced LeNet-5 và SVM.
+    \item \textbf{Chế độ Scene Detection:} Tải lên ảnh toàn cảnh độ phân giải cao, hệ thống tự động khoanh vùng hộp bao phát hiện, cắt ROI và hiển thị nhãn phân loại theo mã màu QCVN trực quan.
+    \item \textbf{Bảng tổng hợp Leaderboard:} Trực quan hóa số liệu thực nghiệm và biểu đồ đối chuẩn toàn diện của toàn bộ hệ thống.
+\end{itemize}
+
+\subsubsection{Giao diện dòng lệnh chuẩn hóa (\texttt{app.py})}
+\label{subsubsec:demo_cli}
+
+Cung cấp các lệnh kiểm thử tự động phục vụ tự động hóa và tích hợp CI/CD:
+\begin{itemize}
+    \item \texttt{python app.py --mode evaluate}: Tự động chạy đối chuẩn phân loại trên tập ROI kiểm thử.
+    \item \texttt{python app.py --mode evaluate-scene}: Chạy pipeline đánh giá toàn trình trên 550 ảnh toàn cảnh hiện trường.
+    \item \texttt{python app.py --mode demo --image path/to/image.jpg}: Chạy suy luận trực quan trên một ảnh duy nhất.
+\end{itemize}
+
+\subsubsection{Các đóng góp sáng tạo cốt lõi so với tài liệu tham khảo}
+\label{subsubsec:dong_gop_sang_tao}
+
+\begin{enumerate}
+    \item \textbf{Cơ chế phân chia Block Split:} Triệt tiêu hoàn toàn hiện tượng rò rỉ dữ liệu (Data Leakage) trong video hành trình mà phần lớn các bài báo nghiên cứu trước đây thường bỏ qua khi áp dụng Random Split.
+    \item \textbf{Khắc phục bài toán "Cùng màu khác hình":} Kết hợp HOG với Spatial Grid giải quyết triệt để sự nhầm lẫn giữa Biển Hiệu Lệnh (xanh tròn) và Biển Chỉ Dẫn (xanh chữ nhật/vuông).
+    \item \textbf{Khung đối chuẩn công bằng (Benchmarking Framework):} Cố định tập test độc lập, chuẩn hóa kích thước đầu vào và đo kiểm song song trên cùng một môi trường phần cứng CPU chuẩn mực.
+\end{enumerate}

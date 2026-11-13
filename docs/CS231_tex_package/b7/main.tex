@@ -1,0 +1,36 @@
+\section{Những nhận xét và kết luận rút ra của học viên}
+\label{sec:ket_luan}
+
+\subsection{Nhận xét và kết luận kỹ thuật}
+\label{subsec:nhan_xet_ky_thuat}
+
+\begin{enumerate}
+    \item \textbf{Tính ưu việt của kiến trúc phân tách trách nhiệm (Decoupling):} Việc kết hợp Deep Learning ở khâu phát hiện (YOLO11s) và các mô hình gọn nhẹ ở khâu phân loại (Enhanced LeNet-5 hoặc SVM) là giải pháp tối ưu cho các thiết bị biên, giúp đạt độ chính xác phân loại $> 98.5\%$ với tốc độ siêu nhanh trên CPU ($1.10\text{ ms}$ với LeNet-5 và $2.63\text{ ms}$ với SVM).
+    \item \textbf{Tương quan giữa Học sâu và Thị giác máy tính truyền thống:}
+    \begin{itemize}
+        \item \textit{Enhanced LeNet-5 (Học sâu):} Chiếm ưu thế về độ chính xác ($98.73\%$ vs $98.57\%$), Macro-F1 ($95.66\%$ vs $95.51\%$) và tốc độ suy luận ($1.10\text{ ms}$ vs $2.63\text{ ms}$). Mạng nơ-ron tự động biểu diễn được các hoa văn tinh xảo trong biển báo mà không cần căn chỉnh tham số trích xuất thủ công.
+        \item \textit{Color + HOG + SVM (Truyền thống):} Vẫn chứng minh sức mạnh đáng nể ($98.57\%$ Accuracy) với ưu điểm lớn về tính minh bạch toán học (Explainability), dễ diễn giải và không đòi hỏi quá trình huấn luyện phức tạp.
+    \end{itemize}
+\end{enumerate}
+
+\subsection{Các hạn chế kỹ thuật hiện tại}
+\label{subsec:han_che}
+
+\begin{enumerate}
+    \item \textbf{Hạn chế phát hiện ở cự ly xa:} YOLO11s còn bỏ sót $14.39\%$ biển báo trên tập test. Phần lớn các trường hợp bỏ sót rơi vào biển báo ở khoảng cách rất xa, kích thước trên ảnh chỉ dưới $15\text{ px}$, nơi tín hiệu biên cạnh bị tiêu biến qua các tầng downsampling của mạng.
+    \item \textbf{Biến thiên ánh sáng phức tạp:} Không gian màu HSV có thể bị dao động trong các điều kiện thời tiết khắc nghiệt như mưa lớn gây lóa đèn vào ban đêm hoặc bóng râm gắt che một nửa mặt biển.
+    \item \textbf{Giới hạn một lần chạy và một hạt ngẫu nhiên (Single Seed):} Toàn bộ các thực nghiệm huấn luyện detector YOLO11s và các mô hình phân loại truyền thống đều mới được tiến hành trên 1 lần chạy duy nhất với 1 hạt ngẫu nhiên cố định ($\text{seed} = 0$ hoặc $\text{seed} = 42$), chưa kiểm chứng độ ổn định và phương sai qua nhiều seed khác nhau.
+    \item \textbf{Đặc thù tương quan chuỗi khung hình (Temporal Correlation):} Dù tập kiểm thử chứa tới 1.821 bounding box biển báo, các khung hình này được trích xuất từ các chuỗi video hành trình liên tục nên thực chất chỉ tương ứng với khoảng \textbf{161 biển báo vật lý độc lập (tracks)}. Do đó, sự thiếu hụt các đối tượng vật lý độc lập khiến cho một số sai lệch cục bộ lặp lại trong chuỗi (chẳng hạn 19 frame lệch hộp của một cột biển cấm P.130) bị phóng đại lên trong bảng thống kê tổng thể.
+    \item \textbf{Hiện tượng nhãn thiếu trong Ground Truth thực tế (Missing Annotations):} Khảo sát mẫu 20 trường hợp báo động giả (False Positive) có độ tự tin cao nhất của detector \texttt{vn\_s} ghi nhận có tới \textbf{12/20 trường hợp (chiếm 60\% mẫu khảo sát)} thực chất là biển báo giao thông có thật ngoài đời thực bị người gán nhãn bỏ sót trong tập dữ liệu gốc. Hiện tượng thiếu nhãn này làm suy giảm chỉ số Precision và mAP thực nghiệm nhưng hoàn toàn không làm thay đổi giá trị Recall kiểm chứng trên các biển đã có nhãn ground-truth.
+    \item \textbf{Điểm mù hoàn toàn đối với nhóm biển phụ:} Cả 3 biến thể detector YOLO11s đều đạt Recall \textbf{0.0\% (0/8 mẫu)} đối với nhóm biển phụ (mã S.505a) do kích thước siêu nhỏ, dạng chữ nhật dẹt nằm sát mép dưới biển chính dẫn tới việc detector không phân tách được biên giới hộp bao. Cỡ mẫu quá nhỏ ($n=8$) cũng khiến việc đánh giá phân loại nhóm này chưa đủ ý nghĩa thống kê tin cậy.
+    \item \textbf{Bỏ sót hoàn toàn 37 biển báo vật lý (Tracks):} Có \textbf{37 / 161 biển báo vật lý} trên đường không có bất kỳ khung hình nào được phát hiện bởi detector \texttt{vn\_s} (kích thước tối đa trung bình của chuỗi vết này chỉ đạt $\approx 20.8\text{ px}$), chủ yếu rơi vào các tình huống bị tán cây rậm che khuất, nằm hoàn toàn trong vùng bóng râm tối hoặc biển bị gỉ sét, biến dạng nặng.
+    \item \textbf{Cảnh báo suy diễn thống kê trên các phân nhóm cỡ mẫu nhỏ:} Đối với các nhóm hoặc mã hiệu có số lượng mẫu kiểm thử rất ít (như nhóm biển phụ hoặc một số mã biển chỉ dẫn hiếm), nhóm nghiên cứu không rút ra kết luận mang tính khái quát hóa tuyệt đối mà chỉ ghi nhận hiện tượng thực nghiệm tại chỗ.
+\end{enumerate}
+
+\subsection{Hướng phát triển trong tương lai}
+\label{subsec:huong_phat_trien}
+
+\begin{enumerate}
+    \item \textbf{Ứng dụng kỹ thuật SAHI (Slicing Aided Hyper Inference):} Chia nhỏ ảnh lớn thành các ô trượt nhằm nâng cao độ nhạy phát hiện đối với các biển báo siêu nhỏ ở cự ly xa.
+    \item \textbf{Phân loại phân cấp 52 mã hiệu chi tiết (Hierarchical Classification):} Mở rộng từ bài toán nhận diện 4 nhóm quy chuẩn sang nhận dạng chính xác từng mã hiệu biển báo cụ thể trong QCVN 41:2019.
+\end{enumerate}

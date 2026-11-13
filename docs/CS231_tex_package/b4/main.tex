@@ -1,0 +1,46 @@
+\section{Thực nghiệm và kết quả đánh giá}
+\label{sec:thuc_nghiem}
+
+\subsection{Mô tả tập dữ liệu và chiến lược phân chia Block Split}
+\label{subsec:dataset_blocksplit}
+
+\begin{enumerate}
+    \item \textbf{Quy mô và đặc thù bộ dữ liệu:} Bộ dữ liệu thực nghiệm bao gồm \textbf{3.216 ảnh} chụp từ camera hành trình trên đường phố Việt Nam ở độ phân giải $960 \times 540$ và $1920 \times 1080$, chứa tổng cộng \textbf{7.858 bounding box} biển báo hợp lệ ($\ge 10\text{ px}$) được gán nhãn 52 mã hiệu chi tiết theo QCVN 41:2019.
+
+    \item \textbf{Kiểm toán và chuẩn hóa nhãn (Data Auditing):}
+    \begin{itemize}
+        \item \textit{Loại bỏ lớp Camera:} 40 mẫu được gán nhãn Camera thực chất chỉ là 3 vị trí camera giám sát lặp lại nhiều lần, không thuộc đối tượng biển báo quy chuẩn nên được loại bỏ.
+        \item \textit{Loại bỏ nhóm biển phụ (phụ):} Chỉ có 8 mẫu trong tập test, kích thước siêu nhỏ $< 15\text{ px}$ và detector bỏ sót $100\%$, do đó được tách khỏi bài toán đối chuẩn 4 nhóm chính.
+        \item \textit{Quy chuẩn nhãn B.8a:} Biển cấm xe sơ-mi rơ-moóc được gộp chuẩn xác vào nhóm \texttt{Bien\_Cam} theo hình dáng tròn viền đỏ nền trắng.
+    \end{itemize}
+
+    \item \textbf{Chiến lược phân chia Block Split triệt tiêu rò rỉ dữ liệu (Zero Data Leakage):}
+    Dữ liệu được sắp xếp theo chuỗi thời gian video và phân chia theo các khối \textbf{100 khung hình liên tục (Blocks)} kết hợp cắt khoảng đệm an toàn \textbf{5 frames (Gap)} giữa các khối để bảo đảm tính độc lập vật lý tuyệt đối giữa các tập dữ liệu:
+    \begin{itemize}
+        \item \textit{Tập Huấn luyện (Train set -- 70\%):} Gồm \textbf{2.236 ảnh} toàn cảnh, chứa \textbf{5.254 mẫu ROI} biển báo.
+        \item \textit{Tập Tinh chỉnh (Validation set -- 15\%):} Gồm \textbf{270 ảnh} toàn cảnh, chứa \textbf{542 mẫu ROI} biển báo.
+        \item \textit{Tập Kiểm thử độc lập (Blind Test set -- 15\%):} Gồm \textbf{550 ảnh} toàn cảnh hoàn toàn mới lạ, chứa \textbf{1.813 mẫu ROI} biển báo độc lập dùng để chấm điểm khách quan.
+    \end{itemize}
+\end{enumerate}
+
+\subsection{Độ đo đánh giá kết quả}
+\label{subsec:do_do_danh_gia}
+
+Hệ thống thiết lập hệ thống chỉ số đánh giá hai tầng theo chuẩn quốc tế:
+
+\begin{enumerate}
+    \item \textbf{Độ đo khâu Định vị (Object Detection):} Sử dụng ngưỡng trùng khớp $\text{IoU} \ge 0.5$ giữa hộp dự đoán $\mathbf{B}_{\text{pred}}$ và hộp nhãn gốc $\mathbf{B}_{\text{gt}}$:
+    \begin{equation}
+        \text{IoU} = \frac{\text{Area}(\mathbf{B}_{\text{pred}} \cap \mathbf{B}_{\text{gt}})}{\text{Area}(\mathbf{B}_{\text{pred}} \cup \mathbf{B}_{\text{gt}})}
+        \label{eq:iou}
+    \end{equation}
+    Đánh giá qua các chỉ số: \textbf{Precision (Độ chuẩn xác)}, \textbf{Recall (Độ phủ/tỷ lệ bắt trúng)}, \textbf{mAP50} (độ chính xác trung bình tại $\text{IoU} = 0.5$) và \textbf{mAP50-95} (trung bình mAP trên 10 ngưỡng IoU từ 0.5 đến 0.95).
+
+    \item \textbf{Độ đo khâu Phân loại (Classification):} Để phản ánh khách quan trong điều kiện mất cân bằng số lượng mẫu giữa các nhóm biển báo, nhóm sử dụng độ đo trung tâm là \textbf{Macro-F1 Score} (trung bình cộng F1 từng lớp không trọng số), kết hợp với \textbf{Accuracy (Độ chính xác tổng quát)}, \textbf{Precision} và \textbf{Recall}:
+    \begin{equation}
+        \text{Macro-F1} = \frac{1}{|\mathcal{C}|} \sum_{c=1}^{|\mathcal{C}|} \frac{2 \times \text{Precision}_c \times \text{Recall}_c}{\text{Precision}_c + \text{Recall}_c}
+        \label{eq:macro_f1}
+    \end{equation}
+
+    \item \textbf{Độ đo Hiệu năng thời gian thực:} Thời gian trễ trung bình \textbf{Latency (ms/mẫu)} và thông lượng \textbf{Throughput (FPS -- Khung hình/giây)} đo kiểm trực tiếp trên bộ xử lý CPU đơn lõi.
+\end{enumerate}

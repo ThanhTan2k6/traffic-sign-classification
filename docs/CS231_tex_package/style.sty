@@ -1,0 +1,65 @@
+\usetikzlibrary{calc}
+\usetikzlibrary{decorations.pathmorphing}
+
+\def\thesislayout{
+	\geometry{
+		a4paper,
+		total={160mm,232mm},
+		top=35mm,
+	}
+}
+
+\def\coverpage{
+\begin{titlepage}
+\thispagestyle{empty}
+\begin{tikzpicture}[remember picture, overlay]
+\draw [line width=1pt]
+    ($ (current page.north west) + (1.5cm,-1.5cm) $)
+    rectangle
+    ($ (current page.south east) + (-1.5cm,1.5cm) $);
+\draw [line width=3pt]
+    ($ (current page.north west) + (1.65cm,-1.65cm) $)
+    rectangle
+    ($ (current page.south east) + (-1.65cm,1.65cm) $); 
+\end{tikzpicture}
+\begin{center}
+{\large \textbf{ĐẠI HỌC QUỐC GIA TP. HỒ CHÍ MINH}}\\[0.2cm]
+{\large \textbf{TRƯỜNG ĐẠI HỌC CÔNG NGHỆ THÔNG TIN}}\\[0.2cm]
+{\large \textbf{KHOA KHOA HỌC MÁY TÍNH}}\\[0.4cm]
+\underline{\hspace{14cm}}\\[0.8cm]
+
+\includegraphics[width=6cm]{graphics/logo_uit2.png}\\[0.8cm]
+
+{\LARGE \textbf{BÁO CÁO ĐỒ ÁN MÔN HỌC}}\\[0.3cm]
+{\Large \textbf{CS231 -- THỊ GIÁC MÁY TÍNH}}\\[0.6cm]
+
+\rule{\textwidth}{1.2pt}\\[0.3cm]
+{\large \textbf{HỆ THỐNG NHẬN DIỆN VÀ ĐÁNH GIÁ ĐỐI CHUẨN\\BIỂN BÁO GIAO THÔNG VIỆT NAM}}\\[0.25cm]
+{\small \textit{Kiến Trúc Lai Hai Giai Đoạn (Two-Stage Hybrid): YOLO11s Detector + Handcrafted Features SVM vs Enhanced LeNet-5 CNN}}\\[0.25cm]
+\rule{\textwidth}{1.2pt}\\[0.6cm]
+
+\begin{flushleft}
+\small
+\begin{tabular}{ll}
+\textbf{Từ Lê Tuấn Anh} & \textbf{24520133} \\
+\textbf{Nguyễn Thanh Tân} & \textbf{24521581} \\[0.3cm]
+\textbf{Giảng viên hướng dẫn:} & \textbf{Mai Tiến Dũng}
+\end{tabular}
+\end{flushleft}
+
+\vfill
+{\large TP. Hồ Chí Minh, Học kỳ 1 -- Năm học 2026 -- 2027}
+\end{center}
+\end{titlepage}
+}
+
+% ==========================
+% ĐỊNH DẠNG MÀU MỤC LỤC ĐEN (CHỈ MỤC LỤC)
+% ==========================
+\let\origtableofcontents\tableofcontents
+\renewcommand{\tableofcontents}{%
+  \begingroup
+  \hypersetup{linkcolor=black}%
+  \origtableofcontents
+  \endgroup
+}
