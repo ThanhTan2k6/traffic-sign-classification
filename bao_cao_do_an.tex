@@ -2,11 +2,19 @@
 \documentclass[a4paper, 11pt]{article}
 
 % ==========================
-% HỖ TRỢ TIẾNG VIỆT & FONT (XELATEX)
+% HỖ TRỢ TIẾNG VIỆT & TỰ ĐỘNG THÍCH ỨNG TRÌNH BIÊN DỊCH (PDFLATEX / XELATEX / LUALATEX)
 % ==========================
-\usepackage[vietnamese]{babel}
-\usepackage{fontspec}
-\setmainfont{TeX Gyre Termes}
+\usepackage{iftex}
+\ifPDFTeX
+  \usepackage[utf8]{inputenc}
+  \usepackage[vietnamese]{babel}
+  \usepackage[T5,T1]{fontenc}
+  \usepackage{mathptmx}
+\else
+  \usepackage[vietnamese]{babel}
+  \usepackage{fontspec}
+  \setmainfont{TeX Gyre Termes}
+\fi
 
 % ==========================
 % BỐ CỤC TRANG & TOÁN HỌC
