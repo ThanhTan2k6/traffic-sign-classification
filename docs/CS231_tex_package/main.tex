@@ -11,7 +11,6 @@
   \usepackage[T5,T1]{fontenc}
   \usepackage{mathptmx}
 \else
-  \usepackage[vietnamese]{babel}
   \usepackage{fontspec}
   \setmainfont{TeX Gyre Termes}
 \fi
@@ -28,6 +27,16 @@
 \usepackage{graphicx}
 \usepackage{float}
 \usepackage[table]{xcolor}
+
+% Cơ chế an toàn tự động: Thay thế khung giữ chỗ nếu chưa tải thư mục graphics lên Overleaf
+\let\origincludegraphics\includegraphics
+\renewcommand{\includegraphics}[2][]{%
+  \IfFileExists{#2}{%
+    \origincludegraphics[#1]{#2}%
+  }{%
+    \fbox{\begin{minipage}[c][3.2cm][c]{0.85\linewidth}\centering\footnotesize\color{red!80!black}\textbf{[Chưa tải file ảnh: \texttt{#2}]}\\\color{black}\scriptsize Vui lòng tải thư mục \texttt{graphics/} lên Overleaf để hiển thị biểu đồ này.\end{minipage}}%
+  }%
+}
 
 % ==========================
 % BẢNG BIỂU
@@ -167,7 +176,7 @@
 \fancyhead[L]{
  \begin{tabular}{rl}
     \begin{picture}(25,15)(0,0)
-    \put(0,-8){\includegraphics[width=8mm]{graphics/logo_uit.png}}
+    \put(0,-8){\IfFileExists{graphics/logo_uit.png}{\origincludegraphics[width=8mm]{graphics/logo_uit.png}}{\rule{8mm}{8mm}}}
    \end{picture}&
 	\begin{tabular}{l}
 		\textbf{\ttfamily Vietnam National University - Ho Chi Minh City}\\
