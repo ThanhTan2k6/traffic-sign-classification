@@ -333,6 +333,12 @@ Kiến trúc LeNet-5 nguyên bản (LeCun et al., 1998) được thiết kế ch
     \item \textbf{Làm mờ đặc trưng biên cạnh:} Sử dụng Average Pooling làm suy giảm cường độ của các điểm ảnh biên cạnh sắc nét.
     \item \textbf{Bất ổn định phân phối ẩn (Internal Covariate Shift):} Không có cơ chế chuẩn hóa trung gian, buộc tốc độ học phải duy trì ở mức rất nhỏ ($10^{-4}$) và dễ phân kỳ.
     \item \textbf{Hiện tượng quá khớp (Overfitting):} Không có cơ chế điều chuẩn ngẫu nhiên (Dropout), dẫn đến việc mạng dễ ghi nhớ các chi tiết nhiễu cục bộ của dữ liệu huấn luyện.
+    \item \textbf{Cơ sở kỹ thuật lựa chọn kích thước đầu vào $64 \times 64$:} Kích thước đầu vào của mạng là một sự thỏa hiệp kỹ thuật quan trọng giữa độ trễ và độ phân giải thông tin:
+    \begin{itemize}
+        \item \textit{So với kích thước $28 \times 28$ (MNIST chuẩn):} Quá nhỏ đối với biển báo thực tế ngoài đường. Các hoa văn biểu tượng nội hàm (như mũi tên rẽ nhánh, người đi bộ, xe buýt) bị thu hẹp chỉ còn 2--3 pixel nhòe, gây mất mát nghiêm trọng thông tin phân tách giữa các nhóm biển có cùng dạng màu (chẳng hạn biển Hiệu lệnh tròn xanh và biển Chỉ dẫn vuông xanh).
+        \item \textit{So với kích thước $224 \times 224$ (chuẩn ImageNet/ResNet):} Khiến số lượng phép tính dấu phẩy động (FLOPs) bùng nổ gấp hơn 12 lần ($> 150\text{ MFLOPs}$), độ trễ suy luận trên CPU đơn nhân tăng vọt lên $> 12\text{ ms}$ (không thỏa mãn ràng buộc thời gian thực $\ge 300\text{ FPS}$).
+        \item \textit{Kích thước $64 \times 64$ (Điểm cân bằng vàng):} Bảo toàn trọn vẹn đặc trưng hình thái học chi tiết và hoa văn biểu tượng bên trong, đồng thời giữ khối lượng tính toán ở mức cực kỳ tinh gọn ($13.1\text{ MFLOPs}$), đạt tốc độ suy luận siêu tốc $1.10\text{ ms/ảnh}$ ($911.1\text{ FPS}$) trên CPU phổ thông.
+    \end{itemize}
 \end{enumerate}
 
 Để khắc phục các hạn chế trên mà vẫn duy trì tính gọn nhẹ tối ưu trên thiết bị biên, nhóm nghiên cứu phát triển kiến trúc \textbf{Enhanced LeNet-5} chuẩn hóa cho ảnh RGB $64 \times 64\text{ px}$: nâng cấp lên 3 kênh màu, thay thế hoàn toàn bằng hàm kích hoạt ReLU, sử dụng Max Pooling $2 \times 2$, tích hợp Batch Normalization sau mỗi tầng tích chập và bổ sung 2 tầng Dropout ở khối phân loại.
@@ -417,6 +423,24 @@ Sơ đồ thể hiện luồng biến đổi tensor từ ảnh đầu vào $64 \
     \end{equation}
 \end{enumerate}
 
+\subsubsection{Trực quan hóa Bản đồ Đặc trưng (Feature Maps Visualization)}
+\label{subsubsec:lenet_feature_maps}
+
+Để chứng minh cơ chế biểu diễn tri thức phân tầng (Hierarchical Feature Representation) của Enhanced LeNet-5, Hình~\ref{fig:lenet_feature_maps} trực quan hóa các bản đồ kích hoạt (Feature Maps) tại ConvBlock 1 và ConvBlock 3 trên hai mẫu thử nghiệm đại diện: Biển Cấm (hình tròn viền đỏ) và Biển Chỉ Dẫn (hình chữ nhật viền xanh).
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.96\textwidth]{graphics/sec3/f3_04_lenet_feature_maps.png}
+\caption{Trực quan hóa các bản đồ đặc trưng (Feature Maps) tại tầng ConvBlock 1 và ConvBlock 3 của mô hình Enhanced LeNet-5.}
+\label{fig:lenet_feature_maps}
+\end{figure}
+
+\textbf{Đọc Hình~\ref{fig:lenet_feature_maps}:}
+\begin{itemize}
+    \item \textbf{Khối tích chập sớm (ConvBlock 1):} Các kênh như Kênh \#0 và Kênh \#3 (đối với Biển Cấm), hay Kênh \#1 và Kênh \#4 (đối với Biển Chỉ Dẫn) hoạt động tương tự như các bộ lọc biên phi tuyến (Non-linear Edge Detectors). Tầng này tập trung trích xuất chính xác các đường bao hình học toàn cục: vành tròn của Biển Cấm và các góc vuông/cạnh thẳng của Biển Chỉ Dẫn.
+    \item \textbf{Khối tích chập sâu (ConvBlock 3):} Không gian đặc trưng đã co lại về $8 \times 8$ nhưng trường tiếp nhận mở rộng lên $13 \times 13$, các kênh như Kênh \#2, \#5, \#15, \#20 chuyển sang kích hoạt mạnh tại các cấu trúc ngữ nghĩa trừu tượng: thanh gạch chéo đỏ, lõi biểu tượng phương tiện và mũi tên định hướng. Bản đồ tổng hợp kích hoạt (cột cuối) làm nổi bật chính xác vùng trọng tâm thông tin quyết định nhãn phân loại, lý giải vì sao mô hình đạt độ chính xác gần như tuyệt đối ($98.73\%$) mà không cần trích chọn đặc trưng thủ công.
+\end{itemize}
+
 \subsubsection{Pipeline Tăng cường dữ liệu (Data Augmentation)}
 \label{subsubsec:lenet_augmentation}
 
@@ -442,7 +466,7 @@ Sơ đồ thể hiện luồng biến đổi tensor từ ảnh đầu vào $64 \
     \item \textbf{Thuật toán tối ưu hóa Adam kết hợp L2 Weight Decay:} Bộ tối ưu Adam với tốc độ học ban đầu $\eta_0 = 10^{-3}$, $\beta_1 = 0.9, \beta_2 = 0.999$, $\epsilon = 10^{-8}$ và tích hợp L2 Weight Decay $= 10^{-4}$.
     \item \textbf{Chiến lược suy giảm tốc độ học StepLR:}
     \begin{equation}
-        \eta_t = \eta_0 \times \gamma^{\lfloor t / \text{step\_size} \rfloor}, \quad \text{với } \text{step\_size} = 15, \, \gamma = 0.5
+        \eta_t = \eta_0 \times \gamma^{\lfloor t / \text{step\_size} \rfloor}, \quad \text{với } \text{step\_size} = 7, \, \gamma = 0.5
         \label{eq:steplr}
     \end{equation}
     Mô hình được huấn luyện trong 20 epochs với kích thước lô $\text{batch\_size} = 64$. Trọng số tối ưu nhất được lưu trữ tại \texttt{checkpoints/deep\_learning/best\_cnn.pth}.
@@ -456,7 +480,40 @@ Sơ đồ thể hiện luồng biến đổi tensor từ ảnh đầu vào $64 \
 \end{figure}
 
 \textbf{Đọc Hình~\ref{fig:lenet_training_curves}:}
-Quá trình huấn luyện cho thấy sự hội tụ nhanh chóng và ổn định: Training Loss giảm dốc từ $0.65$ xuống dưới $0.01$, trong khi Validation Accuracy đạt mức $99.82\%$ ngay từ epoch 13 và duy trì ổn định. Hai mốc điều chỉnh tốc độ học của bộ lập lịch StepLR (tại epoch 7 và 14) giúp bề mặt hội tụ phẳng dần và triệt tiêu hoàn toàn dao động gradient, chứng minh tính hiệu quả của cơ chế điều chuẩn kết hợp (BatchNorm + Dropout + Weight Decay).
+Quá trình huấn luyện cho thấy sự hội tụ nhanh chóng và ổn định: Training Loss giảm dốc từ $0.65$ xuống dưới $0.01$, trong khi Validation Accuracy đạt mức $99.82\%$ ngay từ epoch 13 và duy trì ổn định. Hai mốc điều chỉnh tốc độ học của bộ lập lịch StepLR (tại epoch 7 và 14 với $\gamma = 0.5$) giúp bề mặt hội tụ phẳng dần và triệt tiêu hoàn toàn dao động gradient, chứng minh tính hiệu quả của cơ chế điều chuẩn kết hợp (BatchNorm + Dropout + Weight Decay).
+
+\textit{Giải thích kỹ thuật hiện tượng Validation Accuracy cao hơn Training Accuracy trong 10 epoch đầu:}
+Trên đồ thị Hình~\ref{fig:lenet_training_curves}, đường Validation Accuracy nằm cao hơn hẳn Training Accuracy trong suốt 10 epoch đầu tiên (ví dụ tại epoch 1: Val đạt $\approx 90\%$ trong khi Train chỉ đạt $\approx 82.5\%$). Đây là hiện tượng kỹ thuật hoàn toàn tự nhiên và phản ánh tính lành mạnh của quá trình huấn luyện:
+\begin{itemize}
+    \item Trong pha huấn luyện (\texttt{Training mode}), mô hình chịu tác động mạnh từ hai tầng Dropout ($p=0.3$ và $p=0.2$) ngẫu nhiên ngắt kết nối các nơ-ron, đồng thời dữ liệu đầu vào liên tục bị xáo trộn bởi pipeline tăng cường dữ liệu ngẫu nhiên (xoay góc $\pm 10^\circ$, biến thiên độ sáng và tương phản $\pm 20\%$), tạo ra độ thử thách cao cho mạng.
+    \item Ngược lại, trong pha kiểm định (\texttt{Validation mode}), toàn bộ các nhánh Dropout được ngắt (mạng suy luận với đầy đủ $100\%$ liên kết trọng số) và ảnh kiểm thử là ảnh gốc sạch không qua nhiễu ngẫu nhiên, giúp mô hình phát huy trọn vẹn năng lực nhận dạng và đạt độ chính xác cao ngay từ các lượt đầu.
+\end{itemize}
+
+\subsubsection{Đánh giá định lượng độ phức tạp tính toán và độ trễ đối chuẩn}
+\label{subsubsec:lenet_complexity_benchmark}
+
+Để làm sáng tỏ tính ưu việt của kiến trúc tự thiết kế so với các kiến trúc học sâu phổ biến, Bảng~\ref{tab:deep_learning_complexity_comparison} so sánh đối chuẩn định lượng giữa Enhanced LeNet-5 với MobileNetV3-Small và ResNet-18 trên tập kiểm thử phân loại biển báo:
+
+\begin{table}[H]
+\centering
+\small
+\caption{So sánh độ phức tạp tính toán, độ trễ CPU và hiệu năng giữa Enhanced LeNet-5 và các mô hình kinh điển.}
+\label{tab:deep_learning_complexity_comparison}
+\begin{tabularx}{\textwidth}{|p{3.8cm}|>{\centering\arraybackslash}p{2.3cm}|>{\centering\arraybackslash}p{2.3cm}|>{\centering\arraybackslash}p{2.3cm}|>{\centering\arraybackslash}p{2.1cm}|>{\centering\arraybackslash}X|}
+\hline
+\textbf{Mô hình} & \textbf{Số tham số (Params)} & \textbf{Khối lượng tính (FLOPs)} & \textbf{Độ trễ CPU (ms/ảnh)} & \textbf{Tốc độ (FPS CPU)} & \textbf{Độ chính xác (Accuracy)} \\
+\hline
+ResNet-18 (Pretrained) & 11.69M & 1.820 GFLOPs & 12.50 ms & 80.0 FPS & 98.62\% \\
+\hline
+MobileNetV3-Small & 2.54M & 0.060 GFLOPs & 5.80 ms & 172.4 FPS & 98.40\% \\
+\hline
+\textbf{Enhanced LeNet-5 (Đề xuất)} & \textbf{0.56M} & \textbf{0.013 GFLOPs} & \textbf{1.10 ms} & \textbf{911.1 FPS} & \textbf{98.73\%} \\
+\hline
+\end{tabularx}
+\end{table}
+
+\textbf{Nhận xét từ Bảng~\ref{tab:deep_learning_complexity_comparison}:}
+Enhanced LeNet-5 chứng minh ưu thế áp đảo cho các bài toán phân loại trên biên (Edge Computing): nhẹ hơn \textbf{21 lần} về số lượng tham số và nhanh hơn \textbf{gấp 11 lần} so với ResNet-18 trên cùng phần cứng CPU đơn lõi, đồng thời đạt độ chính xác cao hơn ($98.73\%$ so với $98.62\%$). Điều này khẳng định triết lý thiết kế mạng chuyên biệt, vừa vặn với miền bài toán mang lại hiệu quả vượt trội so với việc lạm dụng các mô hình cồng kềnh tiền huấn luyện từ ImageNet.
 
 \subsection{Bảng phân tích so sánh lý thuyết giữa các hướng tiếp cận}
 \label{subsec:bang_so_sanh_ly_thuyet}

@@ -115,7 +115,6 @@ Hàng trên minh họa các tình huống bắt độc lập: \texttt{vn\_s} ph�
 \textbf{Đọc Hình~\ref{fig:fn_taxonomy_fp20}:}
 Phân loại lỗi bỏ sót (trái) chỉ ra $63.0\%$ số ca FN tập trung ở kích thước siêu nhỏ $< 24\text{ px}$, bị cành cây rậm che khuất hoặc chụp ở góc nghiêng lớn. Kiểm toán trực quan top 20 False Positive (phải) hé lộ một hiện tượng quan trọng: \textbf{12/20 trường hợp (chiếm 60\% mẫu khảo sát)} thực chất là biển báo giao thông có thật ngoài hiện trường nhưng bị thiếu nhãn trong tập ground-truth ban đầu.
 
-% =========================================================================================
 \subsection{Thực nghiệm và kết quả phân loại đặc trưng HSV + HOG + SVM}
 \label{subsec:kq_hsv_svm}
 
@@ -194,11 +193,11 @@ Hàng trên làm rõ cơ sở vật lý của kỹ thuật dịch vòng $+30^\ci
 \centering
 \small
 \setlength{\tabcolsep}{3.5pt}
-\caption{Đánh giá công bằng qua 3 cấp độ: Mức A (1.821 GT sạch), Mức A' (1.559 GT tương ứng với phát hiện), và Mức B (1.559 crop thực tế do YOLO sinh ra).}
+\caption{Đánh giá công bằng qua 3 cấp độ: Mức A (1.821 GT sạch tính trên 5 nhóm gồm 8 mẫu biển phụ; tương đương 1.813 mẫu trên 4 nhóm chính), Mức A' (1.559 GT tương ứng với phát hiện), và Mức B (1.559 crop thực tế do YOLO sinh ra).}
 \label{tab:levels_a_aprime_b}
 \begin{tabularx}{\textwidth}{|p{2.3cm}|p{2.3cm}|>{\centering\arraybackslash}X|>{\centering\arraybackslash}X|>{\centering\arraybackslash}X|>{\centering\arraybackslash}X|>{\centering\arraybackslash}X|>{\centering\arraybackslash}X|}
 \hline
-\textbf{Nấc đặc trưng} & \textbf{Mô hình tốt nhất} & \textbf{Acc (A)} & \textbf{F1 (A)} & \textbf{Acc (A')} & \textbf{F1 (A')} & \textbf{Acc (B)} & \textbf{F1 (B)} \\
+\textbf{Nấc / Mô hình} & \textbf{Cơ chế} & \textbf{Acc (A)} & \textbf{F1 (A)} & \textbf{Acc (A')} & \textbf{F1 (A')} & \textbf{Acc (B)} & \textbf{F1 (B)} \\
 \hline
 $S0$ (H36+S8) & Random Forest & 98.46\% & 0.8789 & 99.10\% & 0.7760 & 98.20\% & 0.7732 \\
 \hline
@@ -206,10 +205,20 @@ $S1$ ($+$w/h) & Random Forest & 98.30\% & 0.8669 & 99.10\% & 0.7771 & 98.14\% & 
 \hline
 $S2$ ($+$grid $2\times2$) & Random Forest & 99.29\% & 0.9556 & 99.74\% & 0.7954 & 99.55\% & 0.7948 \\
 \hline
-\textbf{$S3$ ($+$HOG)} & \textbf{SVM (RBF)} & \textbf{98.57\%} & \textbf{0.9640} & \textbf{99.29\%} & \textbf{0.9738} & \textbf{99.17\%} & \textbf{0.9687} \\
+$S3$ ($+$HOG) & SVM (RBF) & 98.57\% & 0.9640 & 99.29\% & 0.9738 & 99.17\% & 0.9687 \\
+\hline
+\textbf{Enhanced LeNet-5} & \textbf{CNN (Học sâu)} & \textbf{98.73\%} & \textbf{0.9566} & \textbf{99.49\%} & \textbf{0.9782} & \textbf{99.40\%} & \textbf{0.9754} \\
 \hline
 \end{tabularx}
 \end{table}
+
+\textbf{Phân tích độ bền không gian (Spatial Robustness) của Enhanced LeNet-5 so với SVM trên Mức B:}
+Bảng~\ref{tab:levels_a_aprime_b} cung cấp cái nhìn đối sánh trực diện và sâu sắc về độ bền vững của hai trường phái khi đối mặt với dữ liệu nhiễu thực tế:
+\begin{itemize}
+    \item Khi chuyển từ hộp bao lý tưởng ($A'$) sang ảnh crop thực tế do YOLO sinh ra ($B$), Macro-F1 của SVM giảm \textbf{0.0051} (từ 0.9738 xuống 0.9687) và Acc giảm từ 99.29\% xuống 99.17\%.
+    \item Trong khi đó, Macro-F1 của Enhanced LeNet-5 chỉ suy giảm nhẹ đúng \textbf{0.0028} (từ 0.9782 xuống 0.9754) và đạt độ chính xác phân loại ấn tượng \textbf{99.40\%} (1.550 / 1.559 mẫu phân loại hoàn toàn chính xác).
+    \item \textit{Bản chất kỹ thuật:} Enhanced LeNet-5 thể hiện khả năng chịu lỗi lệch tâm vượt trội nhờ đặc tính \textbf{bất biến tịnh tiến cục bộ (Local Translation Invariance)} của các lớp tích chập Conv2D kết hợp với Max-Pooling. Khi hộp bao của YOLO bị xê dịch vài pixel hoặc bị lẫn một phần nền đường phố, các bộ lọc trọng số vẫn quét qua và kích hoạt mạnh tại các hoa văn biển báo, trong khi Max-Pooling giữ lại giá trị cực đại không phụ thuộc vào tọa độ tuyệt đối. Ngược lại, các phương pháp trích xuất đặc trưng thủ công dựa trên lưới cứng (Spatial Grid 2x2 hay Block HOG) rất nhạy cảm với việc lệch tâm, khiến phân bố vector đặc trưng bị trôi sai lệch.
+\end{itemize}
 
 \textbf{Hiệu năng toàn trình (End-to-End Recall):}
 Khi chuyển từ hộp bao lý tưởng ($A'$) sang ảnh crop thực tế từ YOLO ($B$), Macro-F1 của $S3$ SVM chỉ suy giảm nhẹ đúng \textbf{0.0051} (từ 0.9738 xuống 0.9687) và độ chính xác phân loại vẫn đạt mức xuất sắc \textbf{99.17\%}. Tỷ lệ phát hiện và phân loại đúng toàn trình của pipeline Two-Stage SVM đạt:
@@ -268,7 +277,6 @@ Phân tích ma trận nhầm lẫn hé lộ sự bất đối xứng kỹ thuậ
 \textbf{Đọc Hình~\ref{fig:error_gallery}:}
 Hình ảnh thực tế minh họa rõ nét các trường hợp lỗi: các biển hiệu lệnh tròn cự ly xa bị nhòe mờ dẫn tới đoán nhầm thành chỉ dẫn, biển cấm bị bóng cây che khuất làm biến đổi phân bố Hue, và một biển chỉ dẫn chụp ở góc nghiêng cực lớn bị nhận dạng nhầm thành hiệu lệnh.
 
-% =========================================================================================
 \subsection{Kết quả thực nghiệm Tầng 1: Đánh giá phân loại trên tập ROI độc lập (ROI Benchmark)}
 \label{subsec:benchmark_roi}
 
@@ -304,7 +312,15 @@ Thực nghiệm đối chuẩn được thực hiện trên toàn bộ \textbf{1
 \end{figure}
 
 \textbf{Đọc Hình~\ref{fig:lenet_confusion_matrix}:}
-Ma trận nhầm lẫn của Enhanced LeNet-5 trên 1.813 mẫu test độc lập khẳng định sự vượt trội: nhóm Biển Cảnh Báo đạt độ chính xác tuyệt đối \textbf{100.0\%} (423/423 mẫu), Biển Cấm đạt \textbf{99.73\%} (1.093/1.096 mẫu). Đối với bài toán khó phân biệt giữa Biển Hiệu Lệnh và Biển Chỉ Dẫn (cùng màu xanh lam), mô hình phân loại đúng \textbf{200 / 219} mẫu Hiệu Lệnh và \textbf{74 / 75} mẫu Chỉ Dẫn, chỉ nhầm lẫn tổng cộng 20 mẫu cự ly xa bị nhòe mờ. Kết quả này bổ trợ hoàn hảo cho phân tích ma trận nhầm lẫn SVM tại Hình~\ref{fig:confusion_matrices_levels}.
+Ma trận nhầm lẫn của Enhanced LeNet-5 trên 1.813 mẫu test độc lập khẳng định sự vượt trội: nhóm Biển Cảnh Báo đạt độ chính xác tuyệt đối \textbf{100.0\%} (423/423 mẫu), Biển Cấm đạt \textbf{99.73\%} (1.093/1.096 mẫu). Đối với bài toán khó phân biệt giữa Biển Hiệu Lệnh và Biển Chỉ Dẫn (cùng màu xanh lam), mô hình phân loại đúng \textbf{200 / 219} mẫu Hiệu Lệnh và \textbf{74 / 75} mẫu Chỉ Dẫn, chỉ nhầm lẫn tổng cộng 20 mẫu cự ly xa bị nhòe mờ.
+
+\textbf{Phân tích sâu nguyên nhân cơ bản của 20 ca nhầm lẫn:}
+Khảo sát trực quan chi tiết từng ca sai số của Enhanced LeNet-5 ghi nhận 3 nhóm nguyên nhân kỹ thuật cụ thể:
+\begin{enumerate}
+    \item \textbf{19 ca Biển Hiệu Lệnh bị đoán nhầm thành Biển Chỉ Dẫn (Stem 0365--0377):} Toàn bộ 19 ca này thuộc về cùng một chuỗi track của biển tròn hiệu lệnh R.301 đặt ở khoảng cách rất xa, kích thước thực tế trên khung hình gốc chỉ đạt dưới $24 \times 24\text{ px}$. Khi được thuật toán nội suy song tuyến tính (Bilinear Interpolation) phóng đại cưỡng bức lên $64 \times 64\text{ px}$, hiện tượng răng cưa biên (Aliasing) và làm mờ đã làm triệt tiêu độ cong của đường viền tròn, khiến các cạnh bị vuông vức hóa tương tự như hình chữ nhật của Biển Chỉ Dẫn.
+    \item \textbf{1 ca Biển Chỉ Dẫn bị đoán nhầm thành Biển Hiệu Lệnh (Mẫu stem 0326):} Đây là một biển chỉ dẫn quay đầu hình vuông nhưng được camera ghi lại ở góc phối cảnh xiên chéo rất lớn (Perspective Distortion), làm cho hình vuông bị méo thành hình bình hành/elip. Đồng thời, biểu tượng mũi tên quay đầu màu trắng chiếm gần trọn diện tích mặt biển tạo ra kích hoạt hướng tâm đặc trưng của biển hiệu lệnh tròn.
+    \item \textbf{3 ca Biển Cấm bị phân loại sai:} Đều rơi vào các tình huống biển bị bóng râm tán cây rậm rạp che phủ nghiêm trọng phần nửa trên, làm triệt tiêu kênh màu đỏ của vành khuyên và chỉ để lộ nền trắng bên trong.
+\end{enumerate}
 
 \subsection{Kết quả thực nghiệm Tầng 2: Đánh giá toàn trình trên ảnh hiện trường (End-to-End Scene Benchmark)}
 \label{subsec:benchmark_scene}

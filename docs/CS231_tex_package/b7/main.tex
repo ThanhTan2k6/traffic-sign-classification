@@ -31,6 +31,8 @@
 \label{subsec:huong_phat_trien}
 
 \begin{enumerate}
+    \item \textbf{Tối ưu hóa kiến trúc bằng Global Average Pooling (GAP) cho thiết bị siêu nhỏ:}
+    Phân tích tỷ trọng tham số của Enhanced LeNet-5 (Bảng~\ref{tab:lenet_arch}) chỉ ra rằng tầng Fully Connected kết nối từ Flatten ($64 \times 8 \times 8 = 4.096$ chiều) sang Dense ($128$) chiếm tới $4.096 \times 128 = 524.288$ trọng số (tương đương \textbf{94.0\%} tổng số 557.700 tham số của toàn mạng). Hướng phát triển tiếp theo là thay thế tầng Flatten + Dense bằng tầng \textbf{Global Average Pooling (GAP)} kích thước $8 \times 8 \rightarrow 1 \times 1$, sau đó chiếu trực tiếp qua Linear($64 \rightarrow 4$). Cải tiến này sẽ cắt giảm số lượng tham số toàn mạng từ 557.700 xuống chỉ còn \textbf{dưới 33.000 tham số} (giảm hơn $94\%$, dung lượng mô hình nén xuống dưới $150\text{ KB}$), mở ra tiềm năng nạp trực tiếp vào các vi điều khiển siêu rẻ có bộ nhớ SRAM hạn chế (như ESP32-CAM, STM32 hoặc Raspberry Pi Pico) phục vụ các hệ thống IoT giao thông giá rẻ.
     \item \textbf{Ứng dụng kỹ thuật SAHI (Slicing Aided Hyper Inference):} Chia nhỏ ảnh lớn thành các ô trượt nhằm nâng cao độ nhạy phát hiện đối với các biển báo siêu nhỏ ở cự ly xa.
     \item \textbf{Phân loại phân cấp 52 mã hiệu chi tiết (Hierarchical Classification):} Mở rộng từ bài toán nhận diện 4 nhóm quy chuẩn sang nhận dạng chính xác từng mã hiệu biển báo cụ thể trong QCVN 41:2019.
 \end{enumerate}
