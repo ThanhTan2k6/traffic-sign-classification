@@ -18,7 +18,7 @@
 % ==========================
 % BỐ CỤC TRANG & TOÁN HỌC
 % ==========================
-\usepackage[margin=2.5cm]{geometry}
+\usepackage[a4paper, top=35mm, bottom=25mm, left=25mm, right=25mm]{geometry}
 \usepackage{amsmath, amssymb, amsfonts}
 
 % ==========================
@@ -58,6 +58,9 @@
 \setlist[enumerate]{leftmargin=1.2em,itemsep=0.1em,topsep=0.15em}
 \setlength{\parindent}{0pt}
 \setlength{\parskip}{0.35em}
+\emergencystretch=3em
+\hfuzz=5pt
+\hbadness=10000
 
 % ==========================
 % TIKZ & ĐỒ HỌA
@@ -208,13 +211,7 @@
 \usetikzlibrary{calc}
 \usetikzlibrary{decorations.pathmorphing}
 
-\def\thesislayout{
-	\geometry{
-		a4paper,
-		total={160mm,232mm},
-		top=35mm,
-	}
-}
+\def\thesislayout{}
 
 \def\coverpage{
 \begin{titlepage}
@@ -305,8 +302,9 @@ Nguyễn Thanh Tân (24521581)
 \end{flushright}
 
 \vspace{0.8cm}
-\subsection*{Bảng phân công nhiệm vụ và trách nhiệm thực hiện}
+\phantomsection
 \addcontentsline{toc}{subsection}{Bảng phân công nhiệm vụ và trách nhiệm thực hiện}
+\subsection*{Bảng phân công nhiệm vụ và trách nhiệm thực hiện}
 
 Nhằm đảm bảo tính minh bạch, độc lập và chuyên sâu trong nghiên cứu, đồ án được phân chia nhiệm vụ đồng đều giữa hai thành viên ($50\% - 50\%$) theo hai trục tiếp cận bổ trợ cho nhau:
 
