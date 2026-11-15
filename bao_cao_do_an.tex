@@ -955,31 +955,6 @@ Trên đồ thị Hình~\ref{fig:lenet_training_curves}, đường Validation Ac
     \item Ngược lại, trong pha kiểm định (\texttt{Validation mode}), toàn bộ các nhánh Dropout được ngắt (mạng suy luận với đầy đủ $100\%$ liên kết trọng số) và ảnh kiểm thử là ảnh gốc sạch không qua nhiễu ngẫu nhiên, giúp mô hình phát huy trọn vẹn năng lực nhận dạng và đạt độ chính xác cao ngay từ các lượt đầu.
 \end{itemize}
 
-\subsubsection{Cẩm nang chất vấn phản biện dành cho thuyết trình (Defense Q\&A Cheatsheet)}
-\label{subsubsec:lenet_faq}
-
-\begin{enumerate}
-    \item \textbf{Câu hỏi 1: Tại sao không dùng mô hình Transfer Learning có sẵn (ResNet-18, MobileNetV3) mà lại tự thiết kế Enhanced LeNet-5?}
-    \begin{itemize}
-        \item \textit{Phương án trả lời:} Các mô hình Transfer Learning tiền huấn luyện từ ImageNet (như ResNet-18 với 11.7 triệu tham số) được thiết kế cho bài toán 1.000 lớp phức tạp. Khi áp dụng vào bài toán 4 nhóm biển báo có hình học chuẩn hóa đơn giản, mô hình quá nặng gây lãng phí tính toán nghiêm trọng (độ trễ $> 10\text{ ms}$, chậm hơn gấp 3 lần) và dễ bị quá khớp (Overfitting). Enhanced LeNet-5 chỉ có đúng 557.700 tham số ($\approx 0.55\text{M}$), nhẹ hơn 21 lần, đạt tốc độ siêu nhanh $1.10\text{ ms/ảnh}$ trên CPU mà vẫn bảo đảm độ chính xác vượt trội $98.73\%$.
-    \end{itemize}
-
-    \item \textbf{Câu hỏi 2: Tại sao hai khối tích chập đầu tiên dùng kernel $5 \times 5$, trong khi khối thứ ba lại chuyển sang kernel $3 \times 3$?}
-    \begin{itemize}
-        \item \textit{Phương án trả lời:} Hai khối đầu tiên cần trường tiếp nhận (Receptive Field) đủ lớn để bao quát ngay các đường viền hình học toàn cục đặc trưng của biển báo (hình tròn của Biển Cấm/Hiệu Lệnh, hình tam giác của Biển Nguy Hiểm). Ở khối tích chập thứ ba, kích thước bản đồ đặc trưng đã co lại còn $16 \times 16$, trường tiếp nhận tích lũy đã mở rộng từ 5 lên 13; việc chuyển sang kernel $3 \times 3$ giúp tập trung biểu diễn các chi tiết vi mô cục bộ (mũi tên, hoa văn biểu tượng) đồng thời tiết kiệm $44\%$ tham số tính toán so với việc tiếp tục dùng kernel $5 \times 5$.
-    \end{itemize}
-
-    \item \textbf{Câu hỏi 3: Vai trò cốt lõi của Batch Normalization trong mô hình là gì?}
-    \begin{itemize}
-        \item \textit{Phương án trả lời:} Khử hiện tượng trôi dạt phân phối ẩn (Internal Covariate Shift). Trong dữ liệu đường phố, các ảnh con ROI có độ biến thiên ánh sáng rất lớn. Batch Normalization chuẩn hóa lại phân phối sau mỗi tầng tích chập, giữ cho gradient luôn nằm trong vùng tuyến tính mạnh của ReLU, cho phép nâng tốc độ học lên $10^{-3}$ mà không lo bùng nổ gradient, đồng thời đóng vai trò như một bộ điều chuẩn nhẹ.
-    \end{itemize}
-
-    \item \textbf{Câu hỏi 4: Nhóm xử lý hiện tượng mất cân bằng số lượng mẫu giữa các nhóm biển báo (Class Imbalance) như thế nào?}
-    \begin{itemize}
-        \item \textit{Phương án trả lời:} Trong dữ liệu thực tế, Biển Cấm và Biển Cảnh Báo chiếm số lượng áp đảo so với Biển Hiệu Lệnh và Chỉ Dẫn. Nhóm phối hợp 3 giải pháp đồng bộ: (1) Áp dụng các biến đổi Data Augmentation (\texttt{RandomRotation} và \texttt{ColorJitter}) làm phong phú đa dạng góc nhìn cho các lớp thiểu số; (2) Tích hợp hai tầng Dropout (0.3 và 0.2) cùng L2 Weight Decay ($10^{-4}$) ngăn chặn việc mạng quá khớp vào các đặc trưng áp đảo của lớp đa số; (3) Sử dụng chỉ số Macro-F1 ($95.66\%$) làm độ đo đánh giá trung tâm thay vì chỉ dựa vào Accuracy tổng thể.
-    \end{itemize}
-\end{enumerate}
-
 \subsubsection{Đánh giá định lượng độ phức tạp tính toán và độ trễ đối chuẩn}
 \label{subsubsec:lenet_complexity_benchmark}
 
