@@ -442,7 +442,9 @@ def main():
     st.markdown(CUSTOM_CSS, unsafe_allow_html=True)
 
     # 1. Hero Banner Header
-    logo_path = PROJECT_ROOT / "docs" / "CS231_tex_package" / "graphics" / "logo_uit.png"
+    logo_path = PROJECT_ROOT / "assets" / "logo_uit.png"
+    if not logo_path.exists():
+        logo_path = PROJECT_ROOT / "docs" / "CS231_tex_package" / "graphics" / "logo_uit.png"
     col_logo, col_header = st.columns([1, 6])
     with col_logo:
         if logo_path.exists():
@@ -1027,14 +1029,18 @@ def main():
         st.markdown("#### 🔍 Ma Trận Nhầm Lẫn Đối Chuẩn (Confusion Matrices)")
         cm_col1, cm_col2 = st.columns(2)
         with cm_col1:
-            cm_lenet_path = RESULTS_DIR / "confusion_matrix_deep_learning.png"
+            cm_lenet_path = PROJECT_ROOT / "assets" / "confusion_matrix_deep_learning.png"
+            if not cm_lenet_path.exists():
+                cm_lenet_path = RESULTS_DIR / "confusion_matrix_deep_learning.png"
             if not cm_lenet_path.exists():
                 cm_lenet_path = PROJECT_ROOT / "docs" / "CS231_tex_package" / "graphics" / "sec4" / "f3_03_lenet_confusion_matrix.png"
             if cm_lenet_path.exists():
                 st.image(str(cm_lenet_path), caption="Ma trận nhầm lẫn: Enhanced LeNet-5 (Thành viên 2)", use_container_width=True)
 
         with cm_col2:
-            cm_svm_path = RESULTS_DIR / "confusion_matrix_color_hog_svm.png"
+            cm_svm_path = PROJECT_ROOT / "assets" / "confusion_matrix_color_hog_svm.png"
+            if not cm_svm_path.exists():
+                cm_svm_path = RESULTS_DIR / "confusion_matrix_color_hog_svm.png"
             if not cm_svm_path.exists():
                 cm_svm_path = PROJECT_ROOT / "docs" / "CS231_tex_package" / "graphics" / "sec4" / "f1_17_confusion_matrices_levels.png"
             if cm_svm_path.exists():
@@ -1051,12 +1057,16 @@ def main():
 
         with tab_arch_dl:
             st.markdown("#### 1. Sơ Đồ Kiến Trúc Mạng Enhanced LeNet-5")
-            arch_img_path = PROJECT_ROOT / "docs" / "CS231_tex_package" / "graphics" / "sec3" / "f3_01_lenet_architecture.png"
+            arch_img_path = PROJECT_ROOT / "assets" / "f3_01_lenet_architecture.png"
+            if not arch_img_path.exists():
+                arch_img_path = PROJECT_ROOT / "docs" / "CS231_tex_package" / "graphics" / "sec3" / "f3_01_lenet_architecture.png"
             if arch_img_path.exists():
                 st.image(str(arch_img_path), caption="Kiến trúc Enhanced LeNet-5 với 3 Conv Blocks, BatchNorm, GAP và Dropout", use_container_width=True)
 
             st.markdown("#### 2. Trực Quan Hóa Feature Maps (Kích Hoạt Qua Từng Tầng Conv)")
-            fmap_img_path = PROJECT_ROOT / "docs" / "CS231_tex_package" / "graphics" / "sec3" / "f3_04_lenet_feature_maps.png"
+            fmap_img_path = PROJECT_ROOT / "assets" / "f3_04_lenet_feature_maps.png"
+            if not fmap_img_path.exists():
+                fmap_img_path = PROJECT_ROOT / "docs" / "CS231_tex_package" / "graphics" / "sec3" / "f3_04_lenet_feature_maps.png"
             if fmap_img_path.exists():
                 st.image(str(fmap_img_path), caption="Bản đồ kích hoạt: Tầng Conv1 bắt viền/màu; Tầng Conv3 bắt ngữ nghĩa biểu tượng", use_container_width=True)
 
@@ -1101,12 +1111,16 @@ def main():
 
         with tab_arch_trad:
             st.markdown("#### 1. Cấu Trúc Vector Đặc Trưng Kết Hợp S3 (457 Chiều)")
-            feat_struct_path = PROJECT_ROOT / "docs" / "CS231_tex_package" / "graphics" / "sec3" / "f1_14_feature_vector_structure.png"
+            feat_struct_path = PROJECT_ROOT / "assets" / "f1_14_feature_vector_structure.png"
+            if not feat_struct_path.exists():
+                feat_struct_path = PROJECT_ROOT / "docs" / "CS231_tex_package" / "graphics" / "sec3" / "f1_14_feature_vector_structure.png"
             if feat_struct_path.exists():
                 st.image(str(feat_struct_path), caption="Sơ đồ phân rã Vector đặc trưng 457 chiều: Màu sắc HSV + Lưới không gian + HOG", use_container_width=True)
 
             st.markdown("#### 2. Trực Quan Hóa HOG (Histogram of Oriented Gradients) Theo Nhóm Biển")
-            hog_vis_path = PROJECT_ROOT / "docs" / "CS231_tex_package" / "graphics" / "sec3" / "f1_12_hog_visualization_groups.png"
+            hog_vis_path = PROJECT_ROOT / "assets" / "f1_12_hog_visualization_groups.png"
+            if not hog_vis_path.exists():
+                hog_vis_path = PROJECT_ROOT / "docs" / "CS231_tex_package" / "graphics" / "sec3" / "f1_12_hog_visualization_groups.png"
             if hog_vis_path.exists():
                 st.image(str(hog_vis_path), caption="Biểu diễn hướng gradient (HOG) thể hiện biên tròn, tam giác và hình chữ nhật", use_container_width=True)
 
@@ -1120,10 +1134,21 @@ def main():
             "được phân loại vào 4 nhóm đối tượng chính theo quy chuẩn quốc gia **QCVN 41:2019/BGTVT**."
         )
 
-        eda_p1 = RESULTS_DIR / "eda" / "1_class_distribution.png"
-        eda_p2 = RESULTS_DIR / "eda" / "2_bbox_dimensions.png"
-        eda_p3 = RESULTS_DIR / "eda" / "3_sample_traffic_signs_grid.png"
-        eda_p4 = RESULTS_DIR / "eda" / "4_split_distribution.png"
+        eda_p1 = PROJECT_ROOT / "assets" / "eda" / "1_class_distribution.png"
+        if not eda_p1.exists():
+            eda_p1 = RESULTS_DIR / "eda" / "1_class_distribution.png"
+
+        eda_p2 = PROJECT_ROOT / "assets" / "eda" / "2_bbox_dimensions.png"
+        if not eda_p2.exists():
+            eda_p2 = RESULTS_DIR / "eda" / "2_bbox_dimensions.png"
+
+        eda_p3 = PROJECT_ROOT / "assets" / "eda" / "3_sample_traffic_signs_grid.png"
+        if not eda_p3.exists():
+            eda_p3 = RESULTS_DIR / "eda" / "3_sample_traffic_signs_grid.png"
+
+        eda_p4 = PROJECT_ROOT / "assets" / "eda" / "4_split_distribution.png"
+        if not eda_p4.exists():
+            eda_p4 = RESULTS_DIR / "eda" / "4_split_distribution.png"
 
         col_eda1, col_eda2 = st.columns(2)
         with col_eda1:
