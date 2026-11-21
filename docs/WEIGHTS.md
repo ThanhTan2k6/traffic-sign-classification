@@ -17,10 +17,11 @@ Toàn bộ 4 tệp mô hình đã được tải lên và chia sẻ tại thư m
 
 | Tệp trọng số | Kích thước | Mã băm SHA-256 (kiểm tra tính toàn vẹn) | Đường dẫn tương đối cần đặt sau khi tải | Vai trò trong hệ thống |
 |---|:---:|:---:|---|---|
-| `vn_s_best.pt` | 18.28 MB | `c6dca365c2d64951113b7b1d0d4145b436de864ac1fbc09a3b37f6bd2693fa6b` | `runs/detect/vn_s/weights/best.pt` | Detector YOLO11s 1 lớp finetune trên dataset Việt Nam |
+| `best_cnn.pth` | 2.14 MB | `12d2062087654ee8aa6d8f608fe2bfcc993818a2c6a124fdd62c33df7849f3ae` | `checkpoints/deep_learning/best_cnn.pth` | Mô hình phân loại Enhanced LeNet-5 PyTorch (Thành viên 2 - Tân) |
+| `vn_s_best.pt` | 18.28 MB | `c6dca365c2d64951113b7b1d0d4145b436de864ac1fbc09a3b37f6bd2693fa6b` | `runs/detect/vn_s/weights/best.pt` (hoặc `checkpoints/yolo/best.pt`) | Detector YOLO11s 1 lớp finetune trên dataset Việt Nam (Tuấn Anh) |
 | `cctsdb_s_best.pt` | 18.28 MB | `8c85b5c68f35bd8280a2288af129b566c7e9b6aaf4a66baa182fd017bc98e4cc` | `runs/detect/cctsdb_s/weights/best.pt` | Detector YOLO11s 1 lớp pretrain trên CCTSDB (trước finetune) |
-| `stage2_best.joblib` | 6.50 MB | `3d46eb1052f343a38983cecab805371a7606f6c596745d568d2d6e4beb993c0c` | `models/stage2_best.joblib` | Classifier Stage 2 tối ưu (SVM RBF tại S3 + Scaler, 457 dims) |
-| `stage1_hsv_vn_best.joblib` | 2.83 MB | `58a0a275cb56faab30d086470a12b8458471996db60c3fc3c75e9d26b27ff57f` | `models/stage1_hsv_vn_best.joblib` | Classifier Stage 1 baseline (SVM RBF tại S0, 44 dims) |
+| `stage2_best.joblib` | 6.50 MB | `3d46eb1052f343a38983cecab805371a7606f6c596745d568d2d6e4beb993c0c` | `models/stage2_best.joblib` (hoặc `checkpoints/color_hog_svm/stage2_best.joblib`) | Classifier Stage 2 tối ưu (SVM RBF tại S3 + Scaler, 457 dims - Tuấn Anh) |
+| `stage1_hsv_vn_best.joblib` | 2.83 MB | `58a0a275cb56faab30d086470a12b8458471996db60c3fc3c75e9d26b27ff57f` | `models/stage1_hsv_vn_best.joblib` | Classifier Stage 1 baseline (SVM RBF tại S0, 44 dims - Tuấn Anh) |
 
 ---
 

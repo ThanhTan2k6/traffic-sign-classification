@@ -1,0 +1,139 @@
+\section{Phát biểu bài toán và mô hình hóa hệ thống}
+\label{sec:phat_bieu_bai_toan}
+
+\subsection{Phát biểu bài toán hình thức (Formal Problem Formulation)}
+\label{subsec:phat_bieu_hinh_thuc}
+
+Trọng tâm nghiên cứu cốt lõi của đề tài là bài toán \textbf{Phân loại ảnh Biển báo Giao thông (Traffic Sign Image Classification)}, nhằm gán nhãn chính xác cho từng vùng ảnh biển báo theo quy chuẩn QCVN 41:2019/BGTVT. Bên cạnh đó, để áp dụng hiệu quả vào thực tế khi camera hành trình chỉ thu nhận ảnh toàn cảnh đường phố góc rộng, hệ thống được mở rộng thành một pipeline nhận dạng toàn trình tích hợp khâu định vị tự động.
+
+\subsubsection{Bài toán trọng tâm: Phân loại đa lớp ảnh biển báo (Core Classification Task)}
+\label{subsubsec:core_classification_task}
+
+Bám sát mô hình toán học chuẩn mực của bài toán phân loại ảnh trong môn học Thị giác máy tính:
+
+\begin{itemize}
+    \item \textbf{Đầu vào (Input):}
+    \begin{enumerate}
+        \item \textit{Tập dữ liệu huấn luyện có nhãn:} Gồm $N$ mẫu ảnh biển báo đã được gán nhãn:
+        \begin{equation}
+            \mathcal{D} = \{(\mathbf{x}_i, y_i)\}_{i=1}^{N}
+        \end{equation}
+        trong đó $\mathbf{x}_i$ là một ảnh số vùng quan tâm $\mathbf{x}_i \in \mathbb{R}^{h \times w \times 3}$ (hoặc vector đặc trưng rút trích $\mathbf{x}_i \in \mathbb{R}^d$, với $d=457$ chiều ở mô hình truyền thống), và $y_i$ là nhãn chân lý (ground truth label) của mẫu thứ $i$.
+        \item \textit{Ảnh biển báo cần dự đoán (Query image):} $\mathbf{x} \in \mathbb{R}^{h \times w \times 3}$.
+        \item \textit{Không gian nhãn mục tiêu cho trước:} Tập hợp $\mathcal{C}$ gồm $C = 4$ nhóm biển báo quy chuẩn:
+        \begin{equation}
+            \mathcal{C} = \left\{ \text{Bien\_Cam (P)}, \, \text{Bien\_Nguy\_Hiem (W)}, \, \text{Bien\_Hieu\_Lenh (R)}, \, \text{Bien\_Chi\_Dan (I)} \right\}
+            \label{eq:classes}
+        \end{equation}
+    \end{enumerate}
+
+    \item \textbf{Đầu ra (Output):}
+    \begin{itemize}
+        \item Giá trị nhãn dự đoán $\hat{y} \in \mathcal{C}$ cùng phân phối độ tin cậy tương ứng $p \in [0, 1]$:
+        \begin{equation}
+            \hat{y} = \arg\max_{c \in \mathcal{C}} P(y = c \mid \mathbf{x})
+        \end{equation}
+    \end{itemize}
+    \item \textbf{Mục tiêu:} Xây dựng hàm ánh xạ $f: \mathbf{x} \mapsto \hat{y}$ sao cho tối đa hóa độ chính xác phân loại tổng thể và chỉ số Macro-F1 trên toàn bộ 4 nhóm mục tiêu.
+\end{itemize}
+
+\paragraph{Ví dụ minh họa bài toán phân loại:}
+Cho một ảnh con cắt từ camera hành trình kích thước $42 \times 40\text{ px}$ thể hiện biển tròn viền đỏ nền trắng có gạch chéo. Sau khi tiền xử lý đưa về chuẩn kích thước, mô hình phân loại (SVM hoặc Enhanced LeNet-5) xuất ra kết quả:
+\begin{equation*}
+    \mathbf{x} \xrightarrow{\text{Mô hình phân loại}} \hat{y} = \texttt{Bien\_Cam} \quad (\text{với độ tin cậy } p = 0.99)
+\end{equation*}
+
+\subsubsection{Mở rộng hệ thống: Nhận dạng toàn trình từ ảnh camera (End-to-End Recognition Pipeline)}
+\label{subsubsec:e2e_recognition_pipeline}
+
+Trong thực tế vận hành trên xe cơ giới, dữ liệu đầu vào là ảnh toàn cảnh đường phố $\mathbf{I} \in \mathbb{R}^{H \times W \times 3}$ ($960 \times 540$ hoặc $1920 \times 1080$) chứ không phải các ảnh crop sẵn. Do đó, hệ thống phối hợp hai giai đoạn tuần tự (Two-Stage Decoupling):
+
+\begin{enumerate}
+    \item \textbf{Khâu 1 -- Định vị vùng ứng viên (Candidate Localization):} Sử dụng detector chuyên biệt 1-lớp YOLO11s (\texttt{sign}) làm tiền xử lý để quét toàn cảnh và trích xuất tập hợp $K$ hộp bao (bounding box) có độ tin cậy vượt ngưỡng:
+    \begin{equation}
+        \mathcal{B} = \left\{ \hat{b}_k = (x_1, y_1, x_2, y_2)_k \;\middle|\; \text{conf}_k \ge \tau_{\text{conf}}, \, k = 1, \dots, K \right\}
+        \label{eq:localization}
+    \end{equation}
+    với $\tau_{\text{conf}} = 0.25$. Với mỗi hộp bao $\hat{b}_k$, trích xuất vùng ảnh con (ROI crop):
+    \begin{equation}
+        \mathbf{x}_k = \mathbf{I}[y_1 : y_2, \, x_1 : x_2] \in \mathbb{R}^{h_k \times w_k \times 3}
+        \label{eq:crop}
+    \end{equation}
+
+    \item \textbf{Khâu 2 -- Phân loại ngữ nghĩa (Semantic Classification -- Trọng tâm đề tài):} Từng ảnh con $\mathbf{x}_k$ được chuyển đến bộ phân loại (SVM RBF hoặc Enhanced LeNet-5) để xác định nhãn $\hat{y}_k \in \mathcal{C}$.
+\end{enumerate}
+
+\textbf{Đầu ra toàn trình (End-to-End Output):} Danh sách các hộp bao kèm nhãn nhóm tương ứng của khung hình:
+\begin{equation}
+    \hat{\mathcal{Y}} = \left\{ \left( \hat{b}_k, \, \hat{y}_k, \, p_k \right) \;\middle|\; \hat{b}_k \in \mathbb{R}^4, \, \hat{y}_k \in \mathcal{C}, \, p_k \ge \tau_{\text{conf}}, \, k = 1, \dots, K \right\}
+    \label{eq:output_formulation}
+\end{equation}
+\textit{Ví dụ:} Từ ảnh đường phố $\mathbf{I}$, hệ thống định vị và gán nhãn $\hat{b}_1 = (1420, 310, 1465, 355)$ là $\texttt{Bien\_Cam}$ ($p=0.98$), và $\hat{b}_2 = (850, 412, 910, 470)$ là $\texttt{Bien\_Chi\_Dan}$ ($p=0.95$).
+
+\subsection{Các ràng buộc kỹ thuật cốt lõi}
+\label{subsec:rang_buoc_ky_thuat}
+
+Hệ thống được thiết kế dưới hai ràng buộc thực tế nghiêm ngặt:
+
+\begin{itemize}
+    \item \textbf{Nguyên tắc chống rò rỉ dữ liệu tuyệt đối (Zero Data Leakage):} Vì dữ liệu camera hành trình được trích xuất từ các đoạn video liên tục, việc phân chia ngẫu nhiên (Random Split) từng khung hình sẽ khiến các khung hình liên tiếp $(t, t + 1)$ có mức độ tương đồng quang học $> 95\%$ bị phân tán đồng thời vào cả tập huấn luyện và kiểm thử. Hiện tượng này dẫn đến việc mô hình chỉ học vẹt các mẫu cục bộ (empirical memorization) và thổi phồng sai lệch kết quả đánh giá. Do đó, toàn bộ dữ liệu bắt buộc phải được phân chia theo khối video liên tục (Block Split).
+    \item \textbf{Độ trễ thời gian thực trên CPU (Real-Time Latency Constraint):} Khâu suy luận phân loại trên mỗi ảnh crop phải đạt tốc độ $\ge 300\text{ FPS}$ (độ trễ $< 3.3\text{ ms}$) khi thực thi trên CPU đơn lõi, bảo đảm tổng thời gian của cả pipeline duy trì tần số phản hồi an toàn cho xe chạy ngoài thực địa.
+\end{itemize}
+
+\subsection{Sơ đồ kiến trúc luồng dữ liệu toàn trình}
+\label{subsec:so_do_luong_du_lieu}
+
+Hình~\ref{fig:e2e_pipeline_overview} mô tả luồng xử lý khái quát của hệ thống lai hai giai đoạn. Chi tiết đặc tả kỹ thuật từng khối xử lý cùng quy cách giao tiếp đầu vào/đầu ra giữa các mô-đun được trình bày chi tiết tại Mục~\ref{sec:phuong_phap} (Hình~\ref{fig:detailed_pipeline_block}).
+
+\begin{figure}[H]
+\centering
+\resizebox{\textwidth}{!}{%
+\begin{tikzpicture}[
+    node distance=1.0cm and 0.6cm,
+    block/.style={rectangle, draw=deepgreen, fill=softgreen, thick, rounded corners=2pt, align=center, minimum height=1cm, inner sep=5pt, font=\small},
+    branch/.style={rectangle, draw=maingreen!80!black, fill=cream, thick, rounded corners=2pt, align=center, minimum height=0.9cm, inner sep=4pt, font=\small},
+    line/.style={draw=deepgreen, ->, >=stealth, thick}
+]
+    \node [block] (input) {Ảnh Đường Phố\\(960$\times$540 / 1920$\times$1080)};
+    \node [block, right=of input] (yolo) {Giai đoạn 1:\\YOLO11s 1-Class\\Detector (\texttt{sign})};
+    \node [block, right=of yolo] (roi) {Tập Candidate Boxes\\\& Trích xuất ROI};
+    \node [branch, above right=0.3cm and 0.6cm of roi] (trad) {Giai đoạn 2A: Truyền thống\\Color + Grid + HOG\\$\rightarrow$ SVM (RBF)};
+    \node [branch, below right=0.3cm and 0.6cm of roi] (deep) {Giai đoạn 2B: Học sâu\\Enhanced LeNet-5\\(Mạng CNN PyTorch)};
+    \node [block, right=4.2cm of roi] (output) {Kết quả Dự đoán:\\Hộp bao \& Nhãn nhóm};
+
+    \path [line] (input) -- (yolo);
+    \path [line] (yolo) -- (roi);
+    \path [line] (roi.east) |- (trad.west);
+    \path [line] (roi.east) |- (deep.west);
+    \path [line] (trad.east) -| (output.north);
+    \path [line] (deep.east) -| (output.south);
+\end{tikzpicture}%
+}
+\caption{Sơ đồ luồng xử lý toàn trình của hệ thống Two-Stage Hybrid Traffic Sign Recognition.}
+\label{fig:e2e_pipeline_overview}
+\end{figure}
+
+\subsection{Quy chuẩn phân nhóm biển báo theo QCVN 41:2019/BGTVT}
+\label{subsec:qcvn_phan_nhom}
+
+Bảng~\ref{tab:qcvn_groups} tổng hợp các đặc trưng hình học và màu sắc của 4 nhóm biển báo mục tiêu:
+
+\begin{table}[H]
+\centering
+\small
+\caption{Đặc trưng hình học và màu sắc 4 nhóm biển báo giao thông theo QCVN 41:2019.}
+\label{tab:qcvn_groups}
+\begin{tabularx}{\textwidth}{|c|p{3.2cm}|p{2cm}|p{2.8cm}|Y|}
+\hline
+\textbf{ID} & \textbf{Tên nhóm quy chuẩn} & \textbf{Mã hiệu} & \textbf{Hình dạng} & \textbf{Đặc trưng nhận diện quang học} \\
+\hline
+0 & \texttt{Bien\_Cam} & P.*, B.8a & Hình tròn & Viền đỏ, nền trắng hoặc xanh lam, biểu tượng màu đen \\
+\hline
+1 & \texttt{Bien\_Nguy\_Hiem} & W.* & Tam giác đều & Viền đỏ, nền vàng, biểu tượng đen \\
+\hline
+2 & \texttt{Bien\_Hieu\_Lenh} & R.* & Hình tròn & Nền xanh lam chủ đạo, biểu tượng hình vẽ màu trắng \\
+\hline
+3 & \texttt{Bien\_Chi\_Dan} & I.* & Chữ nhật / Vuông & Nền xanh lam chủ đạo, ký hiệu và chữ viết màu trắng \\
+\hline
+\end{tabularx}
+\end{table}

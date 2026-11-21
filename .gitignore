@@ -70,3 +70,17 @@ logs/
 .DS_Store
 Thumbs.db
 desktop.ini
+
+# LaTeX build artifacts
+*.aux
+*.log
+*.toc
+*.out
+*.nav
+*.snm
+*.vrb
+*.synctex.gz
+*.bcf
+*.run.xml
+*.fls
+*.fdb_latexmk

@@ -81,7 +81,7 @@ flowchart TD
 | Thành Viên | Phụ Trách Mô-đun | Phương Pháp & Công Nghệ | Trọng Số Lưu Trữ |
 | :---: | :--- | :--- | :--- |
 | **Thành viên 1** | **Stage 1 (Localization)** &<br/>**Stage 2 (Traditional ML)** | • **YOLO11s (1-class):** Phát hiện bounding box biển báo.<br/>• **Color + HOG + SVM:** Trích xuất đặc trưng S3 (HSV 44d + Aspect Ratio 1d + Spatial Grid 2x2 384d + HOG 28d = 457 chiều) + SVM RBF ($C=10.0, \gamma=\text{scale}$). | `checkpoints/yolo/best.pt`<br/>`checkpoints/color_hog_svm/stage2_best.joblib` |
-| **Thành viên 2** | **Stage 2 (Deep Learning)** | • **Enhanced LeNet-5 (PyTorch):** Mạng CNN 3 khối tích chập `Conv2D(3, 32)` $\to$ `Conv2D(32, 64)` $\to$ `Conv2D(64, 128)` kết hợp `BatchNorm2d`, `MaxPool2d(2, 2)`, `Dropout(0.3)` và 2 lớp `Linear`. Huấn luyện với CrossEntropyLoss và Adam optimizer. | `checkpoints/deep_learning/best_cnn.pth` |
+| **Thành viên 2** | **Stage 2 (Deep Learning)** | • **Enhanced LeNet-5 (PyTorch):** Mạng CNN 3 khối tích chập `Conv2D(3, 16)` $\to$ `Conv2D(16, 32)` $\to$ `Conv2D(32, 64)` kết hợp `BatchNorm2d`, `MaxPool2d(2, 2)`, `Dropout(0.3, 0.2)` và 2 lớp `Linear(4096, 128) -> (128, 4)` (Tổng 557.700 tham số, 2.24 MB). Huấn luyện với CrossEntropyLoss và Adam optimizer. | `checkpoints/deep_learning/best_cnn.pth` |
 
 ---
 
