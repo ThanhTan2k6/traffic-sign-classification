@@ -84,3 +84,7 @@ desktop.ini
 *.run.xml
 *.fls
 *.fdb_latexmk
+
+# Slide thuyet trinh & Bao cao LaTeX (chi luu o local)
+presentation/
+CS231_tex_package_updated/
