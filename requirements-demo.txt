@@ -1,0 +1,8 @@
+# Demo UI dependencies for app_streamlit.py (verified in venv/)
+# Third-party UI wrapper packages evaluated (streamlit-option-menu, streamlit-extras,
+# streamlit-shadcn-ui, streamlit-antd-components) — omitted in favor of native
+# Streamlit 1.52.1 primitives (.streamlit/config.toml, bordered containers,
+# st.metric, :material/ icons) for full compatibility and zero iframe clipping.
+streamlit==1.52.1   # Apache-2.0
+plotly==6.6.0       # MIT
+pyarrow==26.0.1     # Apache-2.0
